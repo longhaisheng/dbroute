@@ -239,7 +239,10 @@ class cls_sqlexecute implements cls_idb{
 			$this->init();
 			$stmt = $this->connection->prepare($result['sql']);
 		}
-
+		if(!$stmt){
+			die("error sql in ".$sql);
+		}
+		
 		$params = $this->get_bind_params($result['params']);
 		$this->bindParameters($stmt, $params);
 
