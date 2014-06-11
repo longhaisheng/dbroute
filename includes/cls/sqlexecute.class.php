@@ -56,10 +56,7 @@ class cls_sqlexecute implements cls_idb{
 			if($db_read_host_array){
 				$db=$connect_array['db'];
 				$host=$db_read_host_array[$db];
-			}else{
-				$host=$this->connect_array['read_host'];
 			}
-
 			$this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'],$connect_array['port']);
 			if (mysqli_connect_errno()) {
 				echo("Database Connect Error : " . mysqli_connect_error($this->read_connection));

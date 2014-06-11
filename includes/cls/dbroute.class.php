@@ -239,13 +239,13 @@ class cls_dbroute {
 				if($this->getUseMysqliExtend()){
 					$this->connections[$db]=new cls_sqlexecute($db);
 				}else{
-                    $this->connections[$db]=new cls_pdosqlexcute($db);
+                    $this->connections[$db]=new cls_pdosqlexecute($db);
 				}
 			}else{
 				if($this->getUseMysqliExtend()){
-					$this->connections[$db]=new cls_sqlexecute($db,$this->config_array);
+					$this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
 				}else{
-                    $this->connections[$db]=new cls_pdosqlexcute($db,$this->config_array);
+                    $this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
 				}
 			}
 		}
@@ -296,6 +296,7 @@ class cls_dbroute {
 	}
 
 	/**
+	 * 此方法只支持在一个表中批量插入 更新 删除 数据
 	 * @param $sql "insert order(order_id,order_sn,user_id) values (#order_id#,#order_sn#,#user_id#)"
 	 * @param array $batch_params (array(array('order_id'=>1,'order_sn'=>'password1','user_id'=>10),array('order_id'=>2,'order_sn'=>'password2','user_id'=>10)......))
 	 * @param array $logic_params 分表物理列名数组，如根据user_id分表的，此可传 array('user_id'=>10)
