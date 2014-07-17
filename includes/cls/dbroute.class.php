@@ -374,6 +374,9 @@ class cls_dbroute {
 		$size=isset($params['size'])?$params['size']:20;
 		$sort_filed=isset($params['sort_filed'])?$params['sort_filed']:'';
 		$sort_order=isset($params['sort_order'])?$params['sort_order']:'desc';
+		if(!stripos($sql," limit ")){
+			$sql =$sql." limit ".$size;
+		}
 
 		unset($params['size']);
 		unset($params['sort_filed']);
