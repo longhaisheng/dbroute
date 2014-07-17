@@ -237,7 +237,7 @@ class cls_sqlexecute implements cls_idb{
 			$stmt = $this->connection->prepare($result['sql']);
 		}
 		if(!$stmt){
-			die("error sql in ".$sql);
+			throw new Exception("error sql in ".$sql);
 		}
 		
 		$params = $this->get_bind_params($result['params']);
@@ -246,7 +246,7 @@ class cls_sqlexecute implements cls_idb{
 		if ($stmt->execute()) {
 			return $stmt;
 		} else {
-			echo("Error in : " . mysqli_error($this->connection));
+			throw new Exception("Error in : " . mysqli_error($this->connection));
 			if($stmt!=null){
 				$stmt->close();
 			}
@@ -315,7 +315,7 @@ class cls_sqlexecute implements cls_idb{
 		if($object){
 			foreach ($object as $key=>$value){
 				if(!stripos($sql, ":".$key)){
-					die(" array key: $key not in sql:".$sql);
+					throw new Exception(" array key: $key not in sql:".$sql);
 				}else{
 					$sql=str_ireplace(":".$key, "?", $sql);
 					foreach ($map as $k=>$v){

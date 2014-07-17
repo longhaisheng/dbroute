@@ -243,7 +243,7 @@ class cls_dbroute {
 				}
 			}else{
 				if($this->getUseMysqliExtend()){
-					$this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
+					$this->connections[$db]=new cls_sqlexecute($db,$this->config_array);
 				}else{
                     $this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
 				}
