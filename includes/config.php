@@ -1,5 +1,5 @@
 <?php
-define("MYSQL_EXTEND", 'mysqli');//值为mysqli | mysql_pdo
+define("MYSQL_EXTEND", 'mysqli');//操作数据方式：值为 mysqli | mysql_pdo 
 
 define("DB_NAME", 'sooch');
 define("DB_USER_NAME", 'root');

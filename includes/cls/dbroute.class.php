@@ -371,9 +371,9 @@ class cls_dbroute {
 		if(!is_array($in_param_arr)){
 			die("select in 条件参数值为数组");
 		}
-		$size=isset($params['size'])?$params['size']:30;
+		$size=isset($params['size'])?$params['size']:20;
 		$sort_filed=isset($params['sort_filed'])?$params['sort_filed']:'';
-		$sort_order=isset($params['sort_order'])?$params['sort_order']:1;
+		$sort_order=isset($params['sort_order'])?$params['sort_order']:'desc';
 
 		unset($params['size']);
 		unset($params['sort_filed']);
@@ -435,7 +435,7 @@ class cls_dbroute {
 				foreach ((array)$merge_result as $key => $row) {
 					$sort_folder[$key] = $row[$sort_filed];
 				}
-				if($sort_order){
+				if($sort_order == 'desc'){
 					array_multisort($sort_folder, SORT_DESC,$merge_result);
 				}else{
 					array_multisort($sort_folder, SORT_ASC,$merge_result);

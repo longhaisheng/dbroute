@@ -62,12 +62,12 @@ class OrderModel {
 	}
 
 	public function queryAllByIn(){
-		$params['size']=30;
+		$params['size']=20;
 		$params['sort_filed']='id';
 		$params['id']=0;
-		$params['sort_order']=1;
+		$params['sort_order']='asc';
 		$params['user_ids']=array(1,1025,2,1026,2049,10);
-		return $this->db->selectByIn("select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30",$params);
+		return $this->db->selectByIn("select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) order by id asc limit 0,30",$params);
 	}
 
 }
