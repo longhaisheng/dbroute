@@ -73,8 +73,9 @@ class OrderModel {
 	public function transactionTest(){
 		$user_id=10;
 		$tx_params=array('user_id'=>$user_id);
-		$this->db->begin($tx_params);
 		try{
+			$this->db->begin($tx_params);
+
 			$sql="insert order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
 			$params=array();
 			$params['id']=$this->sequence->nextValue('order');
@@ -89,13 +90,14 @@ class OrderModel {
 			$params['order_sn']='bcd';
 			$params['user_id']=$user_id;
 			$this->db->update($update_sql,$params);
+
+			$this->db->commit($tx_params);
+			return true;
 		}catch(Exception $e){
 			echo $e->getMessage();
 			$this->db->rollBack($tx_params);
 			return false;
 		}
-		$this->db->commit($tx_params);
-		return true;
 	}
 
 }
