@@ -11,18 +11,18 @@ class OrderModel {
 		$this->db=new cls_dbroute($mysql_db_route_array_two);
 	}
 
-	public function insert(){
+	public function insert($user_id=10){
 		$sql="insert order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
 		$params['id']=$this->sequence->nextValue('order');
 		$params['order_sn']='abc';
-		$params['user_id']=10;
+		$params['user_id']=$user_id;
 		$this->db->insert($sql,$params);
 		return $params['id'];
 	}
 
-	public function getAll(){
+	public function getAll($user_id=10){
 		$sql="select id,order_sn,user_id,add_time,modify_time from order where user_id=#user_id# ";
-		$params['user_id']=10;
+		$params['user_id']=$user_id;
 		return $this->db->getAll($sql,$params);
 	}
 
@@ -65,9 +65,9 @@ class OrderModel {
 		$params['size']=20;
 		$params['id']=0;
 		$params['sort_filed']='id';
-		$params['sort_order']='asc';
+		$params['sort_order']='desc';
 		$params['user_ids']=array(1,1025,2,1026,2049,10);
-		return $this->db->selectByIn("select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) order by id asc limit 0,20",$params);
+		return $this->db->selectByIn("select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) order by id desc limit 0,20",$params);
 	}
 
 	public function transactionTest(){
@@ -92,8 +92,10 @@ class OrderModel {
 		}catch(Exception $e){
 			echo $e->getMessage();
 			$this->db->rollBack($tx_params);
+			return false;
 		}
 		$this->db->commit($tx_params);
+		return true;
 	}
 
 }

@@ -371,9 +371,15 @@ class cls_dbroute {
 		if(!is_array($in_param_arr)){
 			die("select in 条件参数值为数组");
 		}
+		if(empty($in_param_arr)){
+			die("select in 条件参数值为空");
+		}
 		$size=isset($params['size'])?$params['size']:20;
 		$sort_filed=isset($params['sort_filed'])?$params['sort_filed']:'';
 		$sort_order=isset($params['sort_order'])?$params['sort_order']:'desc';
+		if($size >= 100){
+			$size = 100;
+		}
 		if(!stripos($sql," limit ")){
 			$sql =$sql." limit ".$size;
 		}
@@ -423,7 +429,12 @@ class cls_dbroute {
 			$new_sql=str_ireplace("#".$this->select_in_logic_column."#", implode (',',array_values($val)),$sql);
 			$table_name=$this->getTableName($mod);
 			$logic_table=$this->getLogicTable();
-			$new_sql=str_ireplace(" ".$logic_table." "," ".$table_name." ",$new_sql);
+			$first_pos=stripos($new_sql, " ".$logic_table." ");
+			if(!$first_pos){
+				die("error sql in ".$sql);
+			}
+			$new_sql=substr_replace($new_sql," ".$table_name." ",$first_pos,strlen(" ".$logic_table." "));
+				
 			$db_name=$this->getDbName($mod);
 			$result=$this->connections[$db_name]->getAll($new_sql,$in_params[$mod]);
 			if($result){

@@ -7,6 +7,7 @@ define("DB_PASSWORD", '123456');
 define("DB_HOST", '127.0.0.1');
 define("DB_PORT", 3306);
 define("SEQUENCE_DEFAULT_STEP", 1000);//序列步长
+define("TRANSACTION_READ_MASTER", true);//事务中 select 是否读主库
 
 /************sequence配置*****************/
 $sequence_config_array=array();
@@ -34,7 +35,7 @@ $mysql_db_route_array['one_db_table_num']=1024;//每个库里存放的表数
 
 $db_host_array=array();
 $db_host_array['tt_0000']=DB_HOST;
-$mysql_db_route_array_two['db_hosts']=$db_host_array;//每个库存放在哪个host
+$mysql_db_route_array['db_hosts']=$db_host_array;//每个库存放在哪个host
 
 $db_read_host_array=array();
 $db_read_host_array['tt_0000']=DB_HOST;
@@ -68,7 +69,7 @@ $db_host_array['db_cart_0007']=DB_HOST;
 $mysql_db_route_array_two['db_hosts']=$db_host_array;//每个库存放在哪个host
 
 $db_read_host_array=array();
-$db_read_host_array['db_cart_0000']=DB_HOST;
+$db_read_host_array['db_cart_0000']=DB_HOST.",".DB_HOST;
 $db_read_host_array['db_cart_0001']=DB_HOST;
 $db_read_host_array['db_cart_0002']=DB_HOST;
 $db_read_host_array['db_cart_0003']=DB_HOST;

@@ -5,13 +5,20 @@
  */
 class cls_sqlexecute implements cls_idb{
 
+	/** 主库链接 */
 	private $connection;
-
+	
+	/** 读库链接  */
 	private $read_connection;
 
+	/** db链接字符串数组 */
 	private $connect_array=array();
 
+	/** 是否有读库 */
 	private $has_read_db;
+	
+	/** 此次操作是否有事务 */
+	private $this_operation_have_transaction=false;
 
 	public function __construct($db_name,$default_config_array=array()) {
 		if(empty($this->connect_array)){
@@ -55,7 +62,10 @@ class cls_sqlexecute implements cls_idb{
 			$db_read_host_array=isset($this->connect_array['read_db_hosts'])?$this->connect_array['read_db_hosts']:array();
 			if($db_read_host_array){
 				$db=$connect_array['db'];
-				$host=$db_read_host_array[$db];
+				$host_str=$db_read_host_array[$db];
+				$host_array=explode(",", $host_str);
+				$num=rand(0,count($host_array)-1);
+				$host=$host_array[$num];
 			}
 			$this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'],$connect_array['port']);
 			if (mysqli_connect_errno()) {
@@ -229,12 +239,22 @@ class cls_sqlexecute implements cls_idb{
 
 	private function executeQuery($sql, $params = array()) {
 		$result=$this->replaceSql($sql,$params);
-		if($this->has_read_db &&  (stristr($sql, "select ") ||  stristr($sql, "SELECT ")) ){//有读库配置并且是 select 查询 走读库
-			$this->init_read_connection();
-			$stmt = $this->read_connection->prepare($result['sql']);
-		}else{
+		$transaction_read_master=false;//事务中的读操作是否读主库
+		if(defined("TRANSACTION_READ_MASTER")){
+			$transaction_read_master=TRANSACTION_READ_MASTER;
+		}
+		
+		if($this->this_operation_have_transaction && $transaction_read_master){//有事务操作并且事务中select配置成操作主库,事务中select查询走主库
 			$this->init();
 			$stmt = $this->connection->prepare($result['sql']);
+		}else{
+			if($this->has_read_db && (stristr($sql, "select ") || stristr($sql, "SELECT ")) ){//有读库配置并且是 select 查询 走读库
+				$this->init_read_connection();
+				$stmt = $this->read_connection->prepare($result['sql']);
+			}else{
+				$this->init();
+				$stmt = $this->connection->prepare($result['sql']);
+			}
 		}
 		if(!$stmt){
 			throw new Exception("error sql in ".$sql);
@@ -351,16 +371,19 @@ class cls_sqlexecute implements cls_idb{
 
 	public function begin() {
 		$this->init();
+		$this->this_operation_have_transaction=true;
 		$this->connection->autocommit(false);//关闭本次数据库连接的自动命令提交事务模式
 	}
 
 	public function commit() {
 		$this->connection->commit();//提交事务后，打开本次数据库连接的自动命令提交事务模式
+		$this->this_operation_have_transaction=false;
 		$this->connection->autocommit(true);
 	}
 
 	public function rollBack() {
 		$this->connection->rollback();//回滚事务后，打开本次数据库连接的自动命令提交事务模式
+		$this->this_operation_have_transaction=false;
 		$this->connection->autocommit(true);
 	}
 

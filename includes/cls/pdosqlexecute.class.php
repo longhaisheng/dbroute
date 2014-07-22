@@ -9,6 +9,9 @@ class cls_pdosqlexecute implements cls_idb
     private $connect_array;
 
     private $has_read_db = false;
+    
+    /** 此次操作是否有事务 */
+	private $this_operation_have_transaction=false;
 
     public function __construct($db_name, $config = array())
     {
@@ -95,12 +98,19 @@ class cls_pdosqlexecute implements cls_idb
      */
     private function prepare($sql)
     {
-        // 判断SQL语句是否为读
-        if ($this->has_read_db && preg_match('/^select\s/i', $sql)) {
-            $db = $this->getReadConnection();
-        } else {
-            $db = $this->getMasterConnection();
-        }
+    	$transaction_read_master=false;//事务中的读操作是否读主库
+		if(defined("TRANSACTION_READ_MASTER")){
+			$transaction_read_master=TRANSACTION_READ_MASTER;
+		}
+		if($this->this_operation_have_transaction && $transaction_read_master){//有事务操作并且事务中select配置成操作主库,事务中select查询走主库
+			$db = $this->getMasterConnection();
+		}else{	
+	        if ($this->has_read_db && preg_match('/^select\s/i', $sql)) {// 判断SQL语句是否为读
+	            $db = $this->getReadConnection();
+	        } else {
+	            $db = $this->getMasterConnection();
+	        }
+		}
         $stmt = $db->prepare($sql);
 
         return $stmt;
@@ -114,8 +124,12 @@ class cls_pdosqlexecute implements cls_idb
         if (!$this->read_connection) {
             $connect_array = $this->connect_array;
             // 载入读库配置
-            $connect_array['host'] = $this->connect_array['read_db_hosts'][$this->connect_array['db']];
-
+            $db_name=$this->connect_array['db'];
+            $host_str=$this->connect_array['read_db_hosts'][$db_name];
+			$host_array=explode(",", $host_str);
+			$num=rand(0,count($host_array)-1);
+			$host=$host_array[$num];
+  			$connect_array['host'] = $host;
             return $this->read_connection = $this->getDbConnection($connect_array);
         }
 
@@ -241,7 +255,7 @@ class cls_pdosqlexecute implements cls_idb
     {
         $this->getMasterConnection();
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 0);
-
+		$this->this_operation_have_transaction=true;
         return $this->connection->beginTransaction();
     }
 
@@ -249,7 +263,7 @@ class cls_pdosqlexecute implements cls_idb
     {
         $return = $this->connection->commit();
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
-
+		$this->this_operation_have_transaction=false;
         return $return;
     }
 
@@ -320,7 +334,7 @@ class cls_pdosqlexecute implements cls_idb
     {
         $return = $this->connection->rollBack();
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
-
+		$this->this_operation_have_transaction=false;
         return $return;
     }
 }
