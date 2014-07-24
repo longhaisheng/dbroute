@@ -191,7 +191,7 @@ class cls_dbroute {
 	private function decorate($sql,$params=array()){
 		$logic_col=$this->getLogicColumn();
 		if(!isset($params[$logic_col])){
-			die("error params ,it must have key ".$logic_col);
+			throw DBRouteException("error params ,it must have key ".$logic_col);
 		}
 		$id=$params[$logic_col];
 		$mod=$this->getMod($id);
@@ -209,7 +209,7 @@ class cls_dbroute {
 		$logic_table=$this->getLogicTable();
 		$first_pos=stripos($sql, " ".$logic_table." ");
 		if(!$first_pos){
-			die("error sql in ".$sql);
+			throw DBRouteException("error sql in ".$sql);
 		}
 		$new_sql=substr_replace($sql," ".$table_name." ",$first_pos,strlen(" ".$logic_table." "));
 		return $new_sql;
@@ -221,7 +221,7 @@ class cls_dbroute {
 		}
 		$logic_col=$this->getLogicColumn();
 		if(!isset($params[$logic_col])){
-			die("error params ,it must have key ".$logic_col);
+			throw DBRouteException("error params ,it must have key ".$logic_col);
 		}
 		$id=$params[$logic_col];
 		$mod=$this->getMod($id);
@@ -362,17 +362,17 @@ class cls_dbroute {
 	 */
 	public function selectByIn($sql,$params=array()){
 		if(!isset($params[$this->select_in_logic_column])){
-			die("select in 条件参数key名为".$this->select_in_logic_column."");
+			throw DBRouteException("select in 条件参数key名为".$this->select_in_logic_column."");
 		}
 		if(!stripos($sql,"#".$this->select_in_logic_column."#")){
-			die("select in 条件参数key名为#".$this->select_in_logic_column."#");
+			throw DBRouteException("select in 条件参数key名为#".$this->select_in_logic_column."#");
 		}
 		$in_param_arr=$params[$this->select_in_logic_column];
 		if(!is_array($in_param_arr)){
-			die("select in 条件参数值为数组");
+			throw DBRouteException("select in 条件参数值为数组");
 		}
 		if(empty($in_param_arr)){
-			die("select in 条件参数值为空");
+			throw DBRouteException("select in 条件参数值为空");
 		}
 		$size=isset($params['size'])?$params['size']:20;
 		$sort_filed=isset($params['sort_filed'])?$params['sort_filed']:'';
@@ -431,7 +431,7 @@ class cls_dbroute {
 			$logic_table=$this->getLogicTable();
 			$first_pos=stripos($new_sql, " ".$logic_table." ");
 			if(!$first_pos){
-				die("error sql in ".$sql);
+				throw DBRouteException("error sql in ".$sql);
 			}
 			$new_sql=substr_replace($new_sql," ".$table_name." ",$first_pos,strlen(" ".$logic_table." "));
 				
@@ -477,7 +477,7 @@ class cls_dbroute {
 
 		$logic_col=$this->getLogicColumn();
 		if(isset($params[$logic_col])){
-			die("error params ,it must not have key ".$logic_col);
+			throw DBRouteException("error params ,it must not have key ".$logic_col);
 		}
 
 		if($this->is_single_db){
@@ -524,7 +524,7 @@ class cls_dbroute {
 		if($this->is_single_db){
 			$this->getSingleConn()->begin();
 		}else{
-			if(empty($params)) die('请传递参数');
+			if(empty($params)) throw DBRouteException('请传递参数');
 			$db_name=$this->setConnection($params);
 			$this->connections[$db_name]->begin();
 		}
@@ -534,7 +534,7 @@ class cls_dbroute {
 		if($this->is_single_db){
 			$this->getSingleConn()->commit();
 		}else{
-			if(empty($params)) die('请传递参数');
+			if(empty($params)) throw DBRouteException('请传递参数');
 			$db_name=$this->setConnection($params);
 			$this->connections[$db_name]->commit();
 		}
@@ -544,7 +544,7 @@ class cls_dbroute {
 		if($this->is_single_db){
 			$this->getSingleConn()->rollBack();
 		}else{
-			if(empty($params)) die('请传递参数');
+			if(empty($params)) throw DBRouteException('请传递参数');
 			$db_name=$this->setConnection($params);
 			$this->connections[$db_name]->rollBack();
 		}
@@ -583,4 +583,12 @@ class InValue {
 		return $this->value;
 	}
 
+}
+
+class DBRouteException extends Exception{
+
+    public function __construct($message) {
+        $this->message = $message;
+    }
+	
 }
