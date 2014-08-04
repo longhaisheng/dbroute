@@ -251,8 +251,16 @@ class cls_dbroute {
 		}
 	}
 
+	private function isSingleDb(){//如果分库后是单库多表
+		return $this->is_single_db;
+	}
+	
+	private function getDbConnnection($db_name){//如果分库后是单库多表
+		return $this->connections[$db_name];
+	}
+	
 	private function getSingleConn(){//如果分库后是单库多表
-		if($this->is_single_db){
+		if($this->isSingleDb()){
 			foreach ($this->connections as $conn) {
 				return $conn;
 			}
@@ -268,7 +276,7 @@ class cls_dbroute {
 	public function insert($sql, $params = array(), $return_insert_id = true) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->insert($decorate['sql'],$decorate['params'],$return_insert_id);
+		return $this->getDbConnnection($db_name)->insert($decorate['sql'],$decorate['params'],$return_insert_id);
 	}
 
 	/**
@@ -280,7 +288,7 @@ class cls_dbroute {
 	public function update($sql, $params = array(), $return_affected_rows = true) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->update($decorate['sql'],$decorate['params'],$return_affected_rows);
+		return $this->getDbConnnection($db_name)->update($decorate['sql'],$decorate['params'],$return_affected_rows);
 	}
 
 	/**
@@ -292,7 +300,7 @@ class cls_dbroute {
 	public function delete($sql, $params = array(), $return_affected_rows = true) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->delete($decorate['sql'],$decorate['params'],$return_affected_rows);
+		return $this->getDbConnnection($db_name)->delete($decorate['sql'],$decorate['params'],$return_affected_rows);
 	}
 
 	/**
@@ -306,7 +314,7 @@ class cls_dbroute {
 	public function batchExecutes($sql, $batch_params = array(),$logic_params=array(), $batch_num = 20) {
 		$decorate=$this->decorate($sql,$logic_params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->batchExecutes($decorate['sql'],$batch_params,$batch_num);
+		return $this->getDbConnnection($db_name)->batchExecutes($decorate['sql'],$batch_params,$batch_num);
 	}
 
 	/**
@@ -317,7 +325,7 @@ class cls_dbroute {
 	public function getAll($sql, $params = array()) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->getAll($decorate['sql'],$decorate['params']);
+		return $this->getDbConnnection($db_name)->getAll($decorate['sql'],$decorate['params']);
 	}
 
 	/**
@@ -328,7 +336,7 @@ class cls_dbroute {
 	public function getRow($sql, $params = array()) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->getRow($decorate['sql'],$decorate['params']);
+		return $this->getDbConnnection($db_name)->getRow($decorate['sql'],$decorate['params']);
 	}
 
 	/**
@@ -340,7 +348,7 @@ class cls_dbroute {
 	public function getOne($sql, $params = array()) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->getOne($decorate['sql'],$decorate['params']);
+		return $this->getDbConnnection($db_name)->getOne($decorate['sql'],$decorate['params']);
 	}
 
 	/**
@@ -351,7 +359,7 @@ class cls_dbroute {
 	public function getColumn($sql, $params = array()) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
-		return $this->connections[$db_name]->getColumn($decorate['sql'],$decorate['params']);
+		return $this->getDbConnnection($db_name)->getColumn($decorate['sql'],$decorate['params']);
 	}
 
 	/**
@@ -424,7 +432,6 @@ class cls_dbroute {
 		}
 
 		$merge_result=array();
-		$logic_col=$this->getLogicColumn();
 		foreach ($in_value_arrays as $mod=>$val){
 			$new_sql=str_ireplace("#".$this->select_in_logic_column."#", implode (',',array_values($val)),$sql);
 			$table_name=$this->getTableName($mod);
@@ -436,7 +443,7 @@ class cls_dbroute {
 			$new_sql=substr_replace($new_sql," ".$table_name." ",$first_pos,strlen(" ".$logic_table." "));
 				
 			$db_name=$this->getDbName($mod);
-			$result=$this->connections[$db_name]->getAll($new_sql,$in_params[$mod]);
+			$result=$this->getDbConnnection($db_name)->getAll($new_sql,$in_params[$mod]);
 			if($result){
 				foreach ($result as $row){
 					$merge_result[]=$row;
@@ -480,7 +487,7 @@ class cls_dbroute {
 			throw DBRouteException("error params ,it must not have key ".$logic_col);
 		}
 
-		if($this->is_single_db){
+		if($this->isSingleDb()){
 			$tables=array();
 			$total_table_num=$this->getTableTotalNum();
 			for ($i=0;$i<$total_table_num;$i++){
@@ -495,7 +502,7 @@ class cls_dbroute {
 			$db=$this->getDbName($mod);
 			$this->setDBConn($db);
 			$new_sql=$this->getNewSql($sql,$mod);
-			$result=$this->connections[$db]->getAll($new_sql,$params);
+			$result=$this->getDbConnnection($db)->getAll($new_sql,$params);
 			if($result){
 				foreach ($result as $row){
 					$merge_result[]=$row;
@@ -519,34 +526,45 @@ class cls_dbroute {
 			return array();
 		}
 	}
+	
+	public function getConnection($params=array()){//用于分表的表与不分表的表共用同一个数据库链接，一般在事务中可能用到
+		$logic_col=$this->getLogicColumn();
+		if(!isset($params[$logic_col])){
+			throw DBRouteException("error params ,it must have key ".$logic_col);
+		}
+		$id=$params[$logic_col];
+		$mod=$this->getMod($id);
+		$db_name=$this->getDbName($mod);
+		return $this->getDbConnnection($db_name);
+	}
 
 	public function begin($params = array()) {
-		if($this->is_single_db){
+		if($this->isSingleDb()){
 			$this->getSingleConn()->begin();
 		}else{
 			if(empty($params)) throw DBRouteException('请传递参数');
 			$db_name=$this->setConnection($params);
-			$this->connections[$db_name]->begin();
+			$this->getDbConnnection($db_name)->begin();
 		}
 	}
 
 	public function commit($params = array()) {
-		if($this->is_single_db){
+		if($this->isSingleDb()){
 			$this->getSingleConn()->commit();
 		}else{
 			if(empty($params)) throw DBRouteException('请传递参数');
 			$db_name=$this->setConnection($params);
-			$this->connections[$db_name]->commit();
+			$this->getDbConnnection($db_name)->commit();
 		}
 	}
 
 	public function rollBack($params = array()) {
-		if($this->is_single_db){
+		if($this->isSingleDb()){
 			$this->getSingleConn()->rollBack();
 		}else{
 			if(empty($params)) throw DBRouteException('请传递参数');
 			$db_name=$this->setConnection($params);
-			$this->connections[$db_name]->rollBack();
+			$this->getDbConnnection($db_name)->rollBack();
 		}
 	}
 
