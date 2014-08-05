@@ -13,14 +13,20 @@ class cls_pdosqlexecute implements cls_idb
     /** 此次操作是否有事务 */
 	private $this_operation_have_transaction=false;
 
-    public function __construct($db_name, $config = array())
+	/**
+	 * @param string $db_name  数据库名 
+	 * @param ay $db_route_config 分库分表配置
+	 */
+    public function __construct($db_name='', $db_route_config = array())
     {
         if (!$this->connect_array) {
-            global $mysql_db_route_array;
-            $this->connect_array = $config
-                                        ? $config
-                                        : $mysql_db_route_array;
-            $this->connect_array['db'] = $db_name;
+            global $default_config_array;
+            $this->connect_array = $db_route_config
+                                        ? $db_route_config
+                                        : $default_config_array;
+            if($db_name){
+            	$this->connect_array['db'] = $db_name;
+            }
         }
         if (!$this->has_read_db) {
             $this->has_read_db = isset($this->connect_array['read_db_hosts']);

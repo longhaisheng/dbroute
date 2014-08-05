@@ -9,13 +9,13 @@ define("DB_PORT", 3306);
 define("SEQUENCE_DEFAULT_STEP", 1000);//序列步长
 define("TRANSACTION_READ_MASTER", true);//事务中 select 是否读主库
 
-/************sequence配置*****************/
-$sequence_config_array=array();
-$sequence_config_array['host']=DB_HOST;//db_host
-$sequence_config_array['user_name']=DB_USER_NAME;//db username
-$sequence_config_array['pass_word']=DB_PASSWORD;//db pwd
-$sequence_config_array['db']=DB_NAME;//db 
-$sequence_config_array['port']=DB_PORT;//db port
+/************sequence表及未分库的表配置*****************/
+$default_config_array=array();
+$default_config_array['host']=DB_HOST;//db_host
+$default_config_array['user_name']=DB_USER_NAME;//db username
+$default_config_array['pass_word']=DB_PASSWORD;//db pwd
+$default_config_array['db']=DB_NAME;//db 
+$default_config_array['port']=DB_PORT;//db port
 /*****************************/
 
 /***************order库表配置**************/

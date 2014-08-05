@@ -535,6 +535,7 @@ class cls_dbroute {
 		$id=$params[$logic_col];
 		$mod=$this->getMod($id);
 		$db_name=$this->getDbName($mod);
+		$this->setDBConn($db_name);
 		return $this->getDbConnnection($db_name);
 	}
 

@@ -10,8 +10,8 @@ class cls_sequence{
 	private $retry_time=100;
 
 	public function __construct(){
-		global $sequence_config_array;
-		$this->mysqli=new cls_sqlexecute($sequence_config_array['db'],$sequence_config_array);
+		global $default_config_array;
+		$this->mysqli=new cls_sqlexecute($default_config_array['db'],$default_config_array);
 		if(defined('SEQUENCE_DEFAULT_STEP')){//序列递增步长
 			$this->default_step = SEQUENCE_DEFAULT_STEP;
 		}

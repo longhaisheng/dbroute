@@ -1,21 +1,27 @@
 <?php
 header("Content-Type: text/html; charset=utf-8");
 require(dirname(__FILE__) . '/includes/init.php');
+require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 
-//$sql="select id from order where user_id=:user_id0";
-//$s=stristr($sql, ":"."user_id0");
-//echo $s;
+//$order=new OrderModel();
+///$id=$order->insert();
+//echo "insert<br>";
+//print_r($id);
 //die;
-
-
-//echo stristr("Hello user_id_0,user_id_1!","user_id_0");
-
+$ao=new OrderAO();
+$ao->testTransaction(10);
+die;
+$cityModel=new CityModel();
+print_r($cityModel->getAllCity());
+die;
 $mop=new cls_sequence();
 //$num=$mop->nextValue('user');
 //echo $num."<br>";
 //die;
 
 $order=new OrderModel();
+//$order->transactionTest();
+//die;
 
 $result=$order->queryAllByIn();
 print_r($result);

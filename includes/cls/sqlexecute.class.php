@@ -20,15 +20,21 @@ class cls_sqlexecute implements cls_idb{
 	/** 此次操作是否有事务 */
 	private $this_operation_have_transaction=false;
 
-	public function __construct($db_name,$default_config_array=array()) {
+	/**
+	 * @param string $db_name  数据库名 
+	 * @param ay $db_route_config 分库分表配置数组
+	 */
+	public function __construct($db_name='',$db_route_config=array()) {
 		if(empty($this->connect_array)){
-			global $mysql_db_route_array;
-			if($default_config_array){
-				$this->connect_array=$default_config_array;
+			global $default_config_array;
+			if($db_route_config){
+				$this->connect_array=$db_route_config;
 			}else{
-				$this->connect_array=$mysql_db_route_array;
+				$this->connect_array=$default_config_array;
 			}
-			$this->connect_array['db']=$db_name;
+			if($db_name){
+				$this->connect_array['db']=$db_name;
+			}
 		}
 		if(isset($this->connect_array['read_db_hosts'])){
 			$this->has_read_db=true;
