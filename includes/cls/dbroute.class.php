@@ -528,6 +528,9 @@ class cls_dbroute {
 	}
 	
 	public function getConnection($params=array()){//用于分表的表与不分表的表共用同一个数据库链接，一般在事务中可能用到
+		if($this->isSingleDb()){
+			return $this->getSingleConn();
+		}
 		$logic_col=$this->getLogicColumn();
 		if(!isset($params[$logic_col])){
 			throw DBRouteException("error params ,it must have key ".$logic_col);
