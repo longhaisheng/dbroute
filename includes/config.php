@@ -1,7 +1,7 @@
 <?php
 define("MYSQL_EXTEND", 'mysqli');//操作数据方式：值为 mysqli | mysql_pdo 推荐使用mysqli方式操作
+define("IS_DEBUG", false);//调试模式,生产环境配置为false
 
-define("IS_DEBUG", true);//调试模式,生产环境配置为false
 define("DB_NAME", 'sooch');
 define("DB_USER_NAME", 'root');
 define("DB_PASSWORD", '123456');
@@ -10,16 +10,16 @@ define("DB_PORT", 3306);
 define("SEQUENCE_DEFAULT_STEP", 1000);//序列步长
 define("TRANSACTION_READ_MASTER", true);//事务中 select 是否读主库
 
-/************sequence表及未分库的表配置************************************************************************/
+/************sequence表及未分库的表配置*****************************************************************************************************/
 $default_config_array=array();
 $default_config_array['host']=DB_HOST;//db_host
 $default_config_array['user_name']=DB_USER_NAME;//db username
 $default_config_array['pass_word']=DB_PASSWORD;//db pwd
 $default_config_array['db']=DB_NAME;//db 
 $default_config_array['port']=DB_PORT;//db port
-/**********************************************************************************************************/
+/***************************************************************************************************************************************/
 
-/***************order库表配置  单库****************************************************************************/
+/***************order库表配置  单库*********************************************************************************************************/
 $mysql_db_route_array=array();
 $mysql_db_route_array['host']=DB_HOST;//db_host
 $mysql_db_route_array['user_name']=DB_USER_NAME;//db username
@@ -41,9 +41,9 @@ $mysql_db_route_array['db_hosts']=$db_host_array;//每个实库存放在哪个ho
 $db_read_host_array=array();
 $db_read_host_array['mmall']=DB_HOST;
 $mysql_db_route_array['read_db_hosts']=$db_read_host_array;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
-/**********************************************************************************************************/
+/***************************************************************************************************************************************/
 
-/***************order库表配置(多库)**************/
+/***************order库表配置(多库)********************************************************************************************************/
 $mysql_db_route_array_two=array();
 $mysql_db_route_array_two['host']=DB_HOST;//db_host
 $mysql_db_route_array_two['user_name']=DB_USER_NAME;//db username
@@ -79,9 +79,9 @@ $db_read_host_array['mmall_0005']=DB_HOST;
 $db_read_host_array['mmall_0006']=DB_HOST;
 $db_read_host_array['mmall_0007']=DB_HOST;
 $mysql_db_route_array_two['read_db_hosts']=$db_read_host_array;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
-/**********************************************************************************************************/
+/**************************************************************************************************************************************/
 
-/***************order_goods库表配置(多库)**************/
+/***************order_goods库表配置(多库)*************************************************************************************************/
 $mysql_db_route_goods_array=array();
 $mysql_db_route_goods_array['host']=DB_HOST;//db_host
 $mysql_db_route_goods_array['user_name']=DB_USER_NAME;//db username
@@ -117,4 +117,4 @@ $db_goods_read_host_array['mmall_0005']=DB_HOST;
 $db_goods_read_host_array['mmall_0006']=DB_HOST;
 $db_goods_read_host_array['mmall_0007']=DB_HOST;
 $mysql_db_route_goods_array['read_db_hosts']=$db_goods_read_host_array;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
-/**********************************************************************************************************/
+/******************************************************************************************************************************************/
