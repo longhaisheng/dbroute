@@ -43,6 +43,9 @@ class cls_dbroute {
 	/** 默认使用mysqli扩展*/
 	private $use_mysqli_extend=true;
 
+	/** 是否为调试模式*/
+	private $is_debug=false;
+
 	public function __construct($default_db_route_array=array()){
 		global $mysql_db_route_array;
 		if($default_db_route_array){
@@ -60,6 +63,9 @@ class cls_dbroute {
 		$this->table_total_num=$this->config_array['table_total_num'];
 		$this->one_db_table_num=$this->config_array['one_db_table_num'];
 		$this->select_in_logic_column=$this->config_array['select_in_logic_column'];
+		if(defined("IS_DEBUG")){
+			$this->is_debug=IS_DEBUG;
+		}
 		$this->init();
 	}
 
@@ -71,7 +77,9 @@ class cls_dbroute {
 		}
 
 		$db_total_num=$this->getDbTotalNum();
-		$list=array();
+		if($this->is_debug){
+			$list=array();
+		}
 		$mod=$this->getTableTotalNum() % $this->getOneDbTableNum();
 		$num=0;
 		for($i=0;$i<$db_total_num;$i++){
@@ -81,7 +89,7 @@ class cls_dbroute {
 			$tables=array();
 			for ($j=$crea;$j<$crea_two;$j++){
 				$tables[]=$this->getTableName($j);
-				if($this->is_single_db){
+				if($this->isSingleDb()){
 					$this->table_dbs[0]=$i;
 				}else{
 					$this->table_dbs[$j]=$i;//key为表的数字下缀，value为数据库数字下缀（下缀大于等于零）
@@ -90,15 +98,26 @@ class cls_dbroute {
 			if($mod && $num==$db_total_num){
 				$tables= array_slice($tables,0, $mod);
 			}
-			$db_key=substr_replace($this->getDbPrefix(),$i,strlen($this->getDbPrefix())-strlen($i));
-			$list[$db_key]=$tables;
+			if($this->is_debug){
+				if($this->isSingleDb()) {//单库
+					$prefix=explode("_", $this->getDbPrefix());
+					$db_key = $prefix[0];
+				}else{
+					$db_key=substr_replace($this->getDbPrefix(),$i,strlen($this->getDbPrefix())-strlen($i));
+				}
+				$list[$db_key]=$tables;
+			}
 		}
-		return $list;
+		if($this->is_debug){
+			print_r($list);//调试用
+		}
 	}
 
 	private function getDbName($mod){
-		if($this->is_single_db) {//单库
+		if($this->isSingleDb()) {//单库
 			$mod=0;
+			$prefix=explode("_", $this->getDbPrefix());
+			return $prefix[0];
 		}
 		$line=$this->table_dbs[$mod];
 		return substr_replace($this->getDbPrefix(),$line,strlen($this->getDbPrefix())-strlen($line));
@@ -239,13 +258,13 @@ class cls_dbroute {
 				if($this->getUseMysqliExtend()){
 					$this->connections[$db]=new cls_sqlexecute($db);
 				}else{
-                    $this->connections[$db]=new cls_pdosqlexecute($db);
+					$this->connections[$db]=new cls_pdosqlexecute($db);
 				}
 			}else{
 				if($this->getUseMysqliExtend()){
 					$this->connections[$db]=new cls_sqlexecute($db,$this->config_array);
 				}else{
-                    $this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
+					$this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
 				}
 			}
 		}
@@ -254,11 +273,11 @@ class cls_dbroute {
 	private function isSingleDb(){//如果分库后是单库多表
 		return $this->is_single_db;
 	}
-	
+
 	private function getDbConnnection($db_name){//如果分库后是单库多表
 		return $this->connections[$db_name];
 	}
-	
+
 	private function getSingleConn(){//如果分库后是单库多表
 		if($this->isSingleDb()){
 			foreach ($this->connections as $conn) {
@@ -441,7 +460,7 @@ class cls_dbroute {
 				throw DBRouteException("error sql in ".$sql);
 			}
 			$new_sql=substr_replace($new_sql," ".$table_name." ",$first_pos,strlen(" ".$logic_table." "));
-				
+
 			$db_name=$this->getDbName($mod);
 			$result=$this->getDbConnnection($db_name)->getAll($new_sql,$in_params[$mod]);
 			if($result){
@@ -526,7 +545,7 @@ class cls_dbroute {
 			return array();
 		}
 	}
-	
+
 	public function getConnection($params=array()){//用于分表的表与不分表的表共用同一个数据库链接，一般在事务中可能用到
 		$db_name=$this->setConnection($params);
 		if($this->isSingleDb()){
@@ -602,8 +621,8 @@ class InValue {
 
 class DBRouteException extends Exception{
 
-    public function __construct($message) {
-        $this->message = $message;
-    }
-	
+	public function __construct($message) {
+		$this->message = $message;
+	}
+
 }
