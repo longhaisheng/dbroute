@@ -26,6 +26,14 @@ class OrderModel {
 		return $params['id'];
 	}
 
+	public function deractor_insert($user_id=10){
+		$sql="insert order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
+		$params['id']=$this->sequence->nextValue('order');
+		$params['order_sn']='abc';
+		$params['user_id']=$user_id;
+		return $this->dbroute->decorate($sql,$params);
+	}
+
 	public function getAll($user_id=10){
 		$sql="select id,order_sn,user_id,add_time,modify_time from order where user_id=#user_id# ";
 		$params['user_id']=$user_id;

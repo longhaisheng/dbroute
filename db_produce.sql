@@ -6,8 +6,9 @@ DROP PROCEDURE IF EXISTS `seperateDb`$$
 CREATE PROCEDURE `seperateDb`()
   BEGIN
 
-    DECLARE Db_Prefix VARCHAR(20) DEFAULT 'db_order_';
+    DECLARE Db_Prefix VARCHAR(20) DEFAULT 'mmall_';
     DECLARE Table_Prefix VARCHAR(20) DEFAULT 'order_';
+    DECLARE Goods_Table_Prefix VARCHAR(20) DEFAULT 'order_goods_';
     SET @db_num = 8;/**数据库数目**/
     SET @table_num = 128;/**每个库里的表数目**/
     SET @db_count = 0;
@@ -35,7 +36,20 @@ CREATE PROCEDURE `seperateDb`()
 	modify_time datetime
     )
 ');
+
+        SET @create_order_goodsTableSql = CONCAT('
+   create table ', Db_Prefix, @x, '.', Goods_Table_Prefix, @y, ' (
+	id int(11) PRIMARY KEY,
+	order_id int(11),
+	goods_id int(11),
+	user_id int(11),
+	add_time datetime,
+	modify_time datetime
+    )
+');
         PREPARE stmt FROM @createTableSql;
+		EXECUTE stmt;
+		PREPARE stmt FROM @create_order_goodsTableSql;
         EXECUTE stmt;
         SET @table_count = @table_count + 1;
         SET @j = @j + 1;
@@ -50,6 +64,7 @@ CREATE PROCEDURE `seperateDb`()
 
 DELIMITER ;
 CALL seperateDb();
+
 
 /*****************分库分表结束***********************/
 

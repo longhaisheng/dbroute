@@ -188,7 +188,7 @@ class cls_dbroute {
 	 * @param string $sql 'select order_id,order_sn from order where user_id=#user_id# '
 	 * @param array $params 只能为一唯数组，并且包括分表的列名 array('user_id'=>100)
 	 */
-	private function decorate($sql,$params=array()){
+	public function decorate($sql,$params=array()){
 		$logic_col=$this->getLogicColumn();
 		if(!isset($params[$logic_col])){
 			throw DBRouteException("error params ,it must have key ".$logic_col);
@@ -528,17 +528,10 @@ class cls_dbroute {
 	}
 	
 	public function getConnection($params=array()){//用于分表的表与不分表的表共用同一个数据库链接，一般在事务中可能用到
+		$db_name=$this->setConnection($params);
 		if($this->isSingleDb()){
 			return $this->getSingleConn();
 		}
-		$logic_col=$this->getLogicColumn();
-		if(!isset($params[$logic_col])){
-			throw DBRouteException("error params ,it must have key ".$logic_col);
-		}
-		$id=$params[$logic_col];
-		$mod=$this->getMod($id);
-		$db_name=$this->getDbName($mod);
-		$this->setDBConn($db_name);
 		return $this->getDbConnnection($db_name);
 	}
 
