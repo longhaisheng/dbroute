@@ -249,7 +249,7 @@ class cls_sqlexecute implements cls_idb{
 		if(defined("TRANSACTION_READ_MASTER")){
 			$transaction_read_master=TRANSACTION_READ_MASTER;
 		}
-		
+		$read_conn=false;
 		if($this->this_operation_have_transaction && $transaction_read_master){//有事务操作并且事务中select配置成操作主库,事务中select查询走主库
 			$this->init();
 			$stmt = $this->connection->prepare($result['sql']);
@@ -257,6 +257,7 @@ class cls_sqlexecute implements cls_idb{
 			if($this->has_read_db && (stristr($sql, "select ") || stristr($sql, "SELECT ")) ){//有读库配置并且是 select 查询 走读库
 				$this->init_read_connection();
 				$stmt = $this->read_connection->prepare($result['sql']);
+				$read_conn=true;
 			}else{
 				$this->init();
 				$stmt = $this->connection->prepare($result['sql']);
@@ -272,11 +273,11 @@ class cls_sqlexecute implements cls_idb{
 		if ($stmt->execute()) {
 			return $stmt;
 		} else {
-			throw new Exception("Error in : " . mysqli_error($this->connection));
 			if($stmt!=null){
 				$stmt->close();
 			}
-			return 0;
+			$error_msg=$read_conn?mysqli_error($this->read_connection):mysqli_error($this->connection);
+			throw new Exception("Error in : " . $error_msg);
 		}
 	}
 
