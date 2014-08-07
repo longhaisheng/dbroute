@@ -22,7 +22,7 @@ class OrderAO{
 			$city=$this->cityModel->getCityById($city_id);//事务里的代码读操作可配置 优先读主库,详见config
 			if($city){
 				$is_update=$this->cityModel->updateCityById($city_id);
-				$insert_id=$this->ordergooModel->insert($user_id);
+				$insert_id=$this->orderModel->insert($user_id);
 			}
 
 			$connection->commit();

@@ -292,7 +292,7 @@ class cls_dbroute {
 	 * @param bool $return_insert_id
 	 * @return int
 	 */
-	public function insert($sql, $params = array(), $return_insert_id = true) {
+	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate=$this->decorate($sql,$params);
 		$db_name=$decorate['db_name'];
 		return $this->getDbConnnection($db_name)->insert($decorate['sql'],$decorate['params'],$return_insert_id);
