@@ -88,7 +88,7 @@ $mysql_db_route_goods_array['user_name']=DB_USER_NAME;//db username
 $mysql_db_route_goods_array['pass_word']=DB_PASSWORD;//db pwd
 $mysql_db_route_goods_array['port']=DB_PORT;//db port
 
-$mysql_db_route_goods_array['db_prefix']="mmall_0000";//数据库前缀，生成类似mmall_0001、mmall_0001...mmall_1023
+$mysql_db_route_goods_array['db_prefix']="mmall_0000";//数据库前缀，生成类似mmall_0000、mmall_0001...mmall_1023
 $mysql_db_route_goods_array['table_prefix']="order_goods_0000";//表名前缀，生成类似order_goods_0000、order_goods_0001...order_goods_1023
 $mysql_db_route_goods_array['logic_table']="order_goods";//逻辑表名
 $mysql_db_route_goods_array['logic_column']="user_id";//分表的列，执行sql语句时，要传递此参数

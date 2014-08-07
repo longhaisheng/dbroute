@@ -1,5 +1,6 @@
 <?php
 class cls_pdosqlexecute implements cls_idb{
+	
 	private $connection;
 
 	private $read_connection;
@@ -42,10 +43,10 @@ class cls_pdosqlexecute implements cls_idb{
 			$stmt->execute($condition['params']);
 			return $stmt;
 		} catch (PDOException $e) {
-			echo "Error in : " . $e->getMessage();
 			if ($stmt) {
 				$stmt->closeCursor();
 			}
+			throw new Exception( "Error in : " . $e->getMessage());
 			return null;
 		}
 	}
@@ -122,7 +123,7 @@ class cls_pdosqlexecute implements cls_idb{
 			);
 			return $connection;
 		} catch (PDOException $e) {
-			echo "Database Connect Error : " . $e->getMessage();
+			throw new Exception( "Database Connect Error : " . $e->getMessage());
 		}
 	}
 
@@ -135,21 +136,21 @@ class cls_pdosqlexecute implements cls_idb{
 
 	public function begin($params = array()){
 		$this->getMasterConnection();
-		$this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 0);
+		$this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
 		$this->this_operation_have_transaction=true;
 		return $this->connection->beginTransaction();
 	}
 
 	public function commit($params = array()){
 		$return = $this->connection->commit();
-		$this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
+		$this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
 		$this->this_operation_have_transaction=false;
 		return $return;
 	}
 
 	public function rollBack($params = array()){
 		$return = $this->connection->rollBack();
-		$this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
+		$this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
 		$this->this_operation_have_transaction=false;
 		return $return;
 	}
@@ -163,9 +164,6 @@ class cls_pdosqlexecute implements cls_idb{
 	 */
 	public function insert($sql, $params = array(), $return_insert_id = true){
 		$stmt = $this->query($sql, $params);
-		if (!$stmt) {
-			return;
-		}
 		$insertId = $return_insert_id? $stmt->lastInsertId: 0;
 		$stmt->closeCursor();
 
