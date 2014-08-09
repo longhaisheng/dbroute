@@ -49,6 +49,18 @@ class cls_dbroute {
 	/** 是否为调试模式*/
 	private $is_debug=false;
 
+    private $logic_column_field_type;
+
+    private  function setLogicColumnFieldType($logic_column_field_type)
+    {
+        $this->logic_column_field_type = $logic_column_field_type;
+    }
+
+    private function getLogicColumnFieldType()
+    {
+        return $this->logic_column_field_type;
+    }
+
 	public function __construct($db_route_array=array()){
 		global $default_config_array;
 		if($db_route_array){
@@ -66,6 +78,7 @@ class cls_dbroute {
 			$this->table_total_num=$this->config_array['table_total_num'];
 			$this->one_db_table_num=$this->config_array['one_db_table_num'];
 			$this->select_in_logic_column=$this->config_array['select_in_logic_column'];
+			$this->logic_column_field_type=$this->config_array['logic_column_field_type'];
 			if(defined("IS_DEBUG")){
 				$this->is_debug=IS_DEBUG;
 			}
@@ -137,7 +150,7 @@ class cls_dbroute {
 		return substr_replace($this->getDbPrefix(),$line,strlen($this->getDbPrefix())-strlen($line));
 	}
 
-	private function getTableName($mod){
+	public function getTableName($mod){
 		return substr_replace($this->getTablePrefix(),$mod,strlen($this->getTablePrefix())-strlen($mod));
 	}
 
@@ -232,6 +245,15 @@ class cls_dbroute {
 		return $this->use_mysqli_extend;
 	}
 
+    public static function strToIntKey($str){
+        $len=strlen($str);
+        $total=0;
+        for($i=0;$i<$len;$i++){
+            $c=ord(substr($str, $i,1));
+            $total=$total+$c;
+        }
+        return $total;
+    }
 	/**
 	 *
 	 * @param string $sql 'select order_id,order_sn from order where user_id=#user_id# '
@@ -245,7 +267,11 @@ class cls_dbroute {
 			if(!isset($params[$logic_col])){
 				throw new DBRouteException("error params ,it must have key ".$logic_col);
 			}
-			$id=$params[$logic_col];
+            if($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType()=='string'){
+                $id=self::strToIntKey($params[$logic_col]);
+            }else{
+                $id=$params[$logic_col];
+            }
 			$mod=$this->getMod($id);
 			$db=$this->getDbName($mod);
 
@@ -283,7 +309,11 @@ class cls_dbroute {
 			if(!isset($params[$logic_col])){
 				throw new DBRouteException("error params ,it must have key ".$logic_col);
 			}
-			$id=$params[$logic_col];
+            if($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType()=='string'){
+                $id=self::strToIntKey($params[$logic_col]);
+            }else{
+                $id=$params[$logic_col];
+            }
 			$mod=$this->getMod($id);
 			$db=$this->getDbName($mod);
 		}else{
@@ -457,7 +487,11 @@ class cls_dbroute {
 		$array=array();
 		foreach ($in_param_arr as $key=>$value){
 			$in=new InValue();
-			$mod=$this->getMod($value);
+            if($this->getLogicColumnFieldType()=='string' &&is_string($value)){
+                $mod=$this->getMod(self::strToIntKey($value));
+            }else{
+                $mod=$this->getMod($value);
+            }
 			$in->setMod($mod);
 			$in->setValue($value);
 			$db=$this->getDbName($mod);

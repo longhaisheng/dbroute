@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * 此类是针对 订单表(order)的分表数据库操作类，分表的逻辑列字段为 user_id,逻辑表名为order,in查询字段参数为user_ids
+ * 此类是针对 订单表(order)的分表数据库操作类，分表的逻辑列字段为 user_id,逻辑表名为sc_order,in查询字段参数为user_ids
  * @author longhaisheng
  *
  */
@@ -78,7 +78,7 @@ class OrderModel extends BaseModel{
 		$user_id=10;
 		$tx_params=array('user_id'=>$user_id);
 		$connection=$this->dbroute->getConnection($tx_params);
-		$users=$connection->getAll("select id,user_name from user where id=#user_id#",$tx_params);
+		$city_list=$connection->getAll("select id,city_name,city_code from city where id=1 ");
 		try{
 			$this->dbroute->begin($tx_params);
 
