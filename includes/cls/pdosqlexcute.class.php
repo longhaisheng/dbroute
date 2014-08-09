@@ -10,7 +10,7 @@ class cls_pdosqlexcute implements cls_idb
 
     private $has_read_db = false;
 
-    public function __construct($db_name)
+    public function __construct($db_name='')
     {
         if (!$this->connect_array) {
             global $mysql_db_route_array;

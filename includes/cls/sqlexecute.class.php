@@ -19,12 +19,15 @@ class cls_sqlexecute implements cls_idb{
 	
 	/** 此次操作是否有事务 */
 	private $this_operation_have_transaction=false;
+	
+	/** 存储数据库连接单例类数组,key为DB名称 */
+    private static $single_instance_list=array();
 
 	/**
 	 * @param string $db_name  数据库名 
 	 * @param ay $db_route_config 分库分表配置数组
 	 */
-	public function __construct($db_name='',$db_route_config=array()) {
+	private function __construct($db_name='',$db_route_config=array()) {
 		if(empty($this->connect_array)){
 			global $default_config_array;
 			if($db_route_config){
@@ -40,6 +43,20 @@ class cls_sqlexecute implements cls_idb{
 			$this->has_read_db=true;
 		}
 	}
+
+    public static function getInstance($db_name='',$db_route_config=array()){
+            global $default_config_array;
+            if(empty($db_name)){
+                $db_name=$default_config_array['db'];
+            }
+            if (isset(self::$single_instance_list[$db_name])){
+                return self::$single_instance_list[$db_name];
+            }else {
+                self::$single_instance_list[$db_name] = new self($db_name,$db_route_config);
+                return self::$single_instance_list[$db_name];
+            }
+    }
+
 
 	private function init(){
 		if ($this->connection === null) {
@@ -263,6 +280,7 @@ class cls_sqlexecute implements cls_idb{
 				$stmt = $this->connection->prepare($result['sql']);
 			}
 		}
+
 		if(!$stmt){
 			throw new Exception("error sql in ".$sql);
 		}

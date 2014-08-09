@@ -12,11 +12,14 @@ class cls_pdosqlexecute implements cls_idb{
 	/** 此次操作是否有事务 */
 	private $this_operation_have_transaction=false;
 
+	/** 存储数据库连接单例类数组,key为DB名称 */
+    private static $single_instance_list=array();
+    
 	/**
 	 * @param string $db_name  数据库名
 	 * @param ay $db_route_config 分库分表配置
 	 */
-	public function __construct($db_name='', $db_route_config = array()){
+	private function __construct($db_name='', $db_route_config = array()){
 		if (!$this->connect_array) {
 			global $default_config_array;
 			$this->connect_array = $db_route_config? $db_route_config : $default_config_array;
@@ -28,6 +31,19 @@ class cls_pdosqlexecute implements cls_idb{
 			$this->has_read_db = isset($this->connect_array['read_db_hosts']);
 		}
 	}
+	
+    public static function getInstance($db_name='',$db_route_config=array()){
+            global $default_config_array;
+            if(empty($db_name)){
+                $db_name=$default_config_array['db'];
+            }
+            if (isset(self::$single_instance_list[$db_name])){
+                return self::$single_instance_list[$db_name];
+            }else {
+                self::$single_instance_list[$db_name] = new self($db_name,$db_route_config);
+                return self::$single_instance_list[$db_name];
+            }
+    }
 
 	public function getAll($sql, $params = array()){
 		$stmt = $this->query($sql, $params);

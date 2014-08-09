@@ -7,11 +7,6 @@ include (ROOT_PATH . 'includes/base/autoload.class.php');
 date_default_timezone_set('PRC');
 autoloader::init();
 
-if(defined("MYSQL_EXTEND") && MYSQL_EXTEND == 'mysql_pdo'){
-	$db_mysqli=new cls_pdosqlexecute();
-}else{
-	$db_mysqli=new cls_sqlexecute();
-}
-
+$default_oprater_dbroute=new cls_dbroute($default_config_array);
 ob_start();
 ?>

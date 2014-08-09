@@ -11,7 +11,11 @@ class cls_sequence{
 
 	public function __construct(){
 		global $default_config_array;
-		$this->mysqli=new cls_sqlexecute($default_config_array['db'],$default_config_array);
+		if(defined("MYSQL_EXTEND") && MYSQL_EXTEND == 'mysql_pdo'){
+			$this->mysqli=cls_pdosqlexecute::getInstance($default_config_array['db'],$default_config_array);
+		}else{
+			$this->mysqli=cls_sqlexecute::getInstance($default_config_array['db'],$default_config_array);
+		}
 		if(defined('SEQUENCE_DEFAULT_STEP')){//序列递增步长
 			$this->default_step = SEQUENCE_DEFAULT_STEP;
 		}

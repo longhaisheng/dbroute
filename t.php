@@ -3,36 +3,35 @@ header("Content-Type: text/html; charset=utf-8");
 require(dirname(__FILE__) . '/includes/init.php');
 require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 
+
 //$order=new OrderModel();
-///$id=$order->insert();
+//$id=$order->getAll(10);
 //echo "insert<br>";
 //print_r($id);
+
 //die;
 //$order_goods=new OrderGoodsModel();
 //$id=$order_goods->insert();
 //print_r($id);
 //die();
 $ao=new OrderAO();
-$ao->testTransactionTwo(10);
+$ao->testTransaction(10);
 die;
 $cityModel=new CityModel();
-print_r($cityModel->getAllCity());
-die;
+//print_r($cityModel->getAllCity());
+//die;
 $mop=new cls_sequence();
 //$num=$mop->nextValue('user');
 //echo $num."<br>";
 //die;
 
 $order=new OrderModel();
-//$order->transactionTest();
-//die;
+$order->transactionTest();
 
-$result=$order->queryAllByIn();
-print_r($result);
-die;
+//$result=$order->queryAllByIn();
+//print_r($result);
 $res=$order->queryAll();
 print_r($res);
-die;
 
 $result=$order->getAll();
 echo "getAll<br>";

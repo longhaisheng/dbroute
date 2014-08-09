@@ -5,20 +5,18 @@
  * @author longhaisheng
  *
  */
-class OrderModel {
+class OrderModel extends BaseModel{
 
 	private $sequence;
 
-	private $dbroute;
-
 	public function __construct(){
-		global $mysql_db_route_array_two;//分表的配置数组，在config.php中，此处可传不同的配置数组
+		global $order_dbroute_single_config;//分表的配置数组，在config.php中，此处可传不同的配置数组
 		$this->sequence=new cls_sequence();
-		$this->dbroute=new cls_dbroute($mysql_db_route_array_two);
+		$this->dbroute=new cls_dbroute($order_dbroute_single_config);
 	}
 
 	public function insert($user_id=10){
-		$sql="insert order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
+		$sql="insert sc_order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
 		$params['id']=$this->sequence->nextValue('order');
 		$params['order_sn']='abc';
 		$params['user_id']=$user_id;
@@ -26,43 +24,35 @@ class OrderModel {
 		return $params['id'];
 	}
 
-	public function deractor_insert($user_id=10){
-		$sql="insert order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
-		$params['id']=$this->sequence->nextValue('order');
-		$params['order_sn']='abc';
-		$params['user_id']=$user_id;
-		return $this->dbroute->decorate($sql,$params);
-	}
-
 	public function getAll($user_id=10){
-		$sql="select id,order_sn,user_id,add_time,modify_time from order where user_id=#user_id# ";
+		$sql="select id,order_sn,user_id,add_time,modify_time from sc_order where user_id=#user_id# ";
 		$params['user_id']=$user_id;
 		return $this->dbroute->getAll($sql,$params);
 	}
 
 	public function getRow($id){
-		$sql="select id,order_sn,user_id,add_time,modify_time from order where id=#id# and user_id=#user_id# ";
+		$sql="select id,order_sn,user_id,add_time,modify_time from sc_order where id=#id# and user_id=#user_id# ";
 		$params['id']=$id;
 		$params['user_id']=10;
 		return $this->dbroute->getRow($sql,$params);
 	}
 
 	public function getOne($id){
-		$sql="select order_sn from order where id=#id# and user_id=#user_id# ";
+		$sql="select order_sn from sc_order where id=#id# and user_id=#user_id# ";
 		$params['id']=$id;
 		$params['user_id']=10;
 		return $this->dbroute->getOne($sql,$params);
 	}
 
 	public function delete($id,$user_id){
-		$sql="delete from order where id=#id# and user_id=#user_id# ";
+		$sql="delete from sc_order where id=#id# and user_id=#user_id# ";
 		$params['id']=$id;
 		$params['user_id']=$user_id;
 		return $this->dbroute->delete($sql,$params);
 	}
 
 	public function update($id,$user_id){
-		$sql="update order set order_sn=#order_sn# where id=#id# and user_id=#user_id# ";
+		$sql="update sc_order set order_sn=#order_sn# where id=#id# and user_id=#user_id# ";
 		$params['id']=$id;
 		$params['order_sn']="1234a";
 		$params['user_id']=$user_id;
@@ -70,7 +60,7 @@ class OrderModel {
 	}
 
 	public function queryAll(){//遍历所有库表，不建议使用
-		$sql="select order_sn,add_time,user_id from order where id>#id# order by id desc ";
+		$sql="select order_sn,add_time,user_id from sc_order where id>#id# order by id desc ";
 		$params['id']=0;
 		return $this->dbroute->queryResultFromAllDbTables($sql,$params);
 	}
@@ -81,18 +71,18 @@ class OrderModel {
 		$params['sort_filed']='id';
 		$params['sort_order']='desc';
 		$params['user_ids']=array(1,1025,2,1026,2049,10);
-		return $this->dbroute->selectByIn("select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) order by id desc limit 0,20",$params);
+		return $this->dbroute->selectByIn("select id,user_id,order_sn,add_time from sc_order where id>#id# and user_id in(#user_ids#) order by id desc limit 0,20",$params);
 	}
 
 	public function transactionTest(){//事务测试
 		$user_id=10;
 		$tx_params=array('user_id'=>$user_id);
 		$connection=$this->dbroute->getConnection($tx_params);
-		$users=$connection->getAll("select user_id,user_name from user where id=#user_id#",$tx_params);
+		$users=$connection->getAll("select id,user_name from user where id=#user_id#",$tx_params);
 		try{
 			$this->dbroute->begin($tx_params);
 
-			$sql="insert order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
+			$sql="insert sc_order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
 			$params=array();
 			$params['id']=$this->sequence->nextValue('order');
 			$params['order_sn']='abc';
@@ -100,7 +90,7 @@ class OrderModel {
 			$this->dbroute->insert($sql,$params);
 			$id=$params['id'];
 
-			$update_sql="update order set order_sn=#order_sn# where id=#id# and #user_id# ";
+			$update_sql="update sc_order set order_sn=#order_sn# where id=#id# and #user_id# ";
 			$params=array();
 			$params['id']=$id;
 			$params['order_sn']='bcd';

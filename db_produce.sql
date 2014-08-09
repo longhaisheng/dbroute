@@ -9,8 +9,8 @@ CREATE PROCEDURE `seperateDb`()
     DECLARE Db_Prefix VARCHAR(20) DEFAULT 'mmall_';
     DECLARE Table_Prefix VARCHAR(20) DEFAULT 'order_';
     DECLARE Goods_Table_Prefix VARCHAR(20) DEFAULT 'order_goods_';
-    SET @db_num = 8;/**数据库数目**/
-    SET @table_num = 128;/**每个库里的表数目**/
+    SET @db_num = 1;/**数据库数目**/
+    SET @table_num = 64;/**每个库里的表数目**/
     SET @db_count = 0;
     SET @table_count = 0;
     SET @i = 10000;
@@ -18,17 +18,24 @@ CREATE PROCEDURE `seperateDb`()
 
 
     WHILE @db_count < @db_num DO
+
       SET @x = RIGHT(@i, 4);
-      SET @createDbSql = CONCAT(
-          'CREATE DATABASE ', Db_Prefix, @x, ' DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci'
-      );
+	  if  @db_num=1 then
+		SET @db_name=REPLACE(Db_Prefix, '_', '');
+		SET @createDbSql = CONCAT(
+          'CREATE DATABASE ', @db_name, ' DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ');
+	   else
+		SET @db_name=CONCAT(Db_Prefix, @x);
+		SET @createDbSql = CONCAT(
+		  'CREATE DATABASE ', @db_name, ' DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci');
+      end if;
       PREPARE stml FROM @createDbSql;
       EXECUTE stml;
 
       WHILE @table_count < @table_num DO
         SET @y = RIGHT(@j, 4);
         SET @createTableSql = CONCAT('
-    create table ', Db_Prefix, @x, '.', Table_Prefix, @y, ' (
+    create table ', @db_name, '.', Table_Prefix, @y, ' (
 	id int(11) PRIMARY KEY,
 	order_sn varchar(10),
 	user_id int(11),
@@ -38,7 +45,7 @@ CREATE PROCEDURE `seperateDb`()
 ');
 
         SET @create_order_goodsTableSql = CONCAT('
-   create table ', Db_Prefix, @x, '.', Goods_Table_Prefix, @y, ' (
+   create table ', @db_name, '.', Goods_Table_Prefix, @y, ' (
 	id int(11) PRIMARY KEY,
 	order_id int(11),
 	goods_id int(11),
@@ -64,6 +71,7 @@ CREATE PROCEDURE `seperateDb`()
 
 DELIMITER ;
 CALL seperateDb();
+
 
 
 /*****************分库分表结束***********************/
@@ -101,5 +109,23 @@ CREATE TABLE `city` (
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `index_parent_id` (`parent_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=268 DEFAULT CHARSET=utf8 COMMENT='省市区表'$$
+
+delimiter $$
+
+/***********以下是未分库的表，测试事务使用*****************/
+CREATE TABLE `user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_name` varchar(45) DEFAULT NULL COMMENT '用户名',
+  `password` varchar(45) DEFAULT NULL COMMENT '密码',
+  `address` varchar(45) DEFAULT NULL COMMENT '地址',
+  `is_delete` int(11) DEFAULT NULL COMMENT '是否删除',
+  `gmt_create` datetime DEFAULT NULL COMMENT '创建时间',
+  `gmt_modified` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `index_user_name` (`user_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=268 DEFAULT CHARSET=utf8 COMMENT='用户表'$$
+
+
 
 

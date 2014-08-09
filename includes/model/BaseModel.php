@@ -2,23 +2,19 @@
 abstract class BaseModel {
 
 	/** 数据库连接对象*/
-	private $mysql;
-
-	function __construct($mysqli=null) {
-		if($mysqli){
-			$this->mysql=$mysqli;
-		}else{
-			global $db_mysqli;
-			$this->mysql=$db_mysqli;
-		}
+	protected $dbroute;
+	
+	function __construct() {
+		global $default_oprater_dbroute;
+		$this->setDbroute($default_oprater_dbroute);
 	}
 
-	public function setMysql($db_link){
-		$this->mysql=$db_link;
+	public function setDbroute($dbroute) {
+		$this->dbroute = $dbroute;
 	}
 
-	public function getMysql(){
-		return $this->mysql;
+	public function getDbroute() {
+		return $this->dbroute;
 	}
 
 }

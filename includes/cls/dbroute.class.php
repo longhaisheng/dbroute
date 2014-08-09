@@ -16,7 +16,10 @@ class cls_dbroute {
 	/** 每个数据库里的表数 */
 	private $one_db_table_num;
 
-	/** 每个table存在于哪个数据库中 */
+	/** 每个db存在于哪些表,key为库,value为库中所有表(数组) */
+	private $db_tables=array();
+
+	/** 每个表存在于哪些库中,key为表,value为库(字符串) */
 	private $table_dbs=array();
 
 	/** 逻辑表名 */
@@ -46,36 +49,41 @@ class cls_dbroute {
 	/** 是否为调试模式*/
 	private $is_debug=false;
 
-	public function __construct($default_db_route_array=array()){
-		global $mysql_db_route_array;
-		if($default_db_route_array){
-			$this->config_array=$default_db_route_array;
+	public function __construct($db_route_array=array()){
+		global $default_config_array;
+		if($db_route_array){
+			$this->config_array=$db_route_array;
 			$this->use_default_config=false;
 		}else{
+			$this->config_array=$default_config_array;
 			$this->use_default_config=true;
-			$this->config_array=$mysql_db_route_array;
 		}
-
-		$this->db_prefix=$this->config_array['db_prefix'];
-		$this->table_prefix=$this->config_array['table_prefix'];
-		$this->logic_table=$this->config_array['logic_table'];
-		$this->logic_column=$this->config_array['logic_column'];
-		$this->table_total_num=$this->config_array['table_total_num'];
-		$this->one_db_table_num=$this->config_array['one_db_table_num'];
-		$this->select_in_logic_column=$this->config_array['select_in_logic_column'];
-		if(defined("IS_DEBUG")){
-			$this->is_debug=IS_DEBUG;
+		if(isset($this->config_array['logic_table']) && isset($this->config_array['logic_column'])){
+			$this->db_prefix=$this->config_array['db_prefix'];
+			$this->table_prefix=$this->config_array['table_prefix'];
+			$this->logic_table=$this->config_array['logic_table'];
+			$this->logic_column=$this->config_array['logic_column'];
+			$this->table_total_num=$this->config_array['table_total_num'];
+			$this->one_db_table_num=$this->config_array['one_db_table_num'];
+			$this->select_in_logic_column=$this->config_array['select_in_logic_column'];
+			if(defined("IS_DEBUG")){
+				$this->is_debug=IS_DEBUG;
+			}
+			if($this->getOneDbTableNum()==$this->getTableTotalNum()){
+				$this->is_single_db=true;//单库
+			}else{
+				$this->is_single_db=false;//多库
+			}
+			$list=cls_shmop::readArray("init_logic_".$this->logic_table);
+			if($list){
+				$this->db_tables=$list;
+			}else{
+				$this->init();
+			}
 		}
-		$this->init();
 	}
 
 	private function init(){
-		if($this->getOneDbTableNum()==$this->getTableTotalNum()){
-			$this->is_single_db=true;//单库
-		}else{
-			$this->is_single_db=false;//多库
-		}
-
 		$db_total_num=$this->getDbTotalNum();
 		if($this->is_debug){
 			$list=array();
@@ -90,26 +98,32 @@ class cls_dbroute {
 			for ($j=$crea;$j<$crea_two;$j++){
 				$tables[]=$this->getTableName($j);
 				if($this->isSingleDb()){
-					$this->table_dbs[0]=$i;
+					$this->db_tables[0]=$i;
 				}else{
-					$this->table_dbs[$j]=$i;//key为表的数字下缀，value为数据库数字下缀（下缀大于等于零）
+					$this->db_tables[$j]=$i;//key为表的数字下缀，value为数据库数字下缀（下缀大于等于零）
 				}
 			}
 			if($mod && $num==$db_total_num){
 				$tables= array_slice($tables,0, $mod);
 			}
-			if($this->is_debug){
-				if($this->isSingleDb()) {//单库
-					$prefix=explode("_", $this->getDbPrefix());
-					$db_key = $prefix[0];
-				}else{
-					$db_key=substr_replace($this->getDbPrefix(),$i,strlen($this->getDbPrefix())-strlen($i));
-				}
-				$list[$db_key]=$tables;
+			if($this->isSingleDb()) {//单库
+				$prefix=explode("_", $this->getDbPrefix());
+				$db_key = $prefix[0];
+			}else{
+				$db_key=substr_replace($this->getDbPrefix(),$i,strlen($this->getDbPrefix())-strlen($i));
 			}
+			$list[$db_key]=$tables;
 		}
+
+		cls_shmop::writeArray("init_logic_".$this->logic_table,$this->db_tables);
 		if($this->is_debug){
-			print_r($list);//调试用
+			foreach ($list as $key=>$val){
+				foreach ($val as $tab){
+					$this->table_dbs[$tab]=$key;
+				}
+			}
+			print_r($list);
+			print_r($this->table_dbs);
 		}
 	}
 
@@ -119,7 +133,7 @@ class cls_dbroute {
 			$prefix=explode("_", $this->getDbPrefix());
 			return $prefix[0];
 		}
-		$line=$this->table_dbs[$mod];
+		$line=$this->db_tables[$mod];
 		return substr_replace($this->getDbPrefix(),$line,strlen($this->getDbPrefix())-strlen($line));
 	}
 
@@ -187,6 +201,22 @@ class cls_dbroute {
 		return $this->logic_table;
 	}
 
+	private function setDbTables($db_tables) {
+		$this->db_tables = $db_tables;
+	}
+
+	private function getDbTables() {
+		return $this->db_tables;
+	}
+
+	private function setTableDbs($table_dbs) {
+		$this->table_dbs = $table_dbs;
+	}
+
+	private function getTableDbs() {
+		return $this->table_dbs;
+	}
+
 	private function setUseMysqliExtend() {
 		if(defined("MYSQL_EXTEND")){
 			if(MYSQL_EXTEND=='mysqli'){
@@ -208,17 +238,25 @@ class cls_dbroute {
 	 * @param array $params 只能为一唯数组，并且包括分表的列名 array('user_id'=>100)
 	 */
 	public function decorate($sql,$params=array()){
-		$logic_col=$this->getLogicColumn();
-		if(!isset($params[$logic_col])){
-			throw new DBRouteException("error params ,it must have key ".$logic_col);
-		}
-		$id=$params[$logic_col];
-		$mod=$this->getMod($id);
-		$db=$this->getDbName($mod);
+		$logicTable=$this->getLogicTable();
+		$db=null;
+		if($logicTable){
+			$logic_col=$this->getLogicColumn();
+			if(!isset($params[$logic_col])){
+				throw new DBRouteException("error params ,it must have key ".$logic_col);
+			}
+			$id=$params[$logic_col];
+			$mod=$this->getMod($id);
+			$db=$this->getDbName($mod);
 
-		$array['sql']=$this->getNewSql($sql,$mod);
+			$array['sql']=$this->getNewSql($sql,$mod);
+			$array['db_name']=$db;
+		}else{
+			$array['sql']=$sql;
+			$array['db_name']=$this->config_array['db'];
+			$db=$this->config_array['db'];
+		}
 		$array['params']=$params;
-		$array['db_name']=$db;
 		$this->setDBConn($db);
 		return $array;
 	}
@@ -235,37 +273,33 @@ class cls_dbroute {
 	}
 
 	private function setConnection($params=array()){
-		if(empty($params)){
-			return ;
+		$logicTable=$this->getLogicTable();
+		$db=null;
+		if($logicTable){
+			if(empty($params)){
+				return ;
+			}
+			$logic_col=$this->getLogicColumn();
+			if(!isset($params[$logic_col])){
+				throw new DBRouteException("error params ,it must have key ".$logic_col);
+			}
+			$id=$params[$logic_col];
+			$mod=$this->getMod($id);
+			$db=$this->getDbName($mod);
+		}else{
+			$db=$this->config_array['db'];
 		}
-		$logic_col=$this->getLogicColumn();
-		if(!isset($params[$logic_col])){
-			throw new DBRouteException("error params ,it must have key ".$logic_col);
-		}
-		$id=$params[$logic_col];
-		$mod=$this->getMod($id);
-		$db=$this->getDbName($mod);
 		$this->setDBConn($db);
 		return $db;
 	}
 
 	private function setDBConn($db){
 		$this->setUseMysqliExtend();
-		if(isset($this->connections[$db])){
-
-		}else{//不存在则新创建一个连接
-			if($this->use_default_config){
-				if($this->getUseMysqliExtend()){
-					$this->connections[$db]=new cls_sqlexecute($db);
-				}else{
-					$this->connections[$db]=new cls_pdosqlexecute($db);
-				}
+		if(!isset($this->connections[$db])){//不存在则新创建一个连接
+			if($this->getUseMysqliExtend()){
+				$this->connections[$db]=cls_sqlexecute::getInstance($db,$this->config_array);
 			}else{
-				if($this->getUseMysqliExtend()){
-					$this->connections[$db]=new cls_sqlexecute($db,$this->config_array);
-				}else{
-					$this->connections[$db]=new cls_pdosqlexecute($db,$this->config_array);
-				}
+				$this->connections[$db]=cls_pdosqlexecute::getInstance($db,$this->config_array);
 			}
 		}
 	}
@@ -388,6 +422,10 @@ class cls_dbroute {
 	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
 	 */
 	public function selectByIn($sql,$params=array()){
+		$logicTable=$this->getLogicTable();
+		if(!$logicTable){
+			return ;
+		}
 		if(!isset($params[$this->select_in_logic_column])){
 			throw new DBRouteException("select in 条件参数key名为".$this->select_in_logic_column."");
 		}
@@ -493,6 +531,10 @@ class cls_dbroute {
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
 	 */
 	public function queryResultFromAllDbTables($sql,$params=array()){
+		$logicTable=$this->getLogicTable();
+		if(!$logicTable){
+			return ;
+		}
 		$size=isset($params['size'])?$params['size']:20;
 		$sort_filed=isset($params['sort_filed'])?$params['sort_filed']:'';
 		$sort_order=isset($params['sort_order'])?$params['sort_order']:1;
@@ -513,7 +555,7 @@ class cls_dbroute {
 				$tables[$i]=$i;
 			}
 		}else{
-			$tables=array_keys($this->table_dbs);
+			$tables=array_keys($this->db_tables);
 		}
 
 		$merge_result=array();
@@ -555,11 +597,11 @@ class cls_dbroute {
 	}
 
 	public function begin($params = array()) {
+		$db_name=$this->setConnection($params);
 		if($this->isSingleDb()){
 			$this->getSingleConn()->begin();
 		}else{
 			if(empty($params)) throw new DBRouteException('请传递参数');
-			$db_name=$this->setConnection($params);
 			$this->getDbConnnection($db_name)->begin();
 		}
 	}
