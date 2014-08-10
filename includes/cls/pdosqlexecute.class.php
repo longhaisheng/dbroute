@@ -150,21 +150,21 @@ class cls_pdosqlexecute implements cls_idb {
         return $this->connection;
     }
 
-    public function begin($params = array()) {
+    public function begin() {
         $this->getMasterConnection();
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
         $this->this_operation_have_transaction = true;
         return $this->connection->beginTransaction();
     }
 
-    public function commit($params = array()) {
+    public function commit() {
         $return = $this->connection->commit();
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
         $this->this_operation_have_transaction = false;
         return $return;
     }
 
-    public function rollBack($params = array()) {
+    public function rollBack() {
         $return = $this->connection->rollBack();
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
         $this->this_operation_have_transaction = false;

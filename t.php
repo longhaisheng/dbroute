@@ -14,50 +14,50 @@ require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 //$id=$order_goods->insert();
 //print_r($id);
 //die();
-$ao=new OrderAO();
+$ao = new OrderAO();
 $ao->testTransaction(10);
 die;
-$cityModel=new CityModel();
+$cityModel = new CityModel();
 //print_r($cityModel->getAllCity());
 //die;
-$mop=new cls_sequence();
+$mop = new cls_sequence();
 //$num=$mop->nextValue('user');
 //echo $num."<br>";
 //die;
 
-$order=new OrderModel();
+$order = new OrderModel();
 $order->transactionTest();
 
 //$result=$order->queryAllByIn();
 //print_r($result);
-$res=$order->queryAll();
+$res = $order->queryAll();
 print_r($res);
 
-$result=$order->getAll();
+$result = $order->getAll();
 echo "getAll<br>";
 print_r($result);
 
-$res=$order->queryAll();
+$res = $order->queryAll();
 echo "queryAll<br>";
 print_r($res);
 
-$id=$order->insert();
+$id = $order->insert();
 echo "insert<br>";
 print_r($id);
 
-$result=$order->getRow(599);
+$result = $order->getRow(599);
 echo "getRow<br>";
 print_r($result);
 
-$result=$order->getOne(1);
+$result = $order->getOne(1);
 echo "getOne<br>";
 print_r($result);
 
-$result=$order->delete(583,10);
+$result = $order->delete(583, 10);
 echo "delete<br>";
 print_r($result);
 
-$result=$order->update(584,10);
+$result = $order->update(584, 10);
 echo "update<br>";
 print_r($result);
 

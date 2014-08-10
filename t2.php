@@ -4,7 +4,7 @@ require(dirname(__FILE__) . '/includes/init.php');
 require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 
 
-$userModel=new UserModel();
+$userModel = new UserModel();
 //print_r($userModel->insert());
 //print_r($userModel->getRow('abc291901'));
 //print_r($userModel->getOne('abc291901'));

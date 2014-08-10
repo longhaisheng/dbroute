@@ -37,11 +37,11 @@ $sc_order_dbroute_single_config['table_total_num'] = 64; //总表数
 $sc_order_dbroute_single_config['one_db_table_num'] = 64; //每个库里存放的表数
 
 $master_db_host_array = array();
-$master_db_host_array['mmall'] = DB_HOST;//key为数据库名，value为数据库所在的host,此value只能配置一个IP
+$master_db_host_array['mmall'] = DB_HOST; //key为数据库名，value为数据库所在的host,此value只能配置一个IP
 $sc_order_dbroute_single_config['db_hosts'] = $master_db_host_array; //每个主库存放在哪个host
 
 $slave_read_host_array = array();
-$slave_read_host_array['mmall'] = DB_HOST . "," . DB_HOST;//key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
+$slave_read_host_array['mmall'] = DB_HOST . "," . DB_HOST; //key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
 $sc_order_dbroute_single_config['read_db_hosts'] = $slave_read_host_array; //dbroute根据key为‘read_db_hosts’是否设置了值 判断是否有读写分离配置
 /***************************************************************************************************************************************/
 
@@ -62,11 +62,11 @@ $sc_order_goods_dbroute_single_config['table_total_num'] = 64; //总表数
 $sc_order_goods_dbroute_single_config['one_db_table_num'] = 64; //每个库里存放的表数
 
 $master_sc_order_goods_dbs = array();
-$master_sc_order_goods_dbs['mmall'] = DB_HOST;//key为数据库名，value为主库所在的host，此value只能配置一个IP
+$master_sc_order_goods_dbs['mmall'] = DB_HOST; //key为数据库名，value为主库所在的host，此value只能配置一个IP
 $sc_order_goods_dbroute_single_config['db_hosts'] = $master_sc_order_goods_dbs; //每个主库存放在哪个host
 
 $slave_sc_order_goods_dbs = array();
-$slave_sc_order_goods_dbs['mmall'] = DB_HOST . "," . DB_HOST;//key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
+$slave_sc_order_goods_dbs['mmall'] = DB_HOST . "," . DB_HOST; //key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
 $sc_order_goods_dbroute_single_config['read_db_hosts'] = $slave_sc_order_goods_dbs; //dbroute根据key为‘read_db_hosts’是否设置了值 判断是否有读写分离配置
 /******************************************************************************************************************************************/
 
@@ -87,7 +87,7 @@ $user_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $user_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数
 
 $master_sc_user_multiple_dbs = array();
-$master_sc_user_multiple_dbs['mmall_0000'] = DB_HOST;//key为数据库名，value为数据库所在的host，此value只能配置一个IP
+$master_sc_user_multiple_dbs['mmall_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP
 $master_sc_user_multiple_dbs['mmall_0001'] = DB_HOST;
 $master_sc_user_multiple_dbs['mmall_0002'] = DB_HOST;
 $master_sc_user_multiple_dbs['mmall_0003'] = DB_HOST;
@@ -118,14 +118,14 @@ $sc_refund_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $sc_refund_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数
 
 $master_sc_refund_multiple_dbs = array();
-$master_sc_refund_multiple_dbs['sc_refund_0000'] = DB_HOST;//key为数据库名，value为数据库所在的host，此value只能配置一个IP
+$master_sc_refund_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP
 $master_sc_refund_multiple_dbs['sc_refund_0001'] = DB_HOST;
 $master_sc_refund_multiple_dbs['sc_refund_0002'] = DB_HOST;
 $master_sc_refund_multiple_dbs['sc_refund_0003'] = DB_HOST;
 $sc_refund_multiple_dbroute_config['db_hosts'] = $master_sc_refund_multiple_dbs; //每个主库存放在哪个host
 
 $slave_sc_refund__multiple_dbs = array();
-$slave_sc_refund__multiple_dbs['sc_refund_0000'] = DB_HOST . "," . DB_HOST;//key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
+$slave_sc_refund__multiple_dbs['sc_refund_0000'] = DB_HOST . "," . DB_HOST; //key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
 $slave_sc_refund__multiple_dbs['sc_refund_0001'] = DB_HOST . "," . DB_HOST;
 $slave_sc_refund__multiple_dbs['sc_refund_0002'] = DB_HOST . "," . DB_HOST;
 $slave_sc_refund__multiple_dbs['sc_refund_0003'] = DB_HOST . "," . DB_HOST;
@@ -149,14 +149,14 @@ $sc_refund_info_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $sc_refund_info_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数
 
 $master_sc_refund_info_multiple_dbs = array();
-$master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST;//key为数据库名，value为数据库所在的host，此value只能配置一个IP
+$master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP
 $master_sc_refund_info_multiple_dbs['sc_refund_0001'] = DB_HOST;
 $master_sc_refund_info_multiple_dbs['sc_refund_0002'] = DB_HOST;
 $master_sc_refund_info_multiple_dbs['sc_refund_0003'] = DB_HOST;
 $sc_refund_info_multiple_dbroute_config['db_hosts'] = $master_sc_refund_info_multiple_dbs; //每个主库存放在哪个host
 
 $slave_sc_refund_info_multiple_dbs = array();
-$slave_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST . "," . DB_HOST;//key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
+$slave_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST . "," . DB_HOST; //key为数据库名，value为slave库所在的host列表，多台用英文半角逗号分隔开，系统随机读其中一台，如果下面read_db_hosts配置了
 $slave_sc_refund_info_multiple_dbs['sc_refund_0001'] = DB_HOST . "," . DB_HOST;
 $slave_sc_refund_info_multiple_dbs['sc_refund_0002'] = DB_HOST . "," . DB_HOST;
 $slave_sc_refund_info_multiple_dbs['sc_refund_0003'] = DB_HOST . "," . DB_HOST;
