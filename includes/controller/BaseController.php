@@ -1,8 +1,8 @@
 <?php
-class BaseController{
-	
-	public function __construct(){	
-		
-	}	
-	
+class BaseController {
+
+    public function __construct() {
+
+    }
+
 }
