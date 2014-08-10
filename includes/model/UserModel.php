@@ -10,15 +10,18 @@ class UserModel extends BaseModel
 
     private $sequence;
 
+    private $table_total_num;
+
     public function __construct()
     {
         global $user_multiple_dbroute_config; //分表的配置数组，在config.php中，此处可传不同的配置数组
         $this->sequence = new cls_sequence();
         $this->dbroute = new cls_dbroute($user_multiple_dbroute_config);
+        $this->table_total_num=$user_multiple_dbroute_config['table_total_num'];
     }
 
-    public function getUserNameIntValue($user_name){
-        return cls_dbroute::strToIntKey($user_name)%64;
+    public function getUserNameIntValue($user_name){//根据用户名返回表名后缀下标
+        return cls_dbroute::strToIntKey($user_name)%$this->table_total_num;
     }
 
     public function insert()
@@ -29,7 +32,7 @@ class UserModel extends BaseModel
         $params['user_name'] = 'abc'.rand(1,1000000);
         $params['pwd'] = 'pwd' . rand(1, 10000);
         $this->dbroute->insert($sql, $params);
-        return cls_dbroute::strToIntKey($params['user_name']);
+        return $params['user_name'];
     }
 
     public function getAll($user_name)
@@ -98,9 +101,9 @@ class UserModel extends BaseModel
         try {
             $this->dbroute->begin($tx_params);
             $user = $this->getRow($user_name);
-            $id=0;
+            $user_name=null;
             if (!$user) {
-                $id = $this->insert();
+                $user_name = $this->insert();
                 $update_sql = "update sc_user set pwd=#new_pwd# where  user_name=#user_name# ";
                 $params = array();
                 $params['user_name'] = $user_name;
@@ -108,7 +111,7 @@ class UserModel extends BaseModel
                 $this->dbroute->update($update_sql, $params);
             }
             $this->dbroute->commit($tx_params);
-            return $id;
+            return $user_name;
         } catch (Exception $e) {
             echo $e->getMessage();
             $this->dbroute->rollBack($tx_params);
