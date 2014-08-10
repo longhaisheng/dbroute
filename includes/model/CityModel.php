@@ -1,11 +1,8 @@
 <?php
 class CityModel extends BaseModel{//单表
 
-	private $sequence;
-
 	public function __construct(){
 		parent::__construct();
-		$this->sequence=new cls_sequence();
 	}
 
 	public function insert(){
