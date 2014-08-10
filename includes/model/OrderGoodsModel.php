@@ -4,9 +4,9 @@ class OrderGoodsModel extends BaseModel { //单库多表
     private $sequence;
 
     public function __construct() {
-        global $order_goods_dbroute_single_config; //分表的配置数组，在config.php中，此处可传不同的配置数组
+        global $sc_order_goods_dbroute_single_config; //分表的配置数组，在config.php中，此处可传不同的配置数组
         $this->sequence = new cls_sequence();
-        $this->dbroute = new cls_dbroute($order_goods_dbroute_single_config);
+        $this->dbroute = new cls_dbroute($sc_order_goods_dbroute_single_config);
     }
 
     public function insert($user_id = 10) {

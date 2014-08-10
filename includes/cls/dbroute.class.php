@@ -144,7 +144,6 @@ class cls_dbroute {
 
     private function getDbName($mod) {
         if ($this->isSingleDb()) { //单库
-            $mod = 0;
             $prefix = explode("_", $this->getDbPrefix());
             return $prefix[0];
         }
