@@ -5,7 +5,7 @@
  * @author longhaisheng
  *
  */
-class OrderModel extends BaseModel{
+class OrderModel extends BaseModel{//单库多表
 
 	private $sequence;
 

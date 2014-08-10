@@ -46,9 +46,10 @@ class cls_dbroute {
 	/** 默认使用mysqli扩展*/
 	private $use_mysqli_extend=true;
 
-	/** 是否为调试模式*/
-	private $is_debug=false;
+    /** 是否为调试模式*/
+    private $is_debug=false;
 
+    /** 逻辑字段值类型*/
     private $logic_column_field_type;
 
     private  function setLogicColumnFieldType($logic_column_field_type)

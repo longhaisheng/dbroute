@@ -1,5 +1,5 @@
 <?php
-class CityModel extends BaseModel{
+class CityModel extends BaseModel{//单表
 
 	private $sequence;
 

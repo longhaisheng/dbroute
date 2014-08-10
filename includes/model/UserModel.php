@@ -1,12 +1,12 @@
 <?php
 /**
  *
- * 此类是针对 订单表(order)的分表数据库操作类，分表的逻辑列字段为 id,逻辑表名为sc_user,in查询字段参数为ids
+ * 此类是针对 用户表(user)的分表数据库操作类，分表的逻辑列字段为 user_name,用户名唯一,逻辑表名为sc_user,in查询字段参数为user_names
  * @author longhaisheng
  *
  */
 class UserModel extends BaseModel
-{
+{//多库多表
 
     private $sequence;
 

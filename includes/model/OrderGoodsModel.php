@@ -1,5 +1,5 @@
 <?php
-class OrderGoodsModel extends BaseModel{
+class OrderGoodsModel extends BaseModel{//单库多表
 
 	private $sequence;
 	

@@ -1,11 +1,11 @@
 <?php
 /**
  *
- * 此类是针对 订单表(order)的分表数据库操作类，分表的逻辑列字段为 user_id,逻辑表名为sc_order,in查询字段参数为user_ids
+ * 此类是针对 退款单详情表(sc_refund_info)的分表数据库操作类，分表的逻辑列字段为 user_id,逻辑表名为sc_refund_info,in查询字段参数为user_ids
  * @author longhaisheng
  *
  */
-class RefundInfoModel extends BaseModel{
+class RefundInfoModel extends BaseModel{//多库多表
 
 	private $sequence;
 

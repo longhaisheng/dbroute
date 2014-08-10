@@ -11,7 +11,8 @@ class RefundAO{
         $this->refundInfoModel=new RefundInfoModel();//分库分表类
     }
 
-    public function testTransaction($user_id){//逻辑表(refund、refund_info)分表规则想同,都根據user_id切分，事务生效
+    /**逻辑表(refund、refund_info)分表规则相同,且是多库多表，都根據user_id切分，事务生效*/
+    public function testTransaction($user_id){
         $tx_params=array('user_id'=>$user_id);
         try{
             $this->refundModel->getDbroute()->begin($tx_params);
