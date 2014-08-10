@@ -13,7 +13,7 @@ class OrderAO{
 		$this->cityModel=new CityModel();//未分库分表类
 	}
 
-	public function testTransaction($user_id){//逻辑表(order_goods、order)在同一个库中,根據user_id切分
+	public function testTransaction($user_id){//逻辑表(order_goods、order)（单库多表），分表规则相同,都根據user_id切分，支持事务
 		$tx_params=array('user_id'=>$user_id);
 		try{
 			$this->orderModel->getDbroute()->begin($tx_params);

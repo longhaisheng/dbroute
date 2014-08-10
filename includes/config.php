@@ -99,32 +99,63 @@ $slave_customer_multiple_dbs['mmall_0003']=DB_HOST.",".DB_HOST;
 $user_multiple_dbroute_config['read_db_hosts']=$slave_customer_multiple_dbs;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
 /**************************************************************************************************************************************/
 
-/***************用户地址库表配置(多库)*************************************************************************************************/
-$user_address_multiple_dbroute_config=array();
-$user_address_multiple_dbroute_config['host']=DB_HOST;//db_host
-$user_address_multiple_dbroute_config['user_name']=DB_USER_NAME;//db username
-$user_address_multiple_dbroute_config['pass_word']=DB_PASSWORD;//db pwd
-$user_address_multiple_dbroute_config['port']=DB_PORT;//db port
+/***************用户退款库表配置(多库)*************************************************************************************************/
+$sc_refund_multiple_dbroute_config=array();
+$sc_refund_multiple_dbroute_config['host']=DB_HOST;//db_host
+$sc_refund_multiple_dbroute_config['user_name']=DB_USER_NAME;//db username
+$sc_refund_multiple_dbroute_config['pass_word']=DB_PASSWORD;//db pwd
+$sc_refund_multiple_dbroute_config['port']=DB_PORT;//db port
 
-$user_address_multiple_dbroute_config['db_prefix']="mmall_0000";//数据库前缀，生成类似mmall_0000、mmall_0001...mmall_1023
-$user_address_multiple_dbroute_config['table_prefix']="user_address_0000";//表名前缀，生成类似order_goods_0000、order_goods_0001...order_goods_1023
-$user_address_multiple_dbroute_config['logic_table']="sc_user_address";//逻辑表名
-$user_address_multiple_dbroute_config['logic_column']="user_id";//分表的列，执行sql语句时，要传递此参数
-$user_address_multiple_dbroute_config['select_in_logic_column']="user_ids";//select in 查询时时的参数key名
-$user_address_multiple_dbroute_config['table_total_num']=64;//总表数
-$user_address_multiple_dbroute_config['one_db_table_num']=16;//每个库里存放的表数
+$sc_refund_multiple_dbroute_config['db_prefix']="sc_refund_0000";//数据库前缀，生成类似mmall_0000、mmall_0001...mmall_1023
+$sc_refund_multiple_dbroute_config['table_prefix']="refund_0000";//表名前缀，生成类似order_goods_0000、order_goods_0001...order_goods_1023
+$sc_refund_multiple_dbroute_config['logic_table']="sc_refund";//逻辑表名
+$sc_refund_multiple_dbroute_config['logic_column']="user_id";//分表的列，执行sql语句时，要传递此参数
+$sc_refund_multiple_dbroute_config['select_in_logic_column']="user_ids";//select in 查询时时的参数key名
+$sc_refund_multiple_dbroute_config['table_total_num']=64;//总表数
+$sc_refund_multiple_dbroute_config['one_db_table_num']=16;//每个库里存放的表数
 
-$db_goods_host_array=array();
-$db_goods_host_array['mmall_0000']=DB_HOST;
-$db_goods_host_array['mmall_0001']=DB_HOST;
-$db_goods_host_array['mmall_0002']=DB_HOST;
-$db_goods_host_array['mmall_0003']=DB_HOST;
-$user_address_multiple_dbroute_config['db_hosts']=$db_goods_host_array;//每个库存放在哪个host
+$db_refund_host_array=array();
+$db_refund_host_array['sc_refund_0000']=DB_HOST;
+$db_refund_host_array['sc_refund_0001']=DB_HOST;
+$db_refund_host_array['sc_refund_0002']=DB_HOST;
+$db_refund_host_array['sc_refund_0003']=DB_HOST;
+$sc_refund_multiple_dbroute_config['db_hosts']=$db_refund_host_array;//每个库存放在哪个host
 
-$db_goods_read_host_array=array();
-$db_goods_read_host_array['mmall_0000']=DB_HOST.",".DB_HOST;
-$db_goods_read_host_array['mmall_0001']=DB_HOST.",".DB_HOST;
-$db_goods_read_host_array['mmall_0002']=DB_HOST.",".DB_HOST;
-$db_goods_read_host_array['mmall_0003']=DB_HOST.",".DB_HOST;
-$user_address_multiple_dbroute_config['read_db_hosts']=$db_goods_read_host_array;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
+$db_refund_read_host_array=array();
+$db_refund_read_host_array['sc_refund_0000']=DB_HOST.",".DB_HOST;
+$db_refund_read_host_array['sc_refund_0001']=DB_HOST.",".DB_HOST;
+$db_refund_read_host_array['sc_refund_0002']=DB_HOST.",".DB_HOST;
+$db_refund_read_host_array['sc_refund_0003']=DB_HOST.",".DB_HOST;
+$sc_refund_multiple_dbroute_config['read_db_hosts']=$db_refund_read_host_array;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
 /******************************************************************************************************************************************/
+
+/***************用户退款详情库表配置(多库)*************************************************************************************************/
+$sc_refund_info_multiple_dbroute_config=array();
+$sc_refund_info_multiple_dbroute_config['host']=DB_HOST;//db_host
+$sc_refund_info_multiple_dbroute_config['user_name']=DB_USER_NAME;//db username
+$sc_refund_info_multiple_dbroute_config['pass_word']=DB_PASSWORD;//db pwd
+$sc_refund_info_multiple_dbroute_config['port']=DB_PORT;//db port
+
+$sc_refund_info_multiple_dbroute_config['db_prefix']="sc_refund_0000";//数据库前缀，生成类似mmall_0000、mmall_0001...mmall_1023
+$sc_refund_info_multiple_dbroute_config['table_prefix']="refund_info_0000";//表名前缀，生成类似order_goods_0000、order_goods_0001...order_goods_1023
+$sc_refund_info_multiple_dbroute_config['logic_table']="sc_refund_info";//逻辑表名
+$sc_refund_info_multiple_dbroute_config['logic_column']="user_id";//分表的列，执行sql语句时，要传递此参数
+$sc_refund_info_multiple_dbroute_config['select_in_logic_column']="user_ids";//select in 查询时时的参数key名
+$sc_refund_info_multiple_dbroute_config['table_total_num']=64;//总表数
+$sc_refund_info_multiple_dbroute_config['one_db_table_num']=16;//每个库里存放的表数
+
+$db_refund_info_host_array=array();
+$db_refund_info_host_array['sc_refund_0000']=DB_HOST;
+$db_refund_info_host_array['sc_refund_0001']=DB_HOST;
+$db_refund_info_host_array['sc_refund_0002']=DB_HOST;
+$db_refund_info_host_array['sc_refund_0003']=DB_HOST;
+$sc_refund_info_multiple_dbroute_config['db_hosts']=$db_refund_info_host_array;//每个库存放在哪个host
+
+$db_refund_info_read_host_array=array();
+$db_refund_info_read_host_array['sc_refund_0000']=DB_HOST.",".DB_HOST;
+$db_refund_info_read_host_array['sc_refund_0001']=DB_HOST.",".DB_HOST;
+$db_refund_info_read_host_array['sc_refund_0002']=DB_HOST.",".DB_HOST;
+$db_refund_info_read_host_array['sc_refund_0003']=DB_HOST.",".DB_HOST;
+$sc_refund_info_multiple_dbroute_config['read_db_hosts']=$db_refund_info_read_host_array;//每个读库存放在哪个host,根据key为‘read_db_hosts’判断是否有读写分离配置
+/******************************************************************************************************************************************/
+
