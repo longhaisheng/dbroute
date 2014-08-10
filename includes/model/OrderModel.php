@@ -41,7 +41,7 @@ class OrderModel extends BaseModel { //单库多表
         $sql = "select order_sn from sc_order where id=#id# and user_id=#user_id# ";
         $params['id'] = $id;
         $params['user_id'] = 10;
-        return $this->dbroute->getOne($sql, $params);
+        return $this->dbroute->getColumn($sql, $params);
     }
 
     public function delete($id, $user_id) {

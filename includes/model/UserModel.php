@@ -50,7 +50,7 @@ class UserModel extends BaseModel { //多库多表
         $sql = "select pwd from sc_user  where user_name=#user_name# ";
         $params = array();
         $params['user_name'] = $user_name;
-        return $this->dbroute->getOne($sql, $params);
+        return $this->dbroute->getColumn($sql, $params);
     }
 
     public function delete($user_name) {

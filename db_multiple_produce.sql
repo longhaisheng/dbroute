@@ -77,23 +77,3 @@ CALL multiple_seperate_db();
 
 
 /*****************分库分表结束***********************/
-
-/***********以下是创建序列的表，在上另一个主库里执行以下脚本*****************/
-
-DELIMITER $$
-
-CREATE TABLE `sequence` (
-  `id`           INT(11) NOT NULL AUTO_INCREMENT,
-  `table_name`   VARCHAR(100) DEFAULT NULL,
-  `primary_name` VARCHAR(100) DEFAULT NULL,
-  `last_seq`     INT(11) DEFAULT NULL,
-  `modify_date`  DATETIME DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
-)
-  ENGINE =InnoDB
-  AUTO_INCREMENT =9
-  DEFAULT CHARSET =utf8$$
-
-DELIMITER $$
-  

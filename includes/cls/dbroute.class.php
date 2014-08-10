@@ -151,7 +151,7 @@ class cls_dbroute {
         return substr_replace($this->getDbPrefix(), $line, strlen($this->getDbPrefix()) - strlen($line));
     }
 
-    public function getTableName($mod) {
+    public function getTableName($mod) {//只支持分表的表
         return substr_replace($this->getTablePrefix(), $mod, strlen($this->getTablePrefix()) - strlen($mod));
     }
 
@@ -246,7 +246,7 @@ class cls_dbroute {
         return $this->use_mysqli_extend;
     }
 
-    public static function strToIntKey($str) {
+    public static function strToIntKey($str) {//字符串转数字
         $len = strlen($str);
         $total = 0;
         for ($i = 0; $i < $len; $i++) {
@@ -261,7 +261,7 @@ class cls_dbroute {
      * @param string $sql 'select order_id,order_sn from order where user_id=#user_id# '
      * @param array $params 只能为一唯数组，并且包括分表的列名 array('user_id'=>100)
      */
-    public function decorate($sql, $params = array()) {
+    private function decorate($sql, $params = array()) {
         $logicTable = $this->getLogicTable();
         $db = null;
         if ($logicTable) {
@@ -424,17 +424,17 @@ class cls_dbroute {
         return $this->getDbConnnection($db_name)->getRow($decorate['sql'], $decorate['params']);
     }
 
-    /**
-     * @param $sql "select count(1) as count_num from order where user_id=#user_id# "
-     * @param array $bind_params array('user_id'=>100)
-     * @return int
-     * @see getColumn
-     */
-    public function getOne($sql, $params = array()) {
-        $decorate = $this->decorate($sql, $params);
-        $db_name = $decorate['db_name'];
-        return $this->getDbConnnection($db_name)->getOne($decorate['sql'], $decorate['params']);
-    }
+//    /**
+//     * @param $sql "select count(1) as count_num from order where user_id=#user_id# "
+//     * @param array $bind_params array('user_id'=>100)
+//     * @return int
+//     * @see getColumn
+//     */
+//    public function getOne($sql, $params = array()) {
+//        $decorate = $this->decorate($sql, $params);
+//        $db_name = $decorate['db_name'];
+//        return $this->getDbConnnection($db_name)->getOne($decorate['sql'], $decorate['params']);
+//    }
 
     /**
      * @param $sql "select count(1) as count_num from order where user_id=#user_id# "
@@ -448,6 +448,7 @@ class cls_dbroute {
     }
 
     /**
+     * 只支持分表的表
      * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
      * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
      * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
@@ -562,6 +563,7 @@ class cls_dbroute {
     }
 
     /**
+     * 只支持分表的表
      * 访问所有库表 不见意使用此方法
      * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
      * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
