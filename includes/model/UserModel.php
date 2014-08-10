@@ -18,8 +18,8 @@ class UserModel extends BaseModel { //多库多表
         $this->table_total_num = $user_multiple_dbroute_config['table_total_num'];
     }
 
-    public function getUserNameIntValue($user_name) { //根据用户名返回表名后缀下标
-        return cls_dbroute::strToIntKey($user_name) % $this->table_total_num;
+    public function getTableNameBytUserName($user_name) { //根据用户名返回表名
+        return $this->dbroute->getTableName(cls_dbroute::strToIntKey($user_name) % $this->table_total_num);
     }
 
     public function insert() {

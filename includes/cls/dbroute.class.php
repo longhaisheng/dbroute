@@ -108,25 +108,28 @@ class cls_dbroute {
             $crea_two = ($i + 1) * $this->one_db_table_num;
             $tables = array();
             for ($j = $crea; $j < $crea_two; $j++) {
-                $tables[] = $this->getTableName($j);
+                if ($this->is_debug) {
+                    $tables[] = $this->getTableName($j);
+                }
                 if ($this->isSingleDb()) {
                     $this->db_tables[0] = $i;
                 } else {
                     $this->db_tables[$j] = $i; //key为表的数字下缀，value为数据库数字下缀（下缀大于等于零）
                 }
             }
-            if ($mod && $num == $db_total_num) {
-                $tables = array_slice($tables, 0, $mod);
+            if ($this->is_debug) {
+                if ($mod && $num == $db_total_num) {
+                    $tables = array_slice($tables, 0, $mod);
+                }
+                if ($this->isSingleDb()) { //单库
+                    $prefix = explode("_", $this->getDbPrefix());
+                    $db_key = $prefix[0];
+                } else {
+                    $db_key = substr_replace($this->getDbPrefix(), $i, strlen($this->getDbPrefix()) - strlen($i));
+                }
+                $list[$db_key] = $tables;
             }
-            if ($this->isSingleDb()) { //单库
-                $prefix = explode("_", $this->getDbPrefix());
-                $db_key = $prefix[0];
-            } else {
-                $db_key = substr_replace($this->getDbPrefix(), $i, strlen($this->getDbPrefix()) - strlen($i));
-            }
-            $list[$db_key] = $tables;
         }
-
         cls_shmop::writeArray("init_logic_" . $this->logic_table, $this->db_tables);
         if ($this->is_debug) {
             foreach ($list as $key => $val) {
