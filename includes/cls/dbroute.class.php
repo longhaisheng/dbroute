@@ -758,12 +758,12 @@ class ConsistentHash extends BaseConfig{//一致性hash
 		parent::__construct($config_array);
 		if(isset($config_array['consistent_hash_separate_string'])){
 			$this->consistent_hash_separate_string=$config_array['consistent_hash_separate_string'];
-            $this->init();
         }
         if(isset($config_array['consistent_hash_separate_mod_max_value'])){
             $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
         }
-	}
+        $this->init();
+    }
 
     public function init(){
         $str=$this->getConsistentHashSeparateString();
