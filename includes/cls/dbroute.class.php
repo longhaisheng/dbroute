@@ -765,7 +765,7 @@ class ConsistentHash extends BaseConfig{//一致性hash
         $this->init();
     }
 
-    public function init(){
+    private function init(){
         $str=$this->getConsistentHashSeparateString();
         $list=explode(";", $str);
         $max=0;
@@ -785,7 +785,6 @@ class ConsistentHash extends BaseConfig{//一致性hash
         }
         if($max !=$this->consistent_hash_separate_mod_max_value){
             throw new DBRouteException('一致性hash字符串设置错误');
-
         }
     }
 
