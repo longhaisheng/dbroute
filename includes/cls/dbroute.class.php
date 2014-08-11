@@ -2,7 +2,7 @@
 class cls_dbroute {
 
 	/** sql解析器  */
-	private $parse;
+	private $dbParse;
 
 	/** 连接配置数组  */
 	private $config_array;
@@ -21,18 +21,18 @@ class cls_dbroute {
 			$this->config_array = $default_config_array;
 		}
         if(isset($this->config_array['consistent_hash_separate_string'])){
-		    $this->parse=new ConsistentHash($this->config_array);
+		    $this->dbParse=new ConsistentHash($this->config_array);
         }else{
-            $this->parse=new ModHash($this->config_array);
+            $this->dbParse=new ModHash($this->config_array);
         }
 	}
 
-	public function setParse($parse) {
-		$this->parse = $parse;
+	private function setDbParse($parse) {
+		$this->dbParse = $parse;
 	}
 
-	public function getParse() {
-		return $this->parse;
+	public function getDbParse() {
+		return $this->dbParse;
 	}
 
 	private function setUseMysqliExtend() {
@@ -66,15 +66,15 @@ class cls_dbroute {
 	 * @param array $params 只能为一唯数组，并且包括分表的列名 array('user_id'=>100)
 	 */
 	private function decorate($sql, $params = array()) {
-		$logicTable = $this->getParse()->getLogicTable();
+		$logicTable = $this->getDbParse()->getLogicTable();
 		$db = null;
 		if ($logicTable) {
-			$logic_col = $this->getParse()->getLogicColumn();
+			$logic_col = $this->getDbParse()->getLogicColumn();
 			if (!isset($params[$logic_col])) {
 				throw new DBRouteException("error params ,it must have key " . $logic_col);
 			}
 			$logic_col_value=$params[$logic_col];
-			$db = $this->getParse()->getDbName($logic_col_value);
+			$db = $this->getDbParse()->getDbName($logic_col_value);
 			$array['sql'] = $this->getNewSql($sql, $logic_col_value);
 			$array['db_name'] = $db;
 		} else {
@@ -88,8 +88,8 @@ class cls_dbroute {
 	}
 
 	private function getNewSql($sql,$logic_column_value) {
-		$table_name = $this->getParse()->getTableName($logic_column_value);
-		$logic_table = $this->getParse()->getLogicTable();
+		$table_name = $this->getDbParse()->getTableName($logic_column_value);
+		$logic_table = $this->getDbParse()->getLogicTable();
 		$first_pos = stripos($sql, " " . $logic_table . " ");
 		if (!$first_pos) {
 			throw new DBRouteException("error sql in " . $sql);
@@ -99,18 +99,18 @@ class cls_dbroute {
 	}
 
 	private function setConnection($params = array()) {
-		$logicTable = $this->getParse()->getLogicTable();
+		$logicTable = $this->getDbParse()->getLogicTable();
 		$db = null;
 		if ($logicTable) {
 			if (empty($params)) {
 				return;
 			}
-			$logic_col = $this->getParse()->getLogicColumn();
+			$logic_col = $this->getDbParse()->getLogicColumn();
 			if (!isset($params[$logic_col])) {
 				throw new DBRouteException("error params ,it must have key " . $logic_col);
 			}
 			$logic_column_value=$params[$logic_col];
-			$db = $this->getParse()->getDbName($logic_column_value);
+			$db = $this->getDbParse()->getDbName($logic_column_value);
 		} else {
 			$db = $this->config_array['db'];
 		}
@@ -134,7 +134,7 @@ class cls_dbroute {
 	}
 
 	private function getSingleConn() { //如果分库后是单库多表
-		if ($this->getParse()->getIsSingleDb()) {
+		if ($this->getDbParse()->getIsSingleDb()) {
 			foreach ($this->connections as $conn) {
 				return $conn;
 			}
@@ -232,11 +232,11 @@ class cls_dbroute {
 	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
 	 */
 	public function selectByIn($sql, $params = array()) {
-		$logicTable = $this->getParse()->getLogicTable();
+		$logicTable = $this->getDbParse()->getLogicTable();
 		if (!$logicTable) {
 			return;
 		}
-		$select_in_logic_column=$this->getParse()->getSelectInLogicColumn();
+		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
 		if (!isset($params[$select_in_logic_column])) {
 			throw new DBRouteException("select in 条件参数key名为" . $select_in_logic_column . "");
 		}
@@ -268,21 +268,21 @@ class cls_dbroute {
 		$array = array();
 		foreach ($in_param_arr as $key => $value) {
 			$in = new InValue();
-			if ($this->getParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
-				$mod = self::strToIntKey($value) % $this->getParse()->getTableTotalNum();
+			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
+				$mod = self::strToIntKey($value) % $this->getDbParse()->getTableTotalNum();
 			} else {
-				$mod = $value % $this->getParse()->getTableTotalNum();
+				$mod = $value % $this->getDbParse()->getTableTotalNum();
 
 			}
 			$in->setMod($mod);
 			$in->setValue($value);
-			$db = $this->getParse()->getDbName($mod);
+			$db = $this->getDbParse()->getDbName($mod);
 			$this->setDBConn($db);
 			$array[] = $in;
 		}
 
 		$new_array = array(); //key为mod, 值为相同mod的所有value
-		$db_total_num = $this->getParse()->getTableTotalNum();
+		$db_total_num = $this->getDbParse()->getTableTotalNum();
 		foreach ($array as $inValue) {
 			for ($i = 0; $i < $db_total_num; $i++) {
 				if ($inValue->getMod() == $i) {
@@ -306,16 +306,16 @@ class cls_dbroute {
 
 		$merge_result = array();
 		foreach ($in_value_arrays as $mod => $val) {
-			$new_sql = str_ireplace("#" . $this->getParse()->getSelectInLogicColumn() . "#", implode(',', array_values($val)), $sql);
-			$table_name = $this->getParse()->getTableName($mod);
-			$logic_table = $this->getParse()->getLogicTable();
+			$new_sql = str_ireplace("#" . $this->getDbParse()->getSelectInLogicColumn() . "#", implode(',', array_values($val)), $sql);
+			$table_name = $this->getDbParse()->getTableName($mod);
+			$logic_table = $this->getDbParse()->getLogicTable();
 			$first_pos = stripos($new_sql, " " . $logic_table . " ");
 			if (!$first_pos) {
 				throw new DBRouteException("error sql in " . $sql);
 			}
 			$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
 
-			$db_name = $this->getParse()->getDbName($mod);
+			$db_name = $this->getDbParse()->getDbName($mod);
 			$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
 			if ($result) {
 				foreach ($result as $row) {
@@ -348,7 +348,7 @@ class cls_dbroute {
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
 	 */
 	public function queryResultFromAllDbTables($sql, $params = array()) {
-		$logicTable = $this->getParse()->getLogicTable();
+		$logicTable = $this->getDbParse()->getLogicTable();
 		if (!$logicTable) {
 			return;
 		}
@@ -360,20 +360,20 @@ class cls_dbroute {
 		unset($params['sort_filed']);
 		unset($params['sort_order']);
 
-		$logic_col = $this->getParse()->getLogicColumn();
+		$logic_col = $this->getDbParse()->getLogicColumn();
 		if (isset($params[$logic_col])) {
 			throw new DBRouteException("error params ,it must not have key " . $logic_col);
 		}
 
 		$tables = array();
-		$total_table_num = $this->getParse()->getTableTotalNum();
+		$total_table_num = $this->getDbParse()->getTableTotalNum();
 		for ($i = 0; $i < $total_table_num; $i++) {
 			$tables[$i] = $i;
 		}
 
 		$merge_result = array();
 		foreach ($tables as $mod) {
-			$db = $this->getParse()->getDbName($mod);
+			$db = $this->getDbParse()->getDbName($mod);
 			$this->setDBConn($db);
 			$new_sql = $this->getNewSql($sql, $mod);
 			$result = $this->getDbConnnection($db)->getAll($new_sql, $params);
@@ -403,7 +403,7 @@ class cls_dbroute {
 
 	public function getConnection($params = array()) { //用于分表的表与不分表的表共用同一个数据库链接，一般在事务中可能用到
 		$db_name = $this->setConnection($params);
-		if ($this->getParse()->getIsSingleDb()) {
+		if ($this->getDbParse()->getIsSingleDb()) {
 			return $this->getSingleConn();
 		}
 		return $this->getDbConnnection($db_name);
@@ -411,7 +411,7 @@ class cls_dbroute {
 
 	public function begin($params = array()) {
 		$db_name = $this->setConnection($params);
-		if ($this->getParse()->getIsSingleDb()) {
+		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConn()->begin();
 		} else {
 			if (empty($params)) throw new DBRouteException('请传递参数');
@@ -420,7 +420,7 @@ class cls_dbroute {
 	}
 
 	public function commit($params = array()) {
-		if ($this->getParse()->getIsSingleDb()) {
+		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConn()->commit();
 		} else {
 			if (empty($params)) throw new DBRouteException('请传递参数');
@@ -430,7 +430,7 @@ class cls_dbroute {
 	}
 
 	public function rollBack($params = array()) {
-		if ($this->getParse()->getIsSingleDb()) {
+		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConn()->rollBack();
 		} else {
 			if (empty($params)) throw new DBRouteException('请传递参数');
