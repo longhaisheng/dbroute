@@ -19,7 +19,7 @@ class UserModel extends BaseModel { //多库多表
     }
 
     public function getTableNameBytUserName($user_name) { //根据用户名返回表名
-        return $this->dbroute->getTableName(cls_dbroute::strToIntKey($user_name) % $this->table_total_num);
+        return $this->dbroute->getParse()->getTableName(cls_dbroute::strToIntKey($user_name) % $this->table_total_num);
     }
 
     public function insert() {

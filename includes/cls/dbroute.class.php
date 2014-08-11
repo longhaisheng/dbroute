@@ -20,7 +20,11 @@ class cls_dbroute {
 		} else {
 			$this->config_array = $default_config_array;
 		}
-		$this->parse=new ModHash($this->config_array);
+        if(isset($this->config_array['consistent_hash_separate_string'])){
+		    $this->parse=new ConsistentHash($this->config_array);
+        }else{
+            $this->parse=new ModHash($this->config_array);
+        }
 	}
 
 	public function setParse($parse) {
@@ -264,7 +268,7 @@ class cls_dbroute {
 		$array = array();
 		foreach ($in_param_arr as $key => $value) {
 			$in = new InValue();
-			if ($this->getParse()->getLogicColumnFieldType() == 'string' && is_string($value)) {
+			if ($this->getParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
 				$mod = self::strToIntKey($value) % $this->getParse()->getTableTotalNum();
 			} else {
 				$mod = $value % $this->getParse()->getTableTotalNum();
@@ -708,17 +712,15 @@ abstract class BaseConfig{
 		return intval($logic_column_value % $this->getTableTotalNum() / $this->getOneDbTableNum());
 	}
 
-	abstract function getDbName($logic_column_value);
+    public function getTableName($logic_column_value) {
+        $db_name=$this->getDbName($logic_column_value);
+        $db_list=$this->getDbList();
+        $array=$db_list[$db_name];
+        $table_index=$this->getTableMod($logic_column_value);
+        return $array[$table_index];
+    }
 
-	//abstract function getTableName($logic_column_value);
-
-	public function getTableName($logic_column_value) {
-		$db_name=$this->getDbName($logic_column_value);
-		$db_list=$this->getDbList();
-		$array=$db_list[$db_name];
-		$table_index=$this->getTableMod($logic_column_value);
-		return $array[$table_index];
-	}
+    abstract function getDbName($logic_column_value);
 
 }
 
@@ -745,47 +747,73 @@ class ModHash extends BaseConfig{//mod hash
 
 class ConsistentHash extends BaseConfig{//一致性hash
 
-	private $consistent_hash_str;
+    /** 一致性hash配置字符串 */
+	private $consistent_hash_separate_string;
 
-	private $consistent_hash_str_max;
+	private $consistent_hash_separate_mod_max_value;
 
 	private $list=array();
 
-	function __construct($config_array = array()){
+    function __construct($config_array = array()){
 		parent::__construct($config_array);
-		if(isset($config_array['consistent_hash_str'])){
-			$this->consistent_hash_str=$config_array['consistent_hash_str'];
-		}
-		if(isset($config_array['consistent_hash_str_max'])){
-			$this->consistent_hash_str_max=$config_array['consistent_hash_str_max'];
-		}
+		if(isset($config_array['consistent_hash_separate_string'])){
+			$this->consistent_hash_separate_string=$config_array['consistent_hash_separate_string'];
+            $this->init();
+        }
+        if(isset($config_array['consistent_hash_separate_mod_max_value'])){
+            $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
+        }
 	}
 
-	public function setConsistentHashStr($consistent_hash) {
-		$this->consistent_hash_str = $consistent_hash;
-	}
+    public function init(){
+        $str=$this->getConsistentHashSeparateString();
+        $list=explode(";", $str);
+        $max=0;
+        foreach ($list as $value) {
+            $one_db_config=explode("=", $value);
+            $one_db_config[0]=str_replace("[", "", $one_db_config[0]);
+            $one_db_config[0]=str_replace("]", "", $one_db_config[0]);
+            $start_end_list=explode(",", $one_db_config[0]);
+            if($max <=$start_end_list[1]){
+                $max=$start_end_list[1];
+            }
+            $node=new Node();
+            $node->setStart($start_end_list[0]);
+            $node->setEnd($start_end_list[1]);
+            $node->setDbName($one_db_config[1]);
+            $this->list[]=$node;
+        }
+        if($max !=$this->consistent_hash_separate_mod_max_value){
+            throw new DBRouteException('一致性hash字符串设置错误');
 
-	public function getConsistentHashStr() {
-		return $this->consistent_hash_str;
-	}
+        }
+    }
 
-	public function setConsistentHashStrMax($consistent_hash_str_max) {
-		$this->consistent_hash_str_max = $consistent_hash_str_max;
-	}
+    public function setConsistentHashSeparateModMaxValue($consistent_hash_separate_mod_max_value) {
+        $this->consistent_hash_separate_mod_max_value = $consistent_hash_separate_mod_max_value;
+    }
 
-	public function getConsistentHashStrMax() {
-		return $this->consistent_hash_str_max;
-	}
+    public function getConsistentHashSeparateModMaxValue() {
+        return $this->consistent_hash_separate_mod_max_value;
+    }
 
-	public function setList($list) {
+    public function setConsistentHashSeparateString($consistent_hash_separate_string) {
+        $this->consistent_hash_separate_string = $consistent_hash_separate_string;
+    }
+
+    public function getConsistentHashSeparateString() {
+        return $this->consistent_hash_separate_string;
+    }
+
+    public function setList($list) {
 		$this->list = $list;
 	}
 
-	public function getList() {
+    public function getList() {
 		return $this->list;
 	}
 
-	public function getDbName($logic_column_value) {
+    public function getDbName($logic_column_value) {
 		if ($this->getIsSingleDb()) { //单库
 			$prefix = explode("_", $this->getDbPrefix());
 			return $prefix[0];
@@ -794,7 +822,7 @@ class ConsistentHash extends BaseConfig{//一致性hash
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
 
-		$mod=intval($logic_column_value % $this->getConsistentHashStrMax());
+		$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
 		foreach ($this->getList() as $node){
 			if($mod>=$node->getStart() && $mod<$node->getEnd()){
 				return $node->getDbName();
@@ -803,33 +831,6 @@ class ConsistentHash extends BaseConfig{//一致性hash
 
 		return null;
 	}
-
-	//	public function getTableName($logic_column_value) {
-	//		$db_name=$this->getDbName($logic_column_value);
-	//		$db_list=$this->getDbList();
-	//		$array=$db_list[$db_name];
-	//		$table_index=$this->getTableMod($logic_column_value);
-	//		return $array[$table_index];
-	//	}
-
-	public function explodeString(){
-		$str=$this->getConsistentHashStr();
-		$list=explode(";", $str);
-		foreach ($list as $value) {
-			$one_db_config=explode("=", $value);
-			$one_db_config[0]=str_replace("[", "", $one_db_config[0]);
-			$one_db_config[0]=str_replace("]", "", $one_db_config[0]);
-			$start_end_list=explode(",", $one_db_config[0]);
-			$node=new Node();
-			$node->setStart($start_end_list[0]);
-			$node->setEnd($start_end_list[1]);
-			$node->setDbName($one_db_config[1]);
-			$this->list[]=$node;
-		}
-
-		print_r($this->list);
-	}
-
 
 }
 
