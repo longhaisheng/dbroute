@@ -757,6 +757,7 @@ class ModHash extends BaseConfig{//mod hash
 	}
 
 }
+
 /**
  * 
  * 一致性hash算法实现
@@ -767,7 +768,8 @@ class ConsistentHash extends BaseConfig{
 
    /** 一致性hash配置字符串 
 	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
-	* 逻辑列值 在 >=0 用小于256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000
+	* 逻辑列值 在 >=0 用小于256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
+	* 可将[0,256]重新划分为[0,128]=sc_refund_0000和[128,256]=sc_refund_0005
 	*/
 	private $consistent_hash_separate_string;
 
