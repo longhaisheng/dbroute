@@ -844,17 +844,18 @@ class ConsistentHash extends BaseConfig{
 
 		$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
 		$default_db_name=null;
+		$db_name=null;
 		foreach ($this->getList() as $node){
 			if($mod>=$node->getStart() && $mod<$node->getEnd()){
-				return $node->getDbName();
+				$db_name= $node->getDbName();
+				break;
 			}
 			
 			if($node->getDefaultDb()){
 				$default_db_name= $node->getDbName();
 			}
 		}
-
-		return $default_db_name;
+		return $db_name?$db_name:$default_db_name;
 	}
 
 }
