@@ -515,8 +515,6 @@ abstract class BaseConfig{
 	/** 每个db存在于哪些表,key为库,value为库中所有表(数组) */
 	private $db_tables = array();////////////////
 
-	private $table_dbs=array();
-
 	/** 逻辑表名 */
 	private $logic_table;
 
@@ -768,7 +766,7 @@ class ConsistentHash extends BaseConfig{
 
    /** 一致性hash配置字符串 
 	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
-	* 逻辑列值 在 >=0 用小于256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
+	* 逻辑列值 mod Hash最大区间值之后 在 >=0 && <256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
 	* 可将[0,256]重新划分为[0,128]=sc_refund_0000和[128,256]=sc_refund_0005
 	*/
 	private $consistent_hash_separate_string;
