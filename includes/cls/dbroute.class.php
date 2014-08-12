@@ -721,9 +721,9 @@ abstract class BaseConfig{
     public function getTableName($logic_column_value) {
         $db_name=$this->getDbName($logic_column_value);
         $db_list=$this->getDbList();
-        $array=$db_list[$db_name];
+        $one_db_tables=$db_list[$db_name];
         $table_index=$this->getTableMod($logic_column_value);
-        return $array[$table_index];
+        return $one_db_tables[$table_index];
     }
 
     abstract function getDbName($logic_column_value);
@@ -756,7 +756,7 @@ class ModHash extends BaseConfig{//mod hash
  * @author longhaisheng
  *
  */
-class ConsistentHash extends BaseConfig{//一致性hash
+class ConsistentHash extends BaseConfig{
 
    /** 一致性hash配置字符串 
 	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
