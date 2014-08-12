@@ -799,7 +799,7 @@ class ConsistentHash extends BaseConfig{
             $node->setEnd($start_end_list[1]);
             $node->setDbName($one_db_config[1]);
             if($i==0){
-            	$node->setDefaultDb(true);
+            	$node->setIsDefaultDb(true);
             }
             $i++;
             $this->list[]=$node;
@@ -851,7 +851,7 @@ class ConsistentHash extends BaseConfig{
 				break;
 			}
 			
-			if($node->getDefaultDb()){
+			if($node->getIsDefaultDb()){
 				$default_db_name= $node->getDbName();
 			}
 		}
@@ -868,7 +868,7 @@ class Node{
 
 	private $db_name;
 	
-	private $default_db=false;
+	private $is_default_db=false;
 
 	public function setEnd($end) {
 		$this->end = $end;
@@ -894,12 +894,12 @@ class Node{
 		return $this->db_name;
 	}
 
-    public function setDefaultDb($default_db) {
-        $this->default_db = $default_db;
+    public function setIsDefaultDb($default_db) {
+        $this->is_default_db = $default_db;
     }
 
-    public function getDefaultDb() {
-        return $this->default_db;
+    public function getIsDefaultDb() {
+        return $this->is_default_db;
     }
 
 
