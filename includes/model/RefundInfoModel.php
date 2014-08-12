@@ -29,8 +29,7 @@ class RefundInfoModel extends BaseModel { //多库多表
     public function getAll($user_id = 10) {
         $sql = "select id,refund_id,goods_id,goods_num,user_id,add_time,modify_time from sc_refund_info where user_id=#user_id# ";
         $params['user_id'] = $user_id;
-        $x= $this->dbroute->getAll($sql, $params);
-        return $x;
+        return $this->dbroute->getAll($sql, $params);
     }
 
     public function selectByIn() {

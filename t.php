@@ -14,9 +14,35 @@ require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 //$id=$order_goods->insert();
 //print_r($id);
 //die();
-$ao = new OrderAO();
-$ao->testTransaction(10);
+$m=new RefundInfoModel();
+print_r($m->insert(10,10));
 die;
+
+$ao = new OrderAO();
+//$a=new ConsistentHash($sc_refund_info_multiple_dbroute_config);
+//$a->explodeString();
+//
+//for($i=0;$i<1024;$i++){
+//	$db=$a->getDbName($i);
+//	$t=$a->getTableName($i);
+//	echo $i.'=>'.$db."=>$t<br>";
+//}
+//die;
+$ao->testTransaction(10);
+//die;
+
+$order = new OrderModel();
+print_r($order->transactionTest());
+//die;
+$id = $order->insert();
+echo "insert<br>";
+print_r($id);
+
+$result = $order->update(34084, 10);
+echo "update<br>";
+print_r($result);
+
+
 $cityModel = new CityModel();
 //print_r($cityModel->getAllCity());
 //die;
@@ -25,11 +51,15 @@ $mop = new cls_sequence();
 //echo $num."<br>";
 //die;
 
-$order = new OrderModel();
-$order->transactionTest();
+$id = $order->insert();
+echo "insert<br>";
+print_r($id);
 
-//$result=$order->queryAllByIn();
-//print_r($result);
+print_r($order->transactionTest());
+
+$res=$order->queryAllByIn();
+print_r($res);
+
 $res = $order->queryAll();
 print_r($res);
 

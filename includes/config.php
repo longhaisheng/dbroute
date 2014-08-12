@@ -148,7 +148,7 @@ $sc_refund_info_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; 
 $sc_refund_info_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $sc_refund_info_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数
 $sc_refund_info_multiple_dbroute_config['consistent_hash_separate_string'] = "[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003";//一致性hash字符串区间
-$sc_refund_info_multiple_dbroute_config['consistent_hash_separate_mod_max_value'] =1024;//一致性hash区间取余最大值，同上面中括号中最大的一个数值配置的值相同
+$sc_refund_info_multiple_dbroute_config['consistent_hash_separate_mod_max_value'] =1024;//一致性hash最大区间值
 
 $master_sc_refund_info_multiple_dbs = array();
 $master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP

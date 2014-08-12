@@ -1,7 +1,7 @@
 <?php
 class cls_dbroute {
 
-	/** sql解析器  */
+	/** DB路由解析器  */
 	private $dbParse;
 
 	/** 连接配置数组  */
@@ -33,6 +33,12 @@ class cls_dbroute {
 
 	public function getDbParse() {
 		return $this->dbParse;
+	}
+	
+	public function getDBAndTableName($logic_colum_value){
+		$table_name=$this->getDbParse()->getTableName($logic_colum_value);
+		$db_name=$this->getDbParse()->getDbName($logic_colum_value);
+		return array('db_name'=>$db_name,'table_name'=>$table_name);
 	}
 
 	private function setUseMysqliExtend() {
@@ -527,8 +533,8 @@ abstract class BaseConfig{
 
 	private $db_list=array();
 
-	function __construct($config_array = array()) {
-		if(empty($config_array)) echo 'init error ';
+	protected function __construct($config_array = array()) {
+		if(empty($config_array)) echo 'BaseConfig init error ';
 		$this->config_array = $config_array;
 		if (isset($this->config_array['logic_table']) && isset($this->config_array['logic_column'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
@@ -545,7 +551,7 @@ abstract class BaseConfig{
 			if ($this->getOneDbTableNum() == $this->getTableTotalNum()) {
 				$this-> setIsSingleDb(true); //单库
 			} else {
-				$this-> setIsSingleDb(false); //单库
+				$this-> setIsSingleDb(false); //多库
 			}
 			$list = cls_shmop::readArray("init_logic_" . $this->getLogicTable());
 			if ($list) {
@@ -567,16 +573,16 @@ abstract class BaseConfig{
 			$tables = array();
 			for ($j = $crea; $j < $crea_two; $j++) {
 				$tables[] = $this->getTable($j);
-				if ($this->getIsSingleDb()) {
+				/*if ($this->getIsSingleDb()) {
 					$this->db_tables[0] = $i;
 				} else {
 					$this->db_tables[$j] = $i; //key为表的数字下缀，value为数据库数字下缀（下缀大于等于零）
-				}
+				}*/
 			}
 			if ($mod && $num == $db_total_num) {
 				$tables = array_slice($tables, 0, $mod);
 			}
-			if ($this->getIsSingleDb()) { //单库
+			if ($this->getIsSingleDb()) {//单库
 				$prefix = explode("_", $this->getDbPrefix());
 				$db_key = $prefix[0];
 			} else {
@@ -666,7 +672,7 @@ abstract class BaseConfig{
 		$this->is_single_db = $is_single_db;
 	}
 
-	public function getIsSingleDb() {//如果分库后是单库多表
+	public function getIsSingleDb() {
 		return $this->is_single_db;
 	}
 
@@ -735,21 +741,30 @@ class ModHash extends BaseConfig{//mod hash
 	 * @param mixed $logic_column_value 逻辑列的值
 	 */
 	public function getDbName($logic_column_value) {
-		if ($this->getIsSingleDb()) { //单库
-			$prefix = explode("_", $this->getDbPrefix());
+		if (parent::getIsSingleDb()) { //单库
+			$prefix = explode("_", parent::getDbPrefix());
 			return $prefix[0];
 		}
-		$db_index=$this->getDBMod($logic_column_value);
-		return substr_replace($this->getDbPrefix(), $db_index, strlen($this->getDbPrefix()) - strlen($db_index));
+		$db_index=parent::getDBMod($logic_column_value);
+		return substr_replace(parent::getDbPrefix(), $db_index, strlen(parent::getDbPrefix()) - strlen($db_index));
 	}
 
 }
-
+/**
+ * 
+ * 一致性hash算法实现
+ * @author longhaisheng
+ *
+ */
 class ConsistentHash extends BaseConfig{//一致性hash
 
-    /** 一致性hash配置字符串 */
+   /** 一致性hash配置字符串 
+	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
+	* 逻辑列值 在 >=0 用小于256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000
+	*/
 	private $consistent_hash_separate_string;
 
+	/** 一致性hash最大区间值  */
 	private $consistent_hash_separate_mod_max_value;
 
 	private $list=array();
@@ -758,6 +773,7 @@ class ConsistentHash extends BaseConfig{//一致性hash
 		parent::__construct($config_array);
 		if(isset($config_array['consistent_hash_separate_string'])){
 			$this->consistent_hash_separate_string=$config_array['consistent_hash_separate_string'];
+
         }
         if(isset($config_array['consistent_hash_separate_mod_max_value'])){
             $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
@@ -769,6 +785,7 @@ class ConsistentHash extends BaseConfig{//一致性hash
         $str=$this->getConsistentHashSeparateString();
         $list=explode(";", $str);
         $max=0;
+        $i=0;
         foreach ($list as $value) {
             $one_db_config=explode("=", $value);
             $one_db_config[0]=str_replace("[", "", $one_db_config[0]);
@@ -781,6 +798,10 @@ class ConsistentHash extends BaseConfig{//一致性hash
             $node->setStart($start_end_list[0]);
             $node->setEnd($start_end_list[1]);
             $node->setDbName($one_db_config[1]);
+            if($i==0){
+            	$node->setDefaultDb(true);
+            }
+            $i++;
             $this->list[]=$node;
         }
         if($max !=$this->consistent_hash_separate_mod_max_value){
@@ -813,22 +834,27 @@ class ConsistentHash extends BaseConfig{//一致性hash
 	}
 
     public function getDbName($logic_column_value) {
-		if ($this->getIsSingleDb()) { //单库
-			$prefix = explode("_", $this->getDbPrefix());
+		if (parent::getIsSingleDb()) { //单库
+			$prefix = explode("_", parent::getDbPrefix());
 			return $prefix[0];
 		}
-		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
+		if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
 
 		$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
+		$default_db_name=null;
 		foreach ($this->getList() as $node){
 			if($mod>=$node->getStart() && $mod<$node->getEnd()){
 				return $node->getDbName();
 			}
+			
+			if($node->getDefaultDb()){
+				$default_db_name= $node->getDbName();
+			}
 		}
 
-		return null;
+		return $default_db_name;
 	}
 
 }
@@ -840,6 +866,8 @@ class Node{
 	private $end;
 
 	private $db_name;
+	
+	private $default_db=false;
 
 	public function setEnd($end) {
 		$this->end = $end;
@@ -864,5 +892,14 @@ class Node{
 	public function getDbName() {
 		return $this->db_name;
 	}
+
+    public function setDefaultDb($default_db) {
+        $this->default_db = $default_db;
+    }
+
+    public function getDefaultDb() {
+        return $this->default_db;
+    }
+
 
 }
