@@ -1,4 +1,10 @@
 <?php
+/**
+ * dbroute sql解析类，可操作分表的sql,也可操作未分表的sql
+ * 对开发者透明,sql中的参数以前后#绑写,详见方法注释
+ * @author longhaisheng qq:87188524
+ *
+ */
 class cls_dbroute {
 
 	/** DB路由解析器  */
@@ -454,6 +460,7 @@ class cls_dbroute {
 			}
 		}
 	}
+	
 }
 
 class InValue {
@@ -901,6 +908,5 @@ class Node{
     public function getIsDefaultDb() {
         return $this->is_default_db;
     }
-
 
 }
