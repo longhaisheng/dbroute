@@ -149,6 +149,8 @@ $sc_refund_info_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $sc_refund_info_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数
 $sc_refund_info_multiple_dbroute_config['consistent_hash_separate_string'] = "[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003";//一致性hash字符串区间
 $sc_refund_info_multiple_dbroute_config['consistent_hash_separate_mod_max_value'] =1024;//一致性hash最大区间值
+$sc_refund_info_multiple_dbroute_config['virtual_db_node_number'] = 64; //虚拟数据库数目 虚拟hash算法实现以此key为判断
+$sc_refund_info_multiple_dbroute_config['hash_type'] ='consistent_hash';//可为  consistent_hash(必需设置key:consistent_hash_separate_string及consistent_hash_separate_mod_max_value) ||virtual_hash(必需设置key:virtual_db_node_number) ||mod_hash ，如果不设置，则默认为 mod_hash
 
 $master_sc_refund_info_multiple_dbs = array();
 $master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP

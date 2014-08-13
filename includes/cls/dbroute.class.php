@@ -26,10 +26,19 @@ class cls_dbroute {
 		} else {
 			$this->config_array = $default_config_array;
 		}
-        if(isset($this->config_array['consistent_hash_separate_string'])){
+        $hash_type='mod_hash';
+
+        if(isset($this->config_array['hash_type'])){//一致性hash
+            $hash_type=$this->config_array['hash_type'];
+        }
+        if($hash_type==='consistent_hash'){
 		    $this->dbParse=new ConsistentHash($this->config_array);
-        }else{
-            $this->dbParse=new ModHash($this->config_array);
+        }
+        if($hash_type==='virtual_hash'){//虚拟节点hash
+            $this->dbParse=new VirtualHash($this->config_array);
+        }
+        if($hash_type==='mod_hash'){
+            $this->dbParse=new ModHash($this->config_array);//mod Hash
         }
 	}
 
@@ -867,19 +876,66 @@ class ConsistentHash extends BaseConfig{
 
 }
 
+class VirtualHash extends ModHash{//虚拟hash算法实现，其实也是一致性hash
+
+	/** 虚拟节点个数 */
+	private $virtual_db_node_number=0;
+	
+    private $hash;
+
+    function __construct($config_array = array()){
+        parent::__construct($config_array);
+        if(isset($config_array['virtual_db_node_number'])){
+            $this->virtual_db_node_number=$config_array['virtual_db_node_number'];
+            $this->hash=new cls_flexihash(new Flexihash_Crc32Hasher(),$this->virtual_db_node_number);
+
+        }
+        $this->initialize();
+    }
+
+    private function initialize(){//将实际数据库结点对应至圆上
+        $total_table_num=parent::getDbTotalNum();
+        for($i=0;$i<$total_table_num;$i++){
+            $db_name= substr_replace(parent::getDbPrefix(), $i, strlen(parent::getDbPrefix()) - strlen($i));
+            $this->hash->addTarget($db_name);
+        }
+    }
+
+    public function getDbName($logic_column_value) {
+        if (parent::getIsSingleDb()) { //单库
+            $prefix = explode("_", parent::getDbPrefix());
+            return $prefix[0];
+        }
+        if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
+            $logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
+        }
+        return $this->hash->lookup($logic_column_value);
+
+    }
+
+    public function setVirtualDbNodeNumber($virtual_db_node_number) {
+        $this->virtual_db_node_number = $virtual_db_node_number;
+    }
+
+    public function getVirtualDbNodeNumber() {
+        return $this->virtual_db_node_number;
+    }
+
+}
+
 class Node{
 
-	private $start;
+    private $start;
 
-	private $end;
+    private $end;
 
-	private $db_name;
-	
-	private $is_default_db=false;
+    private $db_name;
 
-	public function setEnd($end) {
-		$this->end = $end;
-	}
+    private $is_default_db=false;
+
+    public function setEnd($end) {
+        $this->end = $end;
+    }
 
 	public function getEnd() {
 		return $this->end;
