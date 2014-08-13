@@ -19,6 +19,9 @@ class cls_dbroute {
 	/** 数据库连接 cls_mysqli 类的数组*/
 	private $connections = array();
 
+    /** 数据解析器字符串类型 */
+    private $hash_type;
+	
 	public function __construct($db_route_array=array()){
 		global $default_config_array;
 		if ($db_route_array) {
@@ -26,18 +29,18 @@ class cls_dbroute {
 		} else {
 			$this->config_array = $default_config_array;
 		}
-        $hash_type='mod_hash';
 
+        $this->hash_type='mod_hash';
         if(isset($this->config_array['hash_type'])){
-            $hash_type=$this->config_array['hash_type'];
+            $this->hash_type=$this->config_array['hash_type'];
         }
-        if($hash_type==='consistent_hash'){//一致性hash
+        if($this->hash_type==='consistent_hash'){//一致性hash
 		    $this->dbParse=new ConsistentHash($this->config_array);
         }
-        if($hash_type==='virtual_hash'){//虚拟节点hash
+        if($this->hash_type==='virtual_hash'){//虚拟节点hash
             $this->dbParse=new VirtualHash($this->config_array);
         }
-        if($hash_type==='mod_hash'){//mod Hash
+        if($this->hash_type==='mod_hash'){//mod Hash
             $this->dbParse=new ModHash($this->config_array);
         }
 	}
@@ -49,6 +52,14 @@ class cls_dbroute {
 	public function getDbParse() {
 		return $this->dbParse;
 	}
+
+    public function setHashType($hash_type) {
+        $this->hash_type = $hash_type;
+    }
+
+    public function getHashType() {
+        return $this->hash_type;
+    }
 	
 	public function getDBAndTableName($logic_colum_value){
 		$table_name=$this->getDbParse()->getTableName($logic_colum_value);
