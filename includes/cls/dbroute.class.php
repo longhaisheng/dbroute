@@ -28,17 +28,17 @@ class cls_dbroute {
 		}
         $hash_type='mod_hash';
 
-        if(isset($this->config_array['hash_type'])){//一致性hash
+        if(isset($this->config_array['hash_type'])){
             $hash_type=$this->config_array['hash_type'];
         }
-        if($hash_type==='consistent_hash'){
+        if($hash_type==='consistent_hash'){//一致性hash
 		    $this->dbParse=new ConsistentHash($this->config_array);
         }
         if($hash_type==='virtual_hash'){//虚拟节点hash
             $this->dbParse=new VirtualHash($this->config_array);
         }
-        if($hash_type==='mod_hash'){
-            $this->dbParse=new ModHash($this->config_array);//mod Hash
+        if($hash_type==='mod_hash'){//mod Hash
+            $this->dbParse=new ModHash($this->config_array);
         }
 	}
 
@@ -876,10 +876,10 @@ class ConsistentHash extends BaseConfig{
 
 }
 
-class VirtualHash extends ModHash{//虚拟hash算法实现，其实也是一致性hash
+class VirtualHash extends BaseConfig{//虚拟hash算法实现，其实也是一致性hash
 
 	/** 虚拟节点个数 */
-	private $virtual_db_node_number=0;
+	private $virtual_db_node_number=64;
 	
     private $hash;
 
