@@ -60,7 +60,7 @@ class cls_dbroute {
     public function getHashType() {
         return $this->hash_type;
     }
-	
+
 	public function getDBAndTableName($logic_colum_value){
 		$table_name=$this->getDbParse()->getTableName($logic_colum_value);
 		$db_name=$this->getDbParse()->getDbName($logic_colum_value);
@@ -584,6 +584,9 @@ abstract class BaseConfig{
 			} else {
 				$this->init();
 			}
+			if ($this->getIsDebug()) {
+				print_r($this->db_list);
+			}
 		}
 	}
 
@@ -616,9 +619,6 @@ abstract class BaseConfig{
 			$this->db_list[$db_key] = $tables;
 		}
 		cls_shmop::writeArray("init_logic_" . $this->getLogicTable(), $this->db_list);
-		if ($this->getIsDebug()) {
-			print_r($this->db_list);
-		}
 	}
 
 	public function setDbPrefix($db_prefix) {
