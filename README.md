@@ -4,7 +4,7 @@ dbroute 是一个支持mysql数据库分库分表的数据库操作中间件
 
 1、分表算法支持平滑迁移(要先做好数据迁移).分表后支持mysql中存储超大数据量(上亿、十亿、百亿不再是问题)<br>
 2、分库分表逻辑字段支持字符串和数值类型（不能有小数），路由规则支持 (id % n)、一致性hash、虚拟节点Hash,具体参见ModHash、ConsistentHash、VirtualHash类实现.<br>
-3、同一数据库中事务支持.<br>
+3、同一数据库中事务支持,如果在一个事务过程中有其他数据源,系统将抛出异常<br>
    &nbsp;&nbsp;<b>单库多表：详见<font color=red>OrderAO.php</font></b><br>
    &nbsp;&nbsp;&nbsp;&nbsp;1.1、多个逻辑表事务操作，如order、order_goods都为逻辑表且分表规则相同，都根据user_id分<br>
    &nbsp;&nbsp;&nbsp;&nbsp;1.2、多个逻辑表与多个未分表的表（city）事务支持.<br>
