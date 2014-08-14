@@ -34,7 +34,7 @@ class RefundInfoModel extends BaseModel { //多库多表
 
     public function selectByIn() {
         $sql = "select id,refund_id,goods_id,goods_num,user_id,add_time,modify_time from sc_refund_info where user_id in (#user_ids#)order by id desc  ";
-        $params['user_ids']=array(1,2,3,10);
+        $params['user_ids']=array(10,74,1034,139);
         return$this->dbroute->selectByIn($sql,$params);
     }
 

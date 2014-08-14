@@ -23,11 +23,14 @@ class cls_sqlexecute implements cls_idb {
     /** 存储数据库连接单例类数组,key为DB名称 */
     private static $single_instance_list = array();
     
-    public static $db_name_list = array();
+    /** 一次事务中所包含的数据库名 */
+    private static $db_name_list = array();
     
+    /** 是否需要标记  一次事务中所包含的数据库名 默认为false,不标记,只有事务中代码才需要标记*/
     private static $has_record=false;
     
-    public static function getList(){
+    /** 获取一次事务中所包含的所有数据库名*/
+    public static function get_database_name_list_in_one_transaction(){
     		return array_unique(self::$db_name_list);
     }
 
@@ -50,7 +53,6 @@ class cls_sqlexecute implements cls_idb {
         if (isset($this->connect_array['read_db_hosts'])) {
             $this->has_read_db = true;
         }
-        self::$db_name_list[]=$db_name;
     }
 
     public static function getInstance($db_name = '', $db_route_config = array()) {
@@ -416,9 +418,8 @@ class cls_sqlexecute implements cls_idb {
     }
 
     public function commit() {
-    	if(count(self::$db_name_list)>1){
-    		print_r(self::$db_name_list);
-    		$this->rollBack();
+    	if(count(self::get_database_name_list_in_one_transaction())>1){//事务中超过一个数据库,抛出异常,让客户端回滚
+    		throw new Exception(" transactions have more than one database,plese check you code ");
     	}
         $this->connection->commit(); //提交事务后，打开本次数据库连接的自动命令提交事务模式
         if(self::$has_record){

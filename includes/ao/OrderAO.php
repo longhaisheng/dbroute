@@ -25,7 +25,7 @@ class OrderAO {
             $is_update = $this->cityModel->insert(); //未分表的表//c
             $refund_id = $this->refundModel->insert($user_id);
             
-            print_r(cls_sqlexecute::getList());
+          	print_r(cls_sqlexecute::get_database_name_list_in_one_transaction());
 
             $this->orderModel->getDbroute()->commit($tx_params);
             echo "order_id id is " . $p1 . " " . "order_goods_id is " . $p2 . " is_update:" . $is_update;
