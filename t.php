@@ -3,7 +3,12 @@ header("Content-Type: text/html; charset=utf-8");
 require(dirname(__FILE__) . '/includes/init.php');
 require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 
-
+//$a=cls_sqlexecute::getInstance('mmall_0000',$user_multiple_dbroute_config);
+//$c=cls_sqlexecute::getInstance('mmall_0002',$user_multiple_dbroute_config);
+//print_r($a->getList());
+$ao = new OrderAO();
+$ao->testTransaction(10);
+die;
 //$order=new OrderModel();
 //$id=$order->getAll(10);
 //echo "insert<br>";
@@ -16,7 +21,7 @@ require(dirname(__FILE__) . '/includes/ao/OrderAO.php');
 //die();
 $m=new RefundInfoModel();
 print_r($m->insert(10,10));
-die;
+
 
 $ao = new OrderAO();
 //$a=new ConsistentHash($sc_refund_info_multiple_dbroute_config);

@@ -8,6 +8,7 @@ class OrderAO {
     private $cityModel;
 
     public function __construct() {
+    	$this->refundModel = new RefundModel(); //分库分表类
         $this->orderModel = new OrderModel(); //分库分表类
         $this->orderGoodsModel = new OrderGoodsModel(); //分库分表类
         $this->cityModel = new CityModel(); //未分库分表类
@@ -19,9 +20,12 @@ class OrderAO {
         try {
             $this->orderModel->getDbroute()->begin($tx_params);
 
-            $p1 = $this->orderModel->insert($user_id);
-            $p2 = $this->orderGoodsModel->insert($user_id);
-            $is_update = $this->cityModel->insert(); //未分表的表
+            $p1 = $this->orderModel->insert($user_id);//a
+            $p2 = $this->orderGoodsModel->insert($user_id);//b
+            $is_update = $this->cityModel->insert(); //未分表的表//c
+            $refund_id = $this->refundModel->insert($user_id);
+            
+            print_r(cls_sqlexecute::getList());
 
             $this->orderModel->getDbroute()->commit($tx_params);
             echo "order_id id is " . $p1 . " " . "order_goods_id is " . $p2 . " is_update:" . $is_update;

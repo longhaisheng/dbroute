@@ -22,6 +22,14 @@ class cls_sqlexecute implements cls_idb {
 
     /** 存储数据库连接单例类数组,key为DB名称 */
     private static $single_instance_list = array();
+    
+    public static $db_name_list = array();
+    
+    private static $has_record=false;
+    
+    public static function getList(){
+    		return array_unique(self::$db_name_list);
+    }
 
     /**
      * @param string $db_name  数据库名
@@ -42,6 +50,7 @@ class cls_sqlexecute implements cls_idb {
         if (isset($this->connect_array['read_db_hosts'])) {
             $this->has_read_db = true;
         }
+        self::$db_name_list[]=$db_name;
     }
 
     public static function getInstance($db_name = '', $db_route_config = array()) {
@@ -280,7 +289,9 @@ class cls_sqlexecute implements cls_idb {
                 $stmt = $this->connection->prepare($result['sql']);
             }
         }
-
+        if(self::$has_record){
+			self::$db_name_list[]=$this->connect_array['db'];
+        }
         if (!$stmt) {
             throw new Exception("error sql in " . $sql);
         }
@@ -396,18 +407,34 @@ class cls_sqlexecute implements cls_idb {
 
     public function begin() {
         $this->init();
+        self::$has_record=true;
+        if(self::$has_record){
+        	self::$db_name_list[]=$this->connect_array['db'];
+        }
         $this->this_operation_have_transaction = true;
         $this->connection->autocommit(false); //关闭本次数据库连接的自动命令提交事务模式
     }
 
     public function commit() {
+    	if(count(self::$db_name_list)>1){
+    		print_r(self::$db_name_list);
+    		$this->rollBack();
+    	}
         $this->connection->commit(); //提交事务后，打开本次数据库连接的自动命令提交事务模式
+        if(self::$has_record){
+        	self::$db_name_list[]=array();
+        	self::$has_record=false;
+        }
         $this->this_operation_have_transaction = false;
         $this->connection->autocommit(true);
     }
 
     public function rollBack() {
         $this->connection->rollback(); //回滚事务后，打开本次数据库连接的自动命令提交事务模式
+        if(self::$has_record){
+        	self::$db_name_list[]=array();
+        	self::$has_record=false;
+        }
         $this->this_operation_have_transaction = false;
         $this->connection->autocommit(true);
     }
