@@ -7,7 +7,7 @@ dbroute 是一个支持mysql数据库分库分表的数据库操作中间件
 3、支持基于单库的事务，但不支持跨库进行事务,如果在一个事务过程中有其他数据源,系统将抛出异常<br>
    &nbsp;&nbsp;<b>事务测试代码详见<font color=red>OrderAO.php、RefundAO.php.</font></b><br>
    &nbsp;&nbsp;<b>事务的开启、提交、回滚都委托给cls_dbroute.class</b><br>
-   &nbsp;&nbsp;begin、commit、rollBack方法，分表的传递逻辑列的值，未分表的不用传参<br>
+   &nbsp;&nbsp;<b>begin、commit、rollBack方法，分表的传递逻辑列的值，未分表的不用传参</b><br>
 4、支持读写分离,读库可配置为多个,用逗号分隔.<br>
 5、php操作myql方式可配置为 mysqli 和 PDO ,推荐mysqli操作方式，只需修改配置常量即可实现操作方式切换，无需修改任何业务代码<br>
 6、支持事务中的 select 查询走主库查询，以避免事务中查询延时(从库数据同步可能有延时),事务结束后面的查询依然可以走从库查询.<br>
