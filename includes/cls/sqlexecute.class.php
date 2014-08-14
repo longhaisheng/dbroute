@@ -73,7 +73,7 @@ class cls_sqlexecute implements cls_idb {
             } else {
                 $host = $connect_array['host'];
             }
-
+            //host 前加p:可以设置成持久化连接，不见意使用持久化
             $this->connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
             if (mysqli_connect_errno()) {
                 echo("Database Connect Error : " . mysqli_connect_error($this->connection));

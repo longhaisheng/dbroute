@@ -148,6 +148,7 @@ class cls_pdosqlexecute implements cls_idb {
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_CASE => PDO::CASE_LOWER,
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_PERSISTENT => false,//非持久化连接
                 )
             );
             return $connection;
