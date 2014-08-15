@@ -143,7 +143,7 @@ class cls_mysql {
         $this->query("COMMIT");
     }
 
-    public function rollback() {
+    public function rollBack() {
         $this->query("ROLLBACK");
     }
 
