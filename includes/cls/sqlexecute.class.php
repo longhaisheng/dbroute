@@ -24,10 +24,10 @@ class cls_sqlexecute implements cls_idb {
     private static $single_instance_list = array();
     
     /** 一次事务中所包含的数据库名 */
-    private static $need_record_transaction_database_name = array();
+    private static $db_name_list_in_one_transaction = array();
     
     /** 是否需要标记  一次事务中所包含的数据库名 默认为false,不标记,只有事务中代码才需要标记*/
-    private static $has_record=false;
+    private static $need_record_db_name_in_one_transaction=false;
     
     /**
      * @param string $db_name  数据库名
@@ -106,7 +106,7 @@ class cls_sqlexecute implements cls_idb {
 
     /** 获取一次事务中所包含的所有数据库名*/
     public static function get_database_name_list_in_one_transaction(){
-        return array_unique(self::$need_record_transaction_database_name);
+        return array_unique(self::$db_name_list_in_one_transaction);
     }
 
     private function getConnection() {
@@ -290,8 +290,8 @@ class cls_sqlexecute implements cls_idb {
                 $stmt = $this->connection->prepare($result['sql']);
             }
         }
-        if(self::$has_record){
-			self::$need_record_transaction_database_name[]=$this->connect_array['db'];
+        if(self::$need_record_db_name_in_one_transaction){
+			self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
         }
         if (!$stmt) {
             throw new Exception("error sql in " . $sql);
@@ -410,9 +410,9 @@ class cls_sqlexecute implements cls_idb {
 
     public function begin() {
         $this->init();
-        self::$has_record=true;
-        if(self::$has_record){
-        	self::$need_record_transaction_database_name[]=$this->connect_array['db'];
+        self::$need_record_db_name_in_one_transaction=true;
+        if(self::$need_record_db_name_in_one_transaction){
+        	self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
         }
         $this->this_operation_have_transaction = true;
         $this->connection->autocommit(false); //关闭本次数据库连接的自动命令提交事务模式
@@ -423,9 +423,9 @@ class cls_sqlexecute implements cls_idb {
     		throw new Exception(" transactions have more than one database,plese check you code ");
     	}
         $this->connection->commit(); //提交事务后，打开本次数据库连接的自动命令提交事务模式
-        if(self::$has_record){
-        	self::$need_record_transaction_database_name=array();
-        	self::$has_record=false;
+        if(self::$need_record_db_name_in_one_transaction){
+        	self::$db_name_list_in_one_transaction=array();
+        	self::$need_record_db_name_in_one_transaction=false;
         }
         $this->this_operation_have_transaction = false;
         $this->connection->autocommit(true);
@@ -433,9 +433,9 @@ class cls_sqlexecute implements cls_idb {
 
     public function rollBack() {
         $this->connection->rollback(); //回滚事务后，打开本次数据库连接的自动命令提交事务模式
-        if(self::$has_record){
-        	self::$need_record_transaction_database_name=array();
-        	self::$has_record=false;
+        if(self::$need_record_db_name_in_one_transaction){
+        	self::$db_name_list_in_one_transaction=array();
+        	self::$need_record_db_name_in_one_transaction=false;
         }
         $this->this_operation_have_transaction = false;
         $this->connection->autocommit(true);

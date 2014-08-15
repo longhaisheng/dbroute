@@ -16,10 +16,10 @@ class cls_pdosqlexecute implements cls_idb {
     private static $single_instance_list = array();
 
     /** 一次事务中所包含的数据库名 */
-    private static $db_name_list = array();
+    private static $db_name_list_in_one_transaction = array();
 
     /** 是否需要标记  一次事务中所包含的数据库名 默认为false,不标记,只有事务中代码才需要标记*/
-    private static $need_record_transaction_database_name=false;
+    private static $need_record_db_name_in_one_transaction=false;
 
     /**
      * @param string $db_name  数据库名
@@ -53,7 +53,7 @@ class cls_pdosqlexecute implements cls_idb {
 
     /** 获取一次事务中所包含的所有数据库名*/
     public static function get_database_name_list_in_one_transaction(){
-        return array_unique(self::$db_name_list);
+        return array_unique(self::$db_name_list_in_one_transaction);
     }
 
     public function getAll($sql, $params = array()) {
@@ -114,8 +114,8 @@ class cls_pdosqlexecute implements cls_idb {
             }
         }
         $stmt = $db->prepare($sql);
-        if(self::$need_record_transaction_database_name){
-            self::$db_name_list[]=$this->connect_array['db'];
+        if(self::$need_record_db_name_in_one_transaction){
+            self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
         }
         return $stmt;
     }
@@ -166,9 +166,9 @@ class cls_pdosqlexecute implements cls_idb {
 
     public function begin() {
         $this->getMasterConnection();
-        self::$need_record_transaction_database_name=true;
-        if(self::$need_record_transaction_database_name){
-            self::$db_name_list[]=$this->connect_array['db'];
+        self::$need_record_db_name_in_one_transaction=true;
+        if(self::$need_record_db_name_in_one_transaction){
+            self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
         }
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, false);
         $this->this_operation_have_transaction = true;
@@ -180,9 +180,9 @@ class cls_pdosqlexecute implements cls_idb {
             throw new Exception(" transactions have more than one database,plese check you code ");
         }
         $return = $this->connection->commit();
-        if(self::$need_record_transaction_database_name){
-            self::$db_name_list[]=array();
-            self::$need_record_transaction_database_name=false;
+        if(self::$need_record_db_name_in_one_transaction){
+            self::$db_name_list_in_one_transaction=array();
+            self::$need_record_db_name_in_one_transaction=false;
         }
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
         $this->this_operation_have_transaction = false;
@@ -191,9 +191,9 @@ class cls_pdosqlexecute implements cls_idb {
 
     public function rollBack() {
         $return = $this->connection->rollBack();
-        if(self::$need_record_transaction_database_name){
-            self::$db_name_list[]=array();
-            self::$need_record_transaction_database_name=false;
+        if(self::$need_record_db_name_in_one_transaction){
+            self::$db_name_list_in_one_transaction=array();
+            self::$need_record_db_name_in_one_transaction=false;
         }
         $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
         $this->this_operation_have_transaction = false;
