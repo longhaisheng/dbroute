@@ -75,8 +75,8 @@ class cls_sqlexecute implements cls_idb {
             }
             //host 前加p:可以设置成持久化连接，不见意使用持久化
             $this->connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
-            if ($this->connection->errno) {
-                echo("Database Connect Error : " .$this->connection->errno);
+            if ($this->connection->error) {
+                echo("Database Connect Error : " . $this->connection->error);
             } else {
                 $this->connection->query("SET NAMES 'utf8'");
             }
@@ -96,8 +96,8 @@ class cls_sqlexecute implements cls_idb {
                 $host = $host_array[$num];
             }
             $this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
-            if ($this->read_connection->errno) {
-                echo("Database Connect Error : " . $this->read_connection->errno);
+            if ($this->read_connection->error) {
+                echo("Database Connect Error : " . $this->read_connection->error);
             } else {
                 $this->read_connection->query("SET NAMES 'utf8'");
             }
@@ -306,6 +306,8 @@ class cls_sqlexecute implements cls_idb {
             if ($stmt != null) {
                 $stmt->close();
             }
+            print_r($this->read_connection->error );
+            print_r($this->connection->error );
             $error_msg = $read_conn ? $this->read_connection->error : $this->connection->error;
             throw new Exception("Error in : " . $error_msg);
         }
@@ -422,7 +424,7 @@ class cls_sqlexecute implements cls_idb {
     	}
         $this->connection->commit(); //提交事务后，打开本次数据库连接的自动命令提交事务模式
         if(self::$has_record){
-        	self::$need_record_transaction_database_name[]=array();
+        	self::$need_record_transaction_database_name=array();
         	self::$has_record=false;
         }
         $this->this_operation_have_transaction = false;
@@ -432,7 +434,7 @@ class cls_sqlexecute implements cls_idb {
     public function rollBack() {
         $this->connection->rollback(); //回滚事务后，打开本次数据库连接的自动命令提交事务模式
         if(self::$has_record){
-        	self::$need_record_transaction_database_name[]=array();
+        	self::$need_record_transaction_database_name=array();
         	self::$has_record=false;
         }
         $this->this_operation_have_transaction = false;

@@ -1,7 +1,7 @@
 <?php
 class cls_sequence {
 
-    private $mysqli;
+    private $mysql;
 
     private $default_step = 100;
 
@@ -11,11 +11,7 @@ class cls_sequence {
 
     public function __construct() {
         global $default_config_array;
-        if (defined("MYSQL_EXTEND") && MYSQL_EXTEND == 'mysql_pdo') {
-            $this->mysqli = cls_pdosqlexecute::getInstance($default_config_array['db'], $default_config_array);
-        } else {
-            $this->mysqli = cls_sqlexecute::getInstance($default_config_array['db'], $default_config_array);
-        }
+        $this->mysql = new cls_mysql($default_config_array);
         if (defined('SEQUENCE_DEFAULT_STEP')) { //序列递增步长
             $this->default_step = SEQUENCE_DEFAULT_STEP;
         }
@@ -40,30 +36,25 @@ class cls_sequence {
     private function getLastSeq($table_name) {
         $range = new SeqRange();
         for ($i = 0; $i < $this->retry_time; $i++) {
-            $sql = "select last_seq from sequence where table_name=#table_name# for update";
-            $this->mysqli->begin();
-            $row = $this->mysqli->getRow($sql, array('table_name' => $table_name));
+            $sql = "select last_seq from sequence where table_name='$table_name' for update";
+            $this->mysql->begin();
+            $row = $this->mysql->getRow($sql);
             $update_result = 0;
             if ($row) {
                 $new_value = $row['last_seq'] + $this->getDefaultStep();
                 $range->setMin($row['last_seq'] + 1);
                 $range->setMax($new_value);
-                $update_sql = "update sequence set last_seq=#last_seq#,modify_date=now() where table_name=#table_name#  ";
-                $params = array();
-                $params['last_seq'] = $new_value;
-                $params['table_name'] = $table_name;
-                $update_result = $this->mysqli->update($update_sql, $params);
+                $update_sql = "update sequence set last_seq=$new_value,modify_date=now() where table_name='$table_name'  ";
+                $update_result = $this->mysql->execute($update_sql);
             } else {
-                $insert_sql = "insert sequence(table_name,primary_name,last_seq,modify_date) value(#table_name#,#primary_name#,#last_seq#,now())  ";
-                $params = array();
-                $params['last_seq'] = $this->getDefaultStep();
-                $params['table_name'] = $table_name;
-                $params['primary_name'] = $this->getPrimaryName();
-                $update_result = $this->mysqli->insert($insert_sql, $params);
+                $last_seq = $this->getDefaultStep();
+                $primary_name= $this->getPrimaryName();
+                $insert_sql = "insert sequence(table_name,primary_name,last_seq,modify_date) value('$table_name','$primary_name',$last_seq,now())  ";
+                $update_result = $this->mysql->insert($insert_sql);
                 $range->setMin(1);
                 $range->setMax(0 + $this->getDefaultStep());
             }
-            $this->mysqli->commit();
+            $this->mysql->commit();
             if ($update_result) {
                 return $range;
             }
@@ -74,7 +65,7 @@ class cls_sequence {
     }
 
     public function nextValue($logic_table) {
-        $file = fopen(ROOT_PATH . 'includes/cls/seq.txt', "w+");
+        $file = fopen(ROOT_PATH . 'includes/cls/'.$logic_table.'_seq.txt', "w+");
         if (flock($file, LOCK_EX)) { //独占锁
             $value = 0;
             $is_write = false;
