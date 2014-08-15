@@ -37,7 +37,7 @@ class cls_sequence {
         $range = new SeqRange();
         for ($i = 0; $i < $this->retry_time; $i++) {
             $sql = "select last_seq from sequence where table_name='$table_name' for update";
-            $this->mysql->begin();
+            $this->mysql->begin();//多台机器上存在此操作时，此事务起到唯一性，此处不加事务，在分布式环境下可能会出现取出相同的序列值
             $row = $this->mysql->getRow($sql);
             $update_result = 0;
             if ($row) {
