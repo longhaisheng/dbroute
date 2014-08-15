@@ -75,8 +75,8 @@ class cls_sqlexecute implements cls_idb {
             }
             //host 前加p:可以设置成持久化连接，不见意使用持久化
             $this->connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
-            if (mysqli_connect_errno()) {
-                echo("Database Connect Error : " . mysqli_connect_error($this->connection));
+            if ($this->connection->errno) {
+                echo("Database Connect Error : " .$this->connection->errno);
             } else {
                 $this->connection->query("SET NAMES 'utf8'");
             }
@@ -96,8 +96,8 @@ class cls_sqlexecute implements cls_idb {
                 $host = $host_array[$num];
             }
             $this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
-            if (mysqli_connect_errno()) {
-                echo("Database Connect Error : " . mysqli_connect_error($this->read_connection));
+            if ($this->read_connection->errno) {
+                echo("Database Connect Error : " . $this->read_connection->errno);
             } else {
                 $this->read_connection->query("SET NAMES 'utf8'");
             }
@@ -306,7 +306,7 @@ class cls_sqlexecute implements cls_idb {
             if ($stmt != null) {
                 $stmt->close();
             }
-            $error_msg = $read_conn ? mysqli_error($this->read_connection) : mysqli_error($this->connection);
+            $error_msg = $read_conn ? $this->read_connection->error : $this->connection->error;
             throw new Exception("Error in : " . $error_msg);
         }
     }

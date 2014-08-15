@@ -99,9 +99,9 @@ class cls_dbroute {
 	 */
 	private function decorate($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
+		$logic_col = $this->getDbParse()->getLogicColumn();
 		$db = null;
-		if ($logicTable) {
-			$logic_col = $this->getDbParse()->getLogicColumn();
+		if ($logicTable && $logic_col) {
 			if (!isset($params[$logic_col])) {
 				throw new DBRouteException("error params ,it must have key " . $logic_col);
 			}
@@ -778,7 +778,7 @@ class ModHash extends BaseConfig{//mod hash
 
 /**
  * 
- * 一致性hash算法实现
+ * 一致性hash算法实现(手工指定分段)
  * @author longhaisheng
  *
  */
@@ -921,7 +921,6 @@ class VirtualHash extends BaseConfig{//虚拟hash算法实现，其实也是一�
             $logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
         }
         return $this->hash->lookup($logic_column_value);
-
     }
 
     public function setVirtualDbNodeNumber($virtual_db_node_number) {
