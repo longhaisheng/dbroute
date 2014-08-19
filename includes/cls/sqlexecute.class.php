@@ -125,6 +125,11 @@ class cls_sqlexecute implements cls_idb {
             $insert_id = $stmt->insert_id;
             $stmt->close();
             return $insert_id;
+	        /*if($return_insert_id){
+	            $seq_sql="select LAST_INSERT_ID() as id ";
+	            $id=$this->getColumn($seq_sql);
+	            return $id;
+	        }*/
         }
         if ($stmt != null) {
             $stmt->close();
@@ -306,8 +311,6 @@ class cls_sqlexecute implements cls_idb {
             if ($stmt != null) {
                 $stmt->close();
             }
-            print_r($this->read_connection->error );
-            print_r($this->connection->error );
             $error_msg = $read_conn ? $this->read_connection->error : $this->connection->error;
             throw new Exception("Error in : " . $error_msg);
         }

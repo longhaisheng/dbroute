@@ -33,14 +33,20 @@ class RefundInfoModel extends BaseModel { //多库多表
     }
 
     public function selectByIn() {
-        $sql = "select id,refund_id,goods_id,goods_num,user_id,add_time,modify_time from sc_refund_info where user_id in (#user_ids#)order by id desc  ";
-        $params['user_ids']=array(10,74,1034,139);
+        $sql = "select id,refund_id,goods_id,goods_num,user_id,add_time,modify_time from sc_refund_info where user_id in (#user_ids#) order by id desc  ";
+        $params['user_ids']=array(10,74,257,11);
+        $params['sort_filed'] = 'id';
+        $params['sort_order'] = 'desc';
+        $params['size'] = 10;
         return$this->dbroute->selectByIn($sql,$params);
     }
 
     public function queryAllFromTable() {
         $sql = "select id,refund_id,goods_id,goods_num,user_id,add_time,modify_time from sc_refund_info order by id desc  ";
-        return$this->dbroute->queryResultFromAllDbTables($sql);
+        $params['sort_filed'] = 'id';
+        $params['sort_order'] = 'desc';
+        $params['size'] = 20;
+        return$this->dbroute->queryResultFromAllDbTables($sql,$params);
     }
 
 }

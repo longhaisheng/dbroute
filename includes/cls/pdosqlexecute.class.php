@@ -210,13 +210,8 @@ class cls_pdosqlexecute implements cls_idb {
     public function insert($sql, $params = array(), $return_insert_id = true) {
         $stmt = $this->query($sql, $params);
         $stmt->closeCursor();
-        if($return_insert_id){
-            $seq_sql="select LAST_INSERT_ID() as id ";
-            $id=$this->getColumn($seq_sql);
-            return $id;
-        }
-        //$insertId = $return_insert_id ? $stmt->lastInsertId : 0;//在dbroute使用自己生成主键时，此处会抛出一个警告，无法获取到上一次插入的ID
-        //return $insertId;
+        $insertId = $return_insert_id ? $stmt->lastInsertId : 0;//在dbroute使用自己生成主键时，此处会抛出一个警告，无法获取到上一次插入的ID
+        return $insertId;
     }
 
     /**

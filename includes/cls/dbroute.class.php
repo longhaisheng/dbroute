@@ -179,7 +179,7 @@ class cls_dbroute {
 	 * @param bool $return_insert_id
 	 * @return int
 	 */
-	public function insert($sql, $params = array(), $return_insert_id = true) {
+	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
 		return $this->getDbConnnection($db_name)->insert($decorate['sql'], $decorate['params'], $return_insert_id);
@@ -255,7 +255,6 @@ class cls_dbroute {
 		$db_name = $decorate['db_name'];
 		return $this->getDbConnnection($db_name)->getColumn($decorate['sql'], $decorate['params']);
 	}
-
 	/**
 	 * 只支持分表的表
 	 * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
@@ -264,6 +263,26 @@ class cls_dbroute {
 	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
 	 */
 	public function selectByIn($sql, $params = array()) {
+		return $this->selectByInVirtualHash($sql,$params);
+/*		if($this->getDbParse() instanceof ModHash){
+			return $this->selectByInModHash($sql,$params);
+		}
+		if($this->getDbParse() instanceof ConsistentHash){
+			return $this->selectByInConsistentHash($sql,$params);
+		}
+		if($this->getDbParse() instanceof VirtualHash){
+			return $this->selectByInVirtualHash($sql,$params);
+		}*/
+	}
+	
+	/**
+	 * 只支持分表的表
+	 * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
+	 * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
+	 * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
+	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
+	 */
+	private function selectByInModHash($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		if (!$logicTable) {
 			return;
@@ -372,7 +391,240 @@ class cls_dbroute {
 			return array();
 		}
 	}
+	
+	private function selectByInVirtualHash($sql, $params = array()) {
+		$logicTable = $this->getDbParse()->getLogicTable();
+		if (!$logicTable) {
+			return;
+		}
+		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
+		if (!isset($params[$select_in_logic_column])) {
+			throw new DBRouteException("select in 条件参数key名为" . $select_in_logic_column . "");
+		}
+		if (!stripos($sql, "#" . $select_in_logic_column . "#")) {
+			throw new DBRouteException("select in 条件参数key名为#" . $select_in_logic_column . "#");
+		}
+		$in_param_arr = $params[$select_in_logic_column];
+		if (!is_array($in_param_arr)) {
+			throw new DBRouteException("select in 条件参数值为数组");
+		}
+		if (empty($in_param_arr)) {
+			throw new DBRouteException("select in 条件参数值为空");
+		}
+		$size = isset($params['size']) ? $params['size'] : 20;
+		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
+		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 'desc';
+		if ($size >= 100) {
+			$size = 100;
+		}
+		if (!stripos($sql, " limit ")) {
+			$sql = $sql . " limit " . $size;
+		}
 
+		unset($params['size']);
+		unset($params['sort_filed']);
+		unset($params['sort_order']);
+		unset($params[$select_in_logic_column]);
+
+		$db_param_list = array();//每个数据库中 余数(余一个库中的表数)相同的值数组
+		foreach ($in_param_arr as $key => $value) {
+			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
+				$value = self::strToIntKey($value);
+				$in_param_arr[$key]=$value;
+			} 
+			$mod=$this->getDbParse()->getTableMod($value);
+			$db_name = $this->getDbParse()->getDbName($value);
+			$db_param_list[$db_name][$mod][]=$value;
+		}
+
+		$merge_result = array();
+		foreach ($db_param_list as $db_name => $one_db_mod_values) {
+			$this->setDBConn($db_name);
+			$mod_db_name=array();
+			foreach ($one_db_mod_values as $mod=>$value_array){
+				$in_value_arrays = array();
+				$in_params = array();
+				$in_value_arrays[$mod] = array();
+				$in_params[$mod] = array();
+				foreach ($value_array as $key => $val) {
+					$in_value_arrays[$mod][] = '#p_' . $key . '_v#';
+					$in_params[$mod]['p_' . $key . "_v"] = $val;
+					$mod_db_name[$mod]['table_name']=$this->getDbParse()->getTableName($val);//同一库中余数相同的,肯定定位至同一个表中
+				}
+				foreach ($params as $k => $v) {
+					$in_params[$mod][$k] = $v;
+				}
+			
+				foreach ($in_value_arrays as $mod => $val) {
+					$table_name=$mod_db_name[$mod]['table_name'];
+					$new_sql = str_ireplace("#" . $select_in_logic_column . "#", implode(',', array_values($val)), $sql);
+					$first_pos = stripos($new_sql, " " . $logicTable . " ");
+					if (!$first_pos) {
+						throw new DBRouteException("error sql in " . $sql);
+					}
+					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
+					//print_r($in_params[$mod]);
+					//echo $new_sql."=>$db_name<Br>";
+					$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
+					if ($result) {
+						foreach ($result as $row) {
+							$merge_result[] = $row;
+						}
+					}
+				}
+			}
+			
+		}
+		
+		if ($merge_result) {
+			if ($sort_filed) {
+				foreach ((array)$merge_result as $key => $row) {
+					$sort_folder[$key] = $row[$sort_filed];
+				}
+				if ($sort_order == 'desc') {
+					array_multisort($sort_folder, SORT_DESC, $merge_result);
+				} else {
+					array_multisort($sort_folder, SORT_ASC, $merge_result);
+				}
+			}
+			return array_slice($merge_result, 0, $size);
+		} else {
+			return array();
+		}
+	}
+	
+	/**
+	 * 只支持分表的表
+	 * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
+	 * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
+	 * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
+	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
+	 */
+	private function selectByInConsistentHash($sql, $params = array()) {
+		$logicTable = $this->getDbParse()->getLogicTable();
+		if (!$logicTable) {
+			return;
+		}
+		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
+		if (!isset($params[$select_in_logic_column])) {
+			throw new DBRouteException("select in 条件参数key名为" . $select_in_logic_column . "");
+		}
+		if (!stripos($sql, "#" . $select_in_logic_column . "#")) {
+			throw new DBRouteException("select in 条件参数key名为#" . $select_in_logic_column . "#");
+		}
+		$in_param_arr = $params[$select_in_logic_column];
+		if (!is_array($in_param_arr)) {
+			throw new DBRouteException("select in 条件参数值为数组");
+		}
+		if (empty($in_param_arr)) {
+			throw new DBRouteException("select in 条件参数值为空");
+		}
+		$size = isset($params['size']) ? $params['size'] : 20;
+		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
+		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 'desc';
+		if ($size >= 100) {
+			$size = 100;
+		}
+		if (!stripos($sql, " limit ")) {
+			$sql = $sql . " limit " . $size;
+		}
+
+		unset($params['size']);
+		unset($params['sort_filed']);
+		unset($params['sort_order']);
+		unset($params[$select_in_logic_column]);
+		
+		
+		foreach ($in_param_arr as $key => $value) {
+			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
+				$value = self::strToIntKey($value);
+				$in_param_arr[$key]=$value;
+			}
+		}
+		
+		$node_list=$this->getDbParse()->getList();
+		$db_param_list=array();//同一库中，所有余数相同的参数在一个数组中
+		foreach ($in_param_arr as $key => $value) {
+			foreach ($node_list as $node){
+				if($value>=$node->getStart() && $value<$node->getEnd()){
+					$mod=$this->getDbParse()->getTableMod($value);
+					$db_name = $node->getDbName();
+					$db_param_list[$db_name][$mod][]=$value;
+				}
+			}
+		}
+		
+		foreach ($node_list as $node){
+			foreach ($db_param_list as $db_key=>$array_one){
+				$db_name = $node->getDbName();
+				if($db_name ==$db_key){
+					$node->setInOneDbParams($array_one);
+				}
+			}
+		}
+		
+		$merge_result = array();
+		$logic_table = $this->getDbParse()->getLogicTable();
+		foreach ($node_list as $node){
+			if($node->getInOneDbParams()){
+			$one_db_params_list=$node->getInOneDbParams();
+			$db_name = $node->getDbName();
+			$this->setDBConn($db_name);
+			foreach ($one_db_params_list as $mod=>$array){
+				$in_value_arrays=array();
+				$in_params=array();
+				$in_value_arrays[$mod] = array();
+				$in_params[$mod] = array();
+				$table_name=null;
+				foreach ($array as $key=>$val){
+					if(empty($table_name)){
+						$table_name=$this->getDbParse()->getTableName($val);
+					}
+					$in_value_arrays[$mod][] = '#p_' . $key . '_v#';
+					$in_params[$mod]['p_' . $key . "_v"] = $val;
+				}
+				foreach ($params as $k => $v) {
+					$in_params[$mod][$k] = $v;
+				}
+							
+				foreach ($in_value_arrays as $mod => $val) {
+					$new_sql = str_ireplace("#" . $this->getDbParse()->getSelectInLogicColumn() . "#", implode(',', array_values($val)), $sql);
+					$first_pos = stripos($new_sql, " " . $logic_table . " ");
+					if (!$first_pos) {
+						throw new DBRouteException("error sql in " . $sql);
+					}
+					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
+					//print_r($in_params[$mod]);
+					//echo $new_sql."=>$db_name<Br>";
+					$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
+					if ($result) {
+						foreach ($result as $row) {
+							$merge_result[] = $row;
+						}
+					}
+				}
+			}
+			}
+		}	
+
+		if ($merge_result) {
+			if ($sort_filed) {
+				foreach ((array)$merge_result as $key => $row) {
+					$sort_folder[$key] = $row[$sort_filed];
+				}
+				if ($sort_order == 'desc') {
+					array_multisort($sort_folder, SORT_DESC, $merge_result);
+				} else {
+					array_multisort($sort_folder, SORT_ASC, $merge_result);
+				}
+			}
+			return array_slice($merge_result, 0, $size);
+		} else {
+			return array();
+		}
+
+	}
+	
 	/**
 	 * 只支持分表的表
 	 * 访问所有库表 不见意使用此方法
@@ -380,6 +632,28 @@ class cls_dbroute {
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
 	 */
 	public function queryResultFromAllDbTables($sql, $params = array()) {
+		return $this->query_result_from_all_db_tables($sql,$params);
+/*		if($this->getDbParse() instanceof ModHash || $this->getDbParse() instanceof ConsistentHash || $this->getDbParse() instanceof VirtualHash){
+			return $this->query_result_from_all_db_tables($sql,$params);
+		}
+		if($this->getDbParse() instanceof ModHash){
+			return $this->queryResultFromAllDbTablesWithModHash($sql,$params);
+		}
+		if($this->getDbParse() instanceof ConsistentHash){
+			return $this->query_result_from_all_db_tables($sql,$params);
+		}
+		if($this->getDbParse() instanceof VirtualHash){
+			return $this->query_result_from_all_db_tables($sql,$params);
+		}*/
+	}
+
+	/**
+	 * 只支持分表的表
+	 * 访问所有库表 不见意使用此方法
+	 * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
+	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
+	 */
+	private function queryResultFromAllDbTablesWithModHash($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		if (!$logicTable) {
 			return;
@@ -412,6 +686,61 @@ class cls_dbroute {
 			if ($result) {
 				foreach ($result as $row) {
 					$merge_result[] = $row;
+				}
+			}
+		}
+
+		if ($merge_result) {
+			if ($sort_filed) {
+				foreach ((array)$merge_result as $key => $row) {
+					$sort_folder[$key] = $row[$sort_filed];
+				}
+				if ($sort_order) {
+					array_multisort($sort_folder, SORT_DESC, $merge_result);
+				} else {
+					array_multisort($sort_folder, SORT_ASC, $merge_result);
+				}
+			}
+			return array_slice($merge_result, 0, $size);
+		} else {
+			return array();
+		}
+	}
+	
+	private function query_result_from_all_db_tables($sql, $params = array()) {
+		$logicTable = $this->getDbParse()->getLogicTable();
+		if (!$logicTable) {
+			return;
+		}
+		$size = isset($params['size']) ? $params['size'] : 20;
+		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
+		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 1;
+
+		unset($params['size']);
+		unset($params['sort_filed']);
+		unset($params['sort_order']);
+
+		$logic_col = $this->getDbParse()->getLogicColumn();
+		if (isset($params[$logic_col])) {
+			throw new DBRouteException("error params ,it must not have key " . $logic_col);
+		}
+		
+		$merge_result = array();
+		$db_tables =$this->getDbParse()->getDbList();
+		foreach ($db_tables as $db_name=>$tables){
+			$new_sql=null;
+			foreach ($tables as $table_name){
+				$first_pos = stripos($sql, " " . $logicTable . " ");
+				if (!$first_pos) {
+					throw new DBRouteException("error sql in " . $sql);
+				}
+				$new_sql = substr_replace($sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
+				$this->setDBConn($db_name);
+				$result = $this->getDbConnnection($db_name)->getAll($new_sql, $params);
+				if ($result) {
+					foreach ($result as $row) {
+						$merge_result[] = $row;
+					}
 				}
 			}
 		}
@@ -729,7 +1058,7 @@ abstract class BaseConfig{
 		return $this->db_list;
 	}
 
-	protected function getTableMod($logic_column_value) {
+	public function getTableMod($logic_column_value) {
 		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string' && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
@@ -942,6 +1271,8 @@ class Node{
     private $db_name;
 
     private $is_default_db=false;
+    
+    private $in_one_db_params=array();
 
     public function setEnd($end) {
         $this->end = $end;
@@ -974,5 +1305,14 @@ class Node{
     public function getIsDefaultDb() {
         return $this->is_default_db;
     }
+
+    public function setInOneDbParams($in_one_db_params) {
+        $this->in_one_db_params = $in_one_db_params;
+    }
+
+    public function getInOneDbParams() {
+        return $this->in_one_db_params;
+    }
+
 
 }
