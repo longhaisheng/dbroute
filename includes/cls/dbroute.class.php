@@ -100,6 +100,7 @@ class cls_dbroute {
 	private function decorate($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$logic_col = $this->getDbParse()->getLogicColumn();
+        $date_table=$this->getDbParse()->getTableNameType();
 		$db = null;
 		if ($logicTable && $logic_col) {
 			if (!isset($params[$logic_col])) {
@@ -885,11 +886,21 @@ abstract class BaseConfig{
 	/** 逻辑字段值类型*/
 	private $logic_column_field_type;
 
+    private $table_name_type;
+
+    private $table_name_date_logic_string;
+
 	private $db_list=array();
 
 	protected function __construct($config_array = array()) {
 		if(empty($config_array)) echo 'BaseConfig init error ';
 		$this->config_array = $config_array;
+        if(isset($this->config_array['table_name_type'])){
+            $this->setTableNameType($this->config_array['table_name_type']);
+        }
+        if(isset($this->config_array['table_name_date_logic_string'])){
+            $this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
+        }
 		if (isset($this->config_array['logic_table']) && isset($this->config_array['logic_column'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
 			$this->setTablePrefix($this->config_array['table_prefix']);
@@ -1046,6 +1057,22 @@ abstract class BaseConfig{
 		return $this->logic_column_field_type;
 	}
 
+    public function setTableNameDateLogicString($table_name_date_logic_string) {
+        $this->table_name_date_logic_string = $table_name_date_logic_string;
+    }
+
+    public function getTableNameDateLogicString() {
+        return $this->table_name_date_logic_string;
+    }
+
+    public function setTableNameType($table_name_type) {
+        $this->table_name_type = $table_name_type;
+    }
+
+    public function getTableNameType() {
+        return $this->table_name_type;
+    }
+
 	private function getTable($mod) {
 		return substr_replace($this->getTablePrefix(), $mod, strlen($this->getTablePrefix()) - strlen($mod));
 	}
@@ -1074,6 +1101,18 @@ abstract class BaseConfig{
 
     public function getTableName($logic_column_value) {
         $db_name=$this->getDbName($logic_column_value);
+        if($this->getTableNameType()=='date' && $this->getTableNameDateLogicString()){
+            if($this->getTableNameDateLogicString()=='yyyy'){
+                $suffix=date("Y");
+            }
+            if($this->getTableNameDateLogicString()=='yyyyMM'){
+                $suffix=date("Ym");
+            }
+            if($this->getTableNameDateLogicString()=='yyyyMMdd'){
+                $suffix=date("Ymd");
+            }
+            return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - strlen($suffix));
+        }
         $db_list=$this->getDbList();
         $one_db_tables=$db_list[$db_name];
         $table_index=$this->getTableMod($logic_column_value);
