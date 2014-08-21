@@ -61,7 +61,9 @@ class cls_dbroute {
         return $this->hash_type;
     }
 
-	public function getDBAndTableName($logic_colum_value){
+	public function getDBAndTableName($logic_colum_value=''){
+		$tableNameType=$this->getDbParse()->getTableNameType();
+		if((!isset($tableNameType) || ($tableNameType!='date')) && empty($logic_colum_value))return false;
 		$table_name=$this->getDbParse()->getTableName($logic_colum_value);
 		$db_name=$this->getDbParse()->getDbName($logic_colum_value);
 		return array('db_name'=>$db_name,'table_name'=>$table_name);
@@ -100,13 +102,17 @@ class cls_dbroute {
 	private function decorate($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$logic_col = $this->getDbParse()->getLogicColumn();
-        $date_table=$this->getDbParse()->getTableNameType();
 		$db = null;
-		if ($logicTable && $logic_col) {
-			if (!isset($params[$logic_col])) {
-				throw new DBRouteException("error params ,it must have key " . $logic_col);
-			}
+		if ($logicTable) {
+	        $date_table=$this->getDbParse()->getTableNameType();
 			$logic_col_value=$params[$logic_col];
+			if($date_table && $date_table=='date'){
+				$logic_col_value=$logic_col_value?$logic_col_value:'';
+			}else{
+				if (!isset($params[$logic_col])) {
+					throw new DBRouteException("error params ,it must have key " . $logic_col);
+				}
+			}
 			$db = $this->getDbParse()->getDbName($logic_col_value);
 			$array['sql'] = $this->getNewSql($sql, $logic_col_value);
 			$array['db_name'] = $db;
@@ -120,7 +126,11 @@ class cls_dbroute {
 		return $array;
 	}
 
-	private function getNewSql($sql,$logic_column_value) {
+	private function getNewSql($sql,$logic_column_value='') {
+		$date_table=$this->getDbParse()->getTableNameType();
+		if(!isset($date_table) && !$date_table =='date' &&  empty($logic_column_value)){
+			return false;
+		}
 		$table_name = $this->getDbParse()->getTableName($logic_column_value);
 		$logic_table = $this->getDbParse()->getLogicTable();
 		$first_pos = stripos($sql, " " . $logic_table . " ");
@@ -1111,7 +1121,16 @@ abstract class BaseConfig{
             if($this->getTableNameDateLogicString()=='yyyyMMdd'){
                 $suffix=date("Ymd");
             }
-            return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - strlen($suffix));
+            if($this->getTableNameDateLogicString()=='MMdd'){
+                $suffix=date("md");
+            }
+            if($this->getTableNameDateLogicString()=='MM'){
+                $suffix=date("m");
+            }
+            if($this->getTableNameDateLogicString()=='dd'){
+                $suffix=date("d");
+            }
+            return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - 4);
         }
         $db_list=$this->getDbList();
         $one_db_tables=$db_list[$db_name];
