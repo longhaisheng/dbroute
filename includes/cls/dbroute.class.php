@@ -19,8 +19,8 @@ class cls_dbroute {
 	/** 数据库连接 cls_mysqli 类的数组*/
 	private $connections = array();
 
-    /** 数据解析器字符串类型 */
-    private $hash_type;
+    /** 数据库解析器字符串类型 */
+    private $db_hash_type;
 	
 	public function __construct($db_route_array=array()){
 		global $default_config_array;
@@ -30,17 +30,17 @@ class cls_dbroute {
 			$this->config_array = $default_config_array;
 		}
 
-        $this->hash_type='mod_hash';
-        if(isset($this->config_array['hash_type'])){
-            $this->hash_type=$this->config_array['hash_type'];
+        $this->db_hash_type='mod_hash';
+        if(isset($this->config_array['db_hash_type'])){
+            $this->db_hash_type=$this->config_array['db_hash_type'];
         }
-        if($this->hash_type==='consistent_hash'){//一致性hash
+        if($this->db_hash_type==='consistent_hash'){//一致性hash
 		    $this->dbParse=new ConsistentHash($this->config_array);
         }
-        if($this->hash_type==='virtual_hash'){//虚拟节点hash
+        if($this->db_hash_type==='virtual_hash'){//虚拟节点hash
             $this->dbParse=new VirtualHash($this->config_array);
         }
-        if($this->hash_type==='mod_hash'){//mod Hash
+        if($this->db_hash_type==='mod_hash'){//mod Hash
             $this->dbParse=new ModHash($this->config_array);
         }
 	}
@@ -53,19 +53,18 @@ class cls_dbroute {
 		return $this->dbParse;
 	}
 
-    public function setHashType($hash_type) {
-        $this->hash_type = $hash_type;
+    public function setDbHashType($hash_type) {
+        $this->db_hash_type = $hash_type;
     }
 
-    public function getHashType() {
-        return $this->hash_type;
+    public function getDbHashType() {
+        return $this->db_hash_type;
     }
 
-	public function getDBAndTableName($logic_colum_value=''){
-		$tableNameType=$this->getDbParse()->getTableNameType();
-		if((!isset($tableNameType) || ($tableNameType!='date')) && empty($logic_colum_value))return false;
-		$table_name=$this->getDbParse()->getTableName($logic_colum_value);
-		$db_name=$this->getDbParse()->getDbName($logic_colum_value);
+	public function getDBAndTableName($params=array()){
+		$logic_column_value = $this->get_logic_column_value($params);
+		$table_name=$this->getDbParse()->getTableName($logic_column_value);
+		$db_name=$this->get_db_name($params);
 		return array('db_name'=>$db_name,'table_name'=>$table_name);
 	}
 
@@ -101,35 +100,56 @@ class cls_dbroute {
 	 */
 	private function decorate($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
-		$logic_col = $this->getDbParse()->getLogicColumn();
-		$db = null;
-		if ($logicTable) {
-	        $date_table=$this->getDbParse()->getTableNameType();
-			$logic_col_value=$params[$logic_col];
-			if($date_table && $date_table=='date'){
-				$logic_col_value=$logic_col_value?$logic_col_value:'';
-			}else{
-				if (!isset($params[$logic_col])) {
-					throw new DBRouteException("error params ,it must have key " . $logic_col);
-				}
-			}
-			$db = $this->getDbParse()->getDbName($logic_col_value);
+        $db = null;
+        if ($logicTable) {
+            $logic_col_value = $this->get_logic_column_value($params);
+			$array['db_name'] = $this->get_db_name($params);
 			$array['sql'] = $this->getNewSql($sql, $logic_col_value);
-			$array['db_name'] = $db;
 		} else {
-			$array['sql'] = $sql;
 			$array['db_name'] = $this->config_array['db'];
-			$db = $this->config_array['db'];
+			$array['sql'] = $sql;
 		}
 		$array['params'] = $params;
-		$this->setDBConn($db);
+		$this->setDBConn($array['db_name']);
 		return $array;
 	}
 
-	private function getNewSql($sql,$logic_column_value='') {
+    private function get_logic_column_value($params) {
+        $logic_col = $this->getDbParse()->getTableLogicColumn();
+        $date_table = $this->getDbParse()->getTableNameType();
+        $logic_col_value = $params[$logic_col];
+        if ($date_table && $date_table == 'date') {
+            $logic_col_value = $logic_col_value ? $logic_col_value : '';
+            return $logic_col_value;
+        } else {
+            if (!isset($params[$logic_col])) {
+                throw new DBRouteException("error params ,it must have key " . $logic_col);
+            }
+            return $logic_col_value;
+        }
+    }
+
+    private function get_db_name($params) {
+        $db_logic_column = $this->getDbParse()->getDbLogicColumn();
+        if($db_logic_column){
+	        if (!isset($params[$db_logic_column])) {
+	            throw new DBRouteException("error params ,it must have key " . $db_logic_column);
+	        }
+	        $db_logic_column_value = $params[$db_logic_column];
+        }else{
+	        $logic_col = $this->getDbParse()->getTableLogicColumn();
+			if (!isset($params[$logic_col])) {
+				throw new DBRouteException("error params ,it must have key " . $logic_col);
+			}
+			$db_logic_column_value=$params[$logic_col];
+        }
+        return $this->getDbParse()->getDbName($db_logic_column_value);
+    }
+
+    private function getNewSql($sql,$logic_column_value='') {
 		$date_table=$this->getDbParse()->getTableNameType();
-		if(!isset($date_table) && !$date_table =='date' &&  empty($logic_column_value)){
-			return false;
+		if(!isset($date_table) && $date_table !='date' &&  empty($logic_column_value)){
+			throw new DBRouteException("非日期分表必须要有逻辑列的值 ");
 		}
 		$table_name = $this->getDbParse()->getTableName($logic_column_value);
 		$logic_table = $this->getDbParse()->getLogicTable();
@@ -146,14 +166,9 @@ class cls_dbroute {
 		$db = null;
 		if ($logicTable) {
 			if (empty($params)) {
-				return;
+				throw new DBRouteException("setConnection error,must have params ");
 			}
-			$logic_col = $this->getDbParse()->getLogicColumn();
-			if (!isset($params[$logic_col])) {
-				throw new DBRouteException("error params ,it must have key " . $logic_col);
-			}
-			$logic_column_value=$params[$logic_col];
-			$db = $this->getDbParse()->getDbName($logic_column_value);
+			$db = $this->get_db_name($params);
 		} else {
 			$db = $this->config_array['db'];
 		}
@@ -274,29 +289,13 @@ class cls_dbroute {
 	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
 	 */
 	public function selectByIn($sql, $params = array()) {
-		return $this->selectByInVirtualHash($sql,$params);
-/*		if($this->getDbParse() instanceof ModHash){
-			return $this->selectByInModHash($sql,$params);
-		}
-		if($this->getDbParse() instanceof ConsistentHash){
-			return $this->selectByInConsistentHash($sql,$params);
-		}
-		if($this->getDbParse() instanceof VirtualHash){
-			return $this->selectByInVirtualHash($sql,$params);
-		}*/
-	}
-	
-	/**
-	 * 只支持分表的表
-	 * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
-	 * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
-	 * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
-	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
-	 */
-	private function selectByInModHash($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
+		$tableNameType = $this->getDbParse()->getTableNameType();
 		if (!$logicTable) {
-			return;
+			throw new DBRouteException("非逻辑表不支持此方法");
+		}
+		if (isset($tableNameType) && $tableNameType=='date') {
+			throw new DBRouteException("日期分表不支持此方法");
 		}
 		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
 		if (!isset($params[$select_in_logic_column])) {
@@ -326,116 +325,10 @@ class cls_dbroute {
 		unset($params['sort_filed']);
 		unset($params['sort_order']);
 		unset($params[$select_in_logic_column]);
-
-		$array = array();
-		foreach ($in_param_arr as $key => $value) {
-			$in = new InValue();
-			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
-				$mod = self::strToIntKey($value) % $this->getDbParse()->getTableTotalNum();
-			} else {
-				$mod = $value % $this->getDbParse()->getTableTotalNum();
-
-			}
-			$in->setMod($mod);
-			$in->setValue($value);
-			$db = $this->getDbParse()->getDbName($mod);
-			$this->setDBConn($db);
-			$array[] = $in;
-		}
-
-		$new_array = array(); //key为mod, 值为相同mod的所有value
-		$db_total_num = $this->getDbParse()->getTableTotalNum();
-		foreach ($array as $inValue) {
-			for ($i = 0; $i < $db_total_num; $i++) {
-				if ($inValue->getMod() == $i) {
-					$new_array[$i][] = $inValue->getValue();
-					break;
-				}
-			}
-		}
-
-		foreach ($new_array as $mod => $value_array) {
-			$in_value_arrays[$mod] = array();
-			$in_params[$mod] = array();
-			foreach ($value_array as $key => $val) {
-				$in_value_arrays[$mod][] = '#p_' . $key . '_v#';
-				$in_params[$mod]['p_' . $key . "_v"] = $val;
-			}
-			foreach ($params as $k => $v) {
-				$in_params[$mod][$k] = $v;
-			}
-		}
-
-		$merge_result = array();
-		foreach ($in_value_arrays as $mod => $val) {
-			$new_sql = str_ireplace("#" . $this->getDbParse()->getSelectInLogicColumn() . "#", implode(',', array_values($val)), $sql);
-			$table_name = $this->getDbParse()->getTableName($mod);
-			$logic_table = $this->getDbParse()->getLogicTable();
-			$first_pos = stripos($new_sql, " " . $logic_table . " ");
-			if (!$first_pos) {
-				throw new DBRouteException("error sql in " . $sql);
-			}
-			$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
-
-			$db_name = $this->getDbParse()->getDbName($mod);
-			$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
-			if ($result) {
-				foreach ($result as $row) {
-					$merge_result[] = $row;
-				}
-			}
-		}
-
-		if ($merge_result) {
-			if ($sort_filed) {
-				foreach ((array)$merge_result as $key => $row) {
-					$sort_folder[$key] = $row[$sort_filed];
-				}
-				if ($sort_order == 'desc') {
-					array_multisort($sort_folder, SORT_DESC, $merge_result);
-				} else {
-					array_multisort($sort_folder, SORT_ASC, $merge_result);
-				}
-			}
-			return array_slice($merge_result, 0, $size);
-		} else {
-			return array();
-		}
-	}
-	
-	private function selectByInVirtualHash($sql, $params = array()) {
-		$logicTable = $this->getDbParse()->getLogicTable();
-		if (!$logicTable) {
-			return;
-		}
-		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
-		if (!isset($params[$select_in_logic_column])) {
-			throw new DBRouteException("select in 条件参数key名为" . $select_in_logic_column . "");
-		}
-		if (!stripos($sql, "#" . $select_in_logic_column . "#")) {
-			throw new DBRouteException("select in 条件参数key名为#" . $select_in_logic_column . "#");
-		}
-		$in_param_arr = $params[$select_in_logic_column];
-		if (!is_array($in_param_arr)) {
-			throw new DBRouteException("select in 条件参数值为数组");
-		}
-		if (empty($in_param_arr)) {
-			throw new DBRouteException("select in 条件参数值为空");
-		}
-		$size = isset($params['size']) ? $params['size'] : 20;
-		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
-		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 'desc';
-		if ($size >= 100) {
-			$size = 100;
-		}
-		if (!stripos($sql, " limit ")) {
-			$sql = $sql . " limit " . $size;
-		}
-
-		unset($params['size']);
-		unset($params['sort_filed']);
-		unset($params['sort_order']);
-		unset($params[$select_in_logic_column]);
+		
+		$tableLogicColumn=$this->getDbParse()->getTableLogicColumn();
+		$dbLogicColumn=$this->getDbParse()->getDbLogicColumn();
+		
 
 		$db_param_list = array();//每个数据库中 余数(余一个库中的表数)相同的值数组
 		foreach ($in_param_arr as $key => $value) {
@@ -444,8 +337,16 @@ class cls_dbroute {
 				$in_param_arr[$key]=$value;
 			} 
 			$mod=$this->getDbParse()->getTableMod($value);
-			$db_name = $this->getDbParse()->getDbName($value);
-			$db_param_list[$db_name][$mod][]=$value;
+			if($dbLogicColumn && $dbLogicColumn==$tableLogicColumn){//分库列与分表列相同
+				$db_name = $this->getDbParse()->getDbName($value);
+				$db_param_list[$db_name][$mod][]=$value;
+			}else{
+				$all_dbs=array_keys($this->getDbParse()->getDbList());
+				foreach ($all_dbs as $db_name){
+					$this->setDBConn($db_name);
+					$db_param_list[$db_name][$mod][]=$value;
+				}
+			}
 		}
 
 		$merge_result = array();
@@ -460,7 +361,7 @@ class cls_dbroute {
 				foreach ($value_array as $key => $val) {
 					$in_value_arrays[$mod][] = '#p_' . $key . '_v#';
 					$in_params[$mod]['p_' . $key . "_v"] = $val;
-					$mod_db_name[$mod]['table_name']=$this->getDbParse()->getTableName($val);//同一库中余数相同的,肯定定位至同一个表中
+					$mod_db_name[$mod]['table_name']=$this->getDbParse()->getTableName($val,$db_name);//同一库中余数相同的,肯定定位至同一个表中
 				}
 				foreach ($params as $k => $v) {
 					$in_params[$mod][$k] = $v;
@@ -474,8 +375,7 @@ class cls_dbroute {
 						throw new DBRouteException("error sql in " . $sql);
 					}
 					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
-					//print_r($in_params[$mod]);
-					//echo $new_sql."=>$db_name<Br>";
+					//echo $new_sql.'=>'.$db_name."<br>";
 					$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
 					if ($result) {
 						foreach ($result as $row) {
@@ -506,168 +406,18 @@ class cls_dbroute {
 	
 	/**
 	 * 只支持分表的表
-	 * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
-	 * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
-	 * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
-	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
-	 */
-	private function selectByInConsistentHash($sql, $params = array()) {
-		$logicTable = $this->getDbParse()->getLogicTable();
-		if (!$logicTable) {
-			return;
-		}
-		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
-		if (!isset($params[$select_in_logic_column])) {
-			throw new DBRouteException("select in 条件参数key名为" . $select_in_logic_column . "");
-		}
-		if (!stripos($sql, "#" . $select_in_logic_column . "#")) {
-			throw new DBRouteException("select in 条件参数key名为#" . $select_in_logic_column . "#");
-		}
-		$in_param_arr = $params[$select_in_logic_column];
-		if (!is_array($in_param_arr)) {
-			throw new DBRouteException("select in 条件参数值为数组");
-		}
-		if (empty($in_param_arr)) {
-			throw new DBRouteException("select in 条件参数值为空");
-		}
-		$size = isset($params['size']) ? $params['size'] : 20;
-		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
-		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 'desc';
-		if ($size >= 100) {
-			$size = 100;
-		}
-		if (!stripos($sql, " limit ")) {
-			$sql = $sql . " limit " . $size;
-		}
-
-		unset($params['size']);
-		unset($params['sort_filed']);
-		unset($params['sort_order']);
-		unset($params[$select_in_logic_column]);
-		
-		
-		foreach ($in_param_arr as $key => $value) {
-			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
-				$value = self::strToIntKey($value);
-				$in_param_arr[$key]=$value;
-			}
-		}
-		
-		$node_list=$this->getDbParse()->getList();
-		$db_param_list=array();//同一库中，所有余数相同的参数在一个数组中
-		foreach ($in_param_arr as $key => $value) {
-			foreach ($node_list as $node){
-				if($value>=$node->getStart() && $value<$node->getEnd()){
-					$mod=$this->getDbParse()->getTableMod($value);
-					$db_name = $node->getDbName();
-					$db_param_list[$db_name][$mod][]=$value;
-				}
-			}
-		}
-		
-		foreach ($node_list as $node){
-			foreach ($db_param_list as $db_key=>$array_one){
-				$db_name = $node->getDbName();
-				if($db_name ==$db_key){
-					$node->setInOneDbParams($array_one);
-				}
-			}
-		}
-		
-		$merge_result = array();
-		$logic_table = $this->getDbParse()->getLogicTable();
-		foreach ($node_list as $node){
-			if($node->getInOneDbParams()){
-			$one_db_params_list=$node->getInOneDbParams();
-			$db_name = $node->getDbName();
-			$this->setDBConn($db_name);
-			foreach ($one_db_params_list as $mod=>$array){
-				$in_value_arrays=array();
-				$in_params=array();
-				$in_value_arrays[$mod] = array();
-				$in_params[$mod] = array();
-				$table_name=null;
-				foreach ($array as $key=>$val){
-					if(empty($table_name)){
-						$table_name=$this->getDbParse()->getTableName($val);
-					}
-					$in_value_arrays[$mod][] = '#p_' . $key . '_v#';
-					$in_params[$mod]['p_' . $key . "_v"] = $val;
-				}
-				foreach ($params as $k => $v) {
-					$in_params[$mod][$k] = $v;
-				}
-							
-				foreach ($in_value_arrays as $mod => $val) {
-					$new_sql = str_ireplace("#" . $this->getDbParse()->getSelectInLogicColumn() . "#", implode(',', array_values($val)), $sql);
-					$first_pos = stripos($new_sql, " " . $logic_table . " ");
-					if (!$first_pos) {
-						throw new DBRouteException("error sql in " . $sql);
-					}
-					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
-					//print_r($in_params[$mod]);
-					//echo $new_sql."=>$db_name<Br>";
-					$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
-					if ($result) {
-						foreach ($result as $row) {
-							$merge_result[] = $row;
-						}
-					}
-				}
-			}
-			}
-		}	
-
-		if ($merge_result) {
-			if ($sort_filed) {
-				foreach ((array)$merge_result as $key => $row) {
-					$sort_folder[$key] = $row[$sort_filed];
-				}
-				if ($sort_order == 'desc') {
-					array_multisort($sort_folder, SORT_DESC, $merge_result);
-				} else {
-					array_multisort($sort_folder, SORT_ASC, $merge_result);
-				}
-			}
-			return array_slice($merge_result, 0, $size);
-		} else {
-			return array();
-		}
-
-	}
-	
-	/**
-	 * 只支持分表的表
 	 * 访问所有库表 不见意使用此方法
 	 * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
 	 */
 	public function queryResultFromAllDbTables($sql, $params = array()) {
-		return $this->query_result_from_all_db_tables($sql,$params);
-/*		if($this->getDbParse() instanceof ModHash || $this->getDbParse() instanceof ConsistentHash || $this->getDbParse() instanceof VirtualHash){
-			return $this->query_result_from_all_db_tables($sql,$params);
-		}
-		if($this->getDbParse() instanceof ModHash){
-			return $this->queryResultFromAllDbTablesWithModHash($sql,$params);
-		}
-		if($this->getDbParse() instanceof ConsistentHash){
-			return $this->query_result_from_all_db_tables($sql,$params);
-		}
-		if($this->getDbParse() instanceof VirtualHash){
-			return $this->query_result_from_all_db_tables($sql,$params);
-		}*/
-	}
-
-	/**
-	 * 只支持分表的表
-	 * 访问所有库表 不见意使用此方法
-	 * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
-	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
-	 */
-	private function queryResultFromAllDbTablesWithModHash($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
-		if (!$logicTable) {
-			return;
+		$tableNameType = $this->getDbParse()->getTableNameType();
+		if (!$logicTable) {//非逻辑表不支持
+			throw new DBRouteException("非逻辑表不支持此方法");
+		}
+		if (isset($tableNameType) &&$tableNameType=='date') {//日期分表不支持
+			throw new DBRouteException("日期分表不支持此方法");
 		}
 		$size = isset($params['size']) ? $params['size'] : 20;
 		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
@@ -677,61 +427,7 @@ class cls_dbroute {
 		unset($params['sort_filed']);
 		unset($params['sort_order']);
 
-		$logic_col = $this->getDbParse()->getLogicColumn();
-		if (isset($params[$logic_col])) {
-			throw new DBRouteException("error params ,it must not have key " . $logic_col);
-		}
-
-		$tables = array();
-		$total_table_num = $this->getDbParse()->getTableTotalNum();
-		for ($i = 0; $i < $total_table_num; $i++) {
-			$tables[$i] = $i;
-		}
-
-		$merge_result = array();
-		foreach ($tables as $mod) {
-			$db = $this->getDbParse()->getDbName($mod);
-			$this->setDBConn($db);
-			$new_sql = $this->getNewSql($sql, $mod);
-			$result = $this->getDbConnnection($db)->getAll($new_sql, $params);
-			if ($result) {
-				foreach ($result as $row) {
-					$merge_result[] = $row;
-				}
-			}
-		}
-
-		if ($merge_result) {
-			if ($sort_filed) {
-				foreach ((array)$merge_result as $key => $row) {
-					$sort_folder[$key] = $row[$sort_filed];
-				}
-				if ($sort_order) {
-					array_multisort($sort_folder, SORT_DESC, $merge_result);
-				} else {
-					array_multisort($sort_folder, SORT_ASC, $merge_result);
-				}
-			}
-			return array_slice($merge_result, 0, $size);
-		} else {
-			return array();
-		}
-	}
-	
-	private function query_result_from_all_db_tables($sql, $params = array()) {
-		$logicTable = $this->getDbParse()->getLogicTable();
-		if (!$logicTable) {
-			return;
-		}
-		$size = isset($params['size']) ? $params['size'] : 20;
-		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
-		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 1;
-
-		unset($params['size']);
-		unset($params['sort_filed']);
-		unset($params['sort_order']);
-
-		$logic_col = $this->getDbParse()->getLogicColumn();
+		$logic_col = $this->getDbParse()->getTableLogicColumn();
 		if (isset($params[$logic_col])) {
 			throw new DBRouteException("error params ,it must not have key " . $logic_col);
 		}
@@ -879,9 +575,12 @@ abstract class BaseConfig{
 	private $logic_table;
 
 	/** 分表的逻辑列名 */
-	private $logic_column;
+	private $table_logic_column;
 
-	/** select in 查询时时的参数key名 */
+    /** 分库的逻辑列名 */
+    private $db_logic_column;
+
+    /** select in 查询时时的参数key名 */
 	private $select_in_logic_column;
 
 	/** 是否单库多表 true为单库 */
@@ -911,11 +610,16 @@ abstract class BaseConfig{
         if(isset($this->config_array['table_name_date_logic_string'])){
             $this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
         }
-		if (isset($this->config_array['logic_table']) && isset($this->config_array['logic_column'])) {
+		if (isset($this->config_array['logic_table']) && isset($this->config_array['table_logic_column'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
 			$this->setTablePrefix($this->config_array['table_prefix']);
 			$this->setLogicTable($this->config_array['logic_table']);
-			$this->setLogicColumn($this->config_array['logic_column']);
+			$this->setTableLogicColumn($this->config_array['table_logic_column']);
+            if(isset($this->config_array['db_logic_column'])){
+			    $this->setDbLogicColumn($this->config_array['db_logic_column']);
+            }else{
+                $this->setDbLogicColumn($this->config_array['table_logic_column']);
+            }
 			$this->setTableTotalNum($this->config_array['table_total_num']);
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
 			$this->setSelectInLogicColumn($this->config_array['select_in_logic_column']);
@@ -1027,13 +731,21 @@ abstract class BaseConfig{
 		return $this->logic_table;
 	}
 
-	public function setLogicColumn($logic_column) {
-		$this->logic_column = $logic_column;
+	public function setTableLogicColumn($table_logic_column) {
+		$this->table_logic_column = $table_logic_column;
 	}
 
-	public function getLogicColumn() {
-		return $this->logic_column;
+	public function getTableLogicColumn() {
+		return $this->table_logic_column;
 	}
+
+    public function setDbLogicColumn($db_logic_column) {
+        $this->db_logic_column = $db_logic_column;
+    }
+
+    public function getDbLogicColumn() {
+        return $this->db_logic_column;
+    }
 
 	public function setSelectInLogicColumn($select_in_logic_column) {
 		$this->select_in_logic_column = $select_in_logic_column;
@@ -1109,8 +821,7 @@ abstract class BaseConfig{
 		return intval($logic_column_value % $this->getTableTotalNum() / $this->getOneDbTableNum());
 	}
 
-    public function getTableName($logic_column_value) {
-        $db_name=$this->getDbName($logic_column_value);
+    public function getTableName($logic_column_value,$db_name='') {
         if($this->getTableNameType()=='date' && $this->getTableNameDateLogicString()){
             if($this->getTableNameDateLogicString()=='yyyy'){
                 $suffix=date("Y");
@@ -1131,6 +842,9 @@ abstract class BaseConfig{
                 $suffix=date("d");
             }
             return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - 4);
+        }
+        if(empty($db_name)){
+        	$db_name=$this->getDbName($logic_column_value);
         }
         $db_list=$this->getDbList();
         $one_db_tables=$db_list[$db_name];
