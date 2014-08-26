@@ -806,7 +806,7 @@ abstract class BaseConfig{
 		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string' && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
-		return $logic_column_value % $this->getOneDbTableNum();
+		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();
 	}
 
 	protected function getDBMod($logic_column_value) {
@@ -843,7 +843,7 @@ abstract class BaseConfig{
         }
         $db_list=$this->getDbList();
         $one_db_tables=$db_list[$db_name];
-        $table_index=$this->getConsistentHashOneDbOneTable()?0:$this->getTableMod($logic_column_value);
+        $table_index=$this->getTableMod($logic_column_value);
         return $one_db_tables[$table_index];
     }
 
