@@ -124,15 +124,41 @@ class cls_pdosqlexecute implements cls_idb {
         if (!$this->read_connection) {
             $connect_array = $this->connect_array; // 载入读库配置
             $db_name = $this->connect_array['db'];
-            $host_str = $this->connect_array['read_db_hosts'][$db_name];
-            $host_array = explode(",", $host_str);
-            $num = rand(0, count($host_array) - 1);
-            $host = $host_array[$num];
+            $db_read_host_array = isset($this->connect_array['read_db_hosts']) ? $this->connect_array['read_db_hosts'] : array();
+            if(isset($connect_array['read_db_arithmetic']) && $connect_array['read_db_arithmetic']=='roll'){//轮询算法
+               $host = $this->get_read_db_host_roll($db_read_host_array, $db_name);
+            }else{
+               $host = $this->get_read_db_host_rand($db_read_host_array, $db_name);//随机
+            }
             $connect_array['host'] = $host;
             return $this->read_connection = $this->getDbConnection($connect_array);
         }
 
         return $this->read_connection;
+    }
+    
+    private function get_read_db_host_roll($db_read_host_array, $db) {
+        $host_str = $db_read_host_array[$db];
+        $host_array = explode(",", $host_str);
+        $key=$db.'_read_host';
+        $cache_array=cls_shmop::readArray($key);
+        if($cache_array){
+        	$host = array_shift($cache_array);
+            cls_shmop::writeArray($logic_table, $cache_array);
+        }else{
+        	$host = array_shift($host_array);
+        	cls_shmop::writeArray($key,$host_array);
+        }
+        
+        return $host;
+    }
+    
+    private function get_read_db_host_rand($db_read_host_array, $db) {
+        $host_str = $db_read_host_array[$db];
+        $host_array = explode(",", $host_str);
+        $num = rand(0, count($host_array) - 1);
+        $host = $host_array[$num];
+        return $host;
     }
 
     private function getDbConnection($connect_array) {

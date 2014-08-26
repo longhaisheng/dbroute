@@ -90,10 +90,11 @@ class cls_sqlexecute implements cls_idb {
             $db_read_host_array = isset($this->connect_array['read_db_hosts']) ? $this->connect_array['read_db_hosts'] : array();
             if ($db_read_host_array) {
                 $db = $connect_array['db'];
-                $host_str = $db_read_host_array[$db];
-                $host_array = explode(",", $host_str);
-                $num = rand(0, count($host_array) - 1);
-                $host = $host_array[$num];
+                if(isset($connect_array['read_db_arithmetic']) && $connect_array['read_db_arithmetic']=='roll'){//轮询算法
+                	$host = $this->get_read_db_host_roll($db_read_host_array, $db);
+                }else{
+                	$host = $this->get_read_db_host_rand($db_read_host_array, $db);//随机
+                }
             }
             $this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
             if ($this->read_connection->error) {
@@ -102,6 +103,30 @@ class cls_sqlexecute implements cls_idb {
                 $this->read_connection->query("SET NAMES 'utf8'");
             }
         }
+    }
+
+    private function get_read_db_host_roll($db_read_host_array, $db) {
+        $host_str = $db_read_host_array[$db];
+        $host_array = explode(",", $host_str);
+        $key=$db.'_read_host';
+        $cache_array=cls_shmop::readArray($key);
+        if($cache_array){
+        	$host = array_shift($cache_array);
+            cls_shmop::writeArray($logic_table, $cache_array);
+        }else{
+        	$host = array_shift($host_array);
+        	cls_shmop::writeArray($key,$host_array);
+        }
+        
+        return $host;
+    }
+    
+    private function get_read_db_host_rand($db_read_host_array, $db) {
+        $host_str = $db_read_host_array[$db];
+        $host_array = explode(",", $host_str);
+        $num = rand(0, count($host_array) - 1);
+        $host = $host_array[$num];
+        return $host;
     }
 
     /** 获取一次事务中所包含的所有数据库名*/
