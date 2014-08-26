@@ -6,7 +6,7 @@ define("DB_NAME", 'mmall');
 define("DB_USER_NAME", 'root');
 define("DB_PASSWORD", '123456');
 define("DB_HOST", '127.0.0.1');
-define("DB_PORT", 3307);
+define("DB_PORT", 3306);
 define("SEQUENCE_DEFAULT_STEP", 1000); //序列步长
 define("TRANSACTION_READ_MASTER", true); //事务中 select查询 是否读主库
 
@@ -147,13 +147,14 @@ $sc_refund_info_multiple_dbroute_config['db_prefix'] = "sc_refund_0000"; //数�
 $sc_refund_info_multiple_dbroute_config['table_prefix'] = "refund_info_0000"; //表名前缀，生成类似refund_info_0000、refund_info_0001...refund_info_1023
 $sc_refund_info_multiple_dbroute_config['logic_table'] = "sc_refund_info"; //逻辑表名不能为sql关键字
 $sc_refund_info_multiple_dbroute_config['table_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数
-$sc_refund_info_multiple_dbroute_config['db_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数
+$sc_refund_info_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数
 $sc_refund_info_multiple_dbroute_config['logic_column_field_type'] = "int"; //分表的列值的类型
 $sc_refund_info_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //select in 查询时时的参数key名
 $sc_refund_info_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $sc_refund_info_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数
-//$sc_refund_info_multiple_dbroute_config['consistent_hash_separate_string'] = "[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003";//一致性hash字符串区间
+$sc_refund_info_multiple_dbroute_config['consistent_hash_separate_string'] = "[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003";//一致性hash字符串区间
 //$sc_refund_info_multiple_dbroute_config['consistent_hash_separate_mod_max_value'] =1024;//一致性hash最大区间值
+//$sc_refund_info_multiple_dbroute_config['consistent_hash_one_db_one_table'] =true;//区间是否是是一库一表
 //$sc_refund_info_multiple_dbroute_config['virtual_db_node_number'] = 64; //虚拟数据库数目 虚拟hash算法实现以此key为判断
 //$sc_refund_info_multiple_dbroute_config['db_hash_type'] ='virtual_hash';//可为  consistent_hash(必需设置key:consistent_hash_separate_string及consistent_hash_separate_mod_max_value) ||virtual_hash(必需设置key:virtual_db_node_number) ||mod_hash ，如果不设置，则默认为 mod_hash
 

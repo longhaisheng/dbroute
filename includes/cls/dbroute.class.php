@@ -579,6 +579,9 @@ abstract class BaseConfig{
     private $table_name_type;
 
     private $table_name_date_logic_string;
+    
+   	/** 区间是否是是一库一表 */
+	private $consistent_hash_one_db_one_table=false;
 
 	private $db_list=array();
 
@@ -605,6 +608,9 @@ abstract class BaseConfig{
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
 			$this->setSelectInLogicColumn($this->config_array['select_in_logic_column']);
 			$this->setLogicColumnFieldType($this->config_array['logic_column_field_type']);
+	        if(isset($config_array['consistent_hash_one_db_one_table'])){
+            	$this->consistent_hash_one_db_one_table=$config_array['consistent_hash_one_db_one_table'];
+        	}
 			if (defined("IS_DEBUG")) {
 				$this->setIsDebug (IS_DEBUG);
 			}
@@ -776,6 +782,14 @@ abstract class BaseConfig{
         return $this->table_name_type;
     }
 
+    public function setConsistentHashOneDbOneTable($consistent_hash_one_db_one_table) {
+        $this->consistent_hash_one_db_one_table = $consistent_hash_one_db_one_table;
+    }
+
+    public function getConsistentHashOneDbOneTable() {
+        return $this->consistent_hash_one_db_one_table;
+    }
+    
 	private function getTable($mod) {
 		return substr_replace($this->getTablePrefix(), $mod, strlen($this->getTablePrefix()) - strlen($mod));
 	}
@@ -829,7 +843,7 @@ abstract class BaseConfig{
         }
         $db_list=$this->getDbList();
         $one_db_tables=$db_list[$db_name];
-        $table_index=$this->getTableMod($logic_column_value);
+        $table_index=$this->getConsistentHashOneDbOneTable()?0:$this->getTableMod($logic_column_value);
         return $one_db_tables[$table_index];
     }
 
@@ -881,7 +895,7 @@ class ConsistentHash extends BaseConfig{
 
 	/** 一致性hash最大区间值  */
 	private $consistent_hash_separate_mod_max_value;
-
+	
 	private $list=array();
 
     function __construct($config_array = array()){
@@ -893,6 +907,7 @@ class ConsistentHash extends BaseConfig{
         if(isset($config_array['consistent_hash_separate_mod_max_value'])){
             $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
         }
+
         $this->init();
     }
 
@@ -910,18 +925,18 @@ class ConsistentHash extends BaseConfig{
                 $max=$start_end_list[1];
             }
             $node=new Node();
-            $node->setStart($start_end_list[0]);
-            $node->setEnd($start_end_list[1]);
+            $node->setStart(str_replace("w", "0000", $start_end_list[0]));
+            $node->setEnd(str_replace("w", "0000", $start_end_list[1]));
             $node->setDbName($one_db_config[1]);
-            if($i==0){
+            if($i==0 && !parent::getConsistentHashOneDbOneTable()){
             	$node->setIsDefaultDb(true);
             }
             $i++;
             $this->list[]=$node;
         }
-        if($max !=$this->consistent_hash_separate_mod_max_value){
+        /*if($max !=$this->consistent_hash_separate_mod_max_value){
             throw new DBRouteException('一致性hash字符串设置错误');
-        }
+        }*/
     }
 
     public function setConsistentHashSeparateModMaxValue($consistent_hash_separate_mod_max_value) {
@@ -957,7 +972,11 @@ class ConsistentHash extends BaseConfig{
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
 
-		$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
+		if(parent::getConsistentHashOneDbOneTable()){
+			$mod=intval($logic_column_value);
+		}else{
+			$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
+		}
 		$default_db_name=null;
 		$db_name=null;
 		foreach ($this->getList() as $node){
@@ -970,7 +989,11 @@ class ConsistentHash extends BaseConfig{
 				$default_db_name= $node->getDbName();
 			}
 		}
-		return $db_name?$db_name:$default_db_name;
+		$return_db= $db_name?$db_name:$default_db_name;
+		if(empty($return_db)){
+			throw new DBRouteException('未找到db_name');
+		}
+		return $return_db;
 	}
 
 }
