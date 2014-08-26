@@ -144,7 +144,7 @@ class cls_pdosqlexecute implements cls_idb {
         $cache_array=cls_shmop::readArray($key);
         if($cache_array){
         	$host = array_shift($cache_array);
-            cls_shmop::writeArray($logic_table, $cache_array);
+            cls_shmop::writeArray($key, $cache_array);
         }else{
         	$host = array_shift($host_array);
         	cls_shmop::writeArray($key,$host_array);
