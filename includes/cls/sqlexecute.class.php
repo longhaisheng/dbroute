@@ -422,6 +422,9 @@ class cls_sqlexecute implements cls_idb {
     }
 
     public function commit() {
+        if(self::$need_record_db_name_in_one_transaction){
+        	self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
+        }
     	if(count(self::get_database_name_list_in_one_transaction())>1){//事务中超过一个数据库,抛出异常,让客户端回滚
     		throw new Exception(" transactions have more than one database,plese check you code ");
     	}

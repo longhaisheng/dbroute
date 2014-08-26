@@ -96,7 +96,7 @@ class cls_dbroute {
 	/**
 	 *
 	 * @param string $sql 'select order_id,order_sn from order where user_id=#user_id# '
-	 * @param array $params 只能为一唯数组，并且包括分表的列名 array('user_id'=>100)
+	 * @param array $params 只能为一唯数组，非日期分表必须包括分表的列名 array('user_id'=>100)
 	 */
 	private function decorate($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
@@ -282,7 +282,7 @@ class cls_dbroute {
 		return $this->getDbConnnection($db_name)->getColumn($decorate['sql'], $decorate['params']);
 	}
 	/**
-	 * 只支持分表的表
+	 * 只支持分表的表,不包括日期分表
 	 * 支持分表列in查询，此方法一般会查多个库表,主要根据in条件
 	 * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
 	 * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
@@ -405,7 +405,7 @@ class cls_dbroute {
 	}
 	
 	/**
-	 * 只支持分表的表
+	 * 只支持分表的表,不包括日期分表
 	 * 访问所有库表 不见意使用此方法
 	 * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
@@ -519,30 +519,6 @@ class cls_dbroute {
 	
 }
 
-class InValue {
-
-	private $mod; //余数值
-
-	private $value; //原值
-
-	public function setMod($mod) {
-		$this->mod = $mod;
-	}
-
-	public function getMod() {
-		return $this->mod;
-	}
-
-	public function setValue($value) {
-		$this->value = $value;
-	}
-
-	public function getValue() {
-		return $this->value;
-	}
-
-}
-
 class DBRouteException extends Exception {
 
 	public function __construct($message) {
@@ -550,7 +526,12 @@ class DBRouteException extends Exception {
 	}
 
 }
-
+/**
+ * 
+ * 单个分库分表配置项基础抽象类
+ * @author longhaisheng
+ *
+ */
 abstract class BaseConfig{
 
 	/** 数据库前缀名 */
@@ -569,7 +550,7 @@ abstract class BaseConfig{
 	private $one_db_table_num;
 
 	/** 每个db存在于哪些表,key为库,value为库中所有表(数组) */
-	private $db_tables = array();////////////////
+	private $db_tables = array();//此属性暂时不用
 
 	/** 逻辑表名 */
 	private $logic_table;
@@ -856,8 +837,14 @@ abstract class BaseConfig{
 
 }
 
-class ModHash extends BaseConfig{//mod hash
-
+/**
+ * 
+ * 取模hash
+ * @author longhaisheng
+ *
+ */
+class ModHash extends BaseConfig{
+	
 	function __construct($config_array = array()){
 		parent::__construct($config_array);
 	}
@@ -879,7 +866,7 @@ class ModHash extends BaseConfig{//mod hash
 
 /**
  * 
- * 一致性hash算法实现(手工指定分段)
+ * 一致性hash算法实现(分段hash)
  * @author longhaisheng
  *
  */
@@ -987,12 +974,18 @@ class ConsistentHash extends BaseConfig{
 	}
 
 }
-
-class VirtualHash extends BaseConfig{//虚拟hash算法实现，其实也是一致性hash
+/**
+ * 
+ * 虚拟节点hash算法实现
+ * @author longhaisheng
+ *
+ */
+class VirtualHash extends BaseConfig{
 
 	/** 虚拟节点个数 */
 	private $virtual_db_node_number=64;
 	
+	/** hash算法类实例 */
     private $hash;
 
     function __construct($config_array = array()){
@@ -1036,16 +1029,18 @@ class VirtualHash extends BaseConfig{//虚拟hash算法实现，其实也是一�
 
 class Node{
 
+	/** 节点开始值 */
     private $start;
 
+	/** 节点结束值 */
     private $end;
 
+	/** 节点段中的数据库名 */
     private $db_name;
 
+	/** 节点中的数据库名是否是默认db */
     private $is_default_db=false;
     
-    private $in_one_db_params=array();
-
     public function setEnd($end) {
         $this->end = $end;
     }
@@ -1077,14 +1072,5 @@ class Node{
     public function getIsDefaultDb() {
         return $this->is_default_db;
     }
-
-    public function setInOneDbParams($in_one_db_params) {
-        $this->in_one_db_params = $in_one_db_params;
-    }
-
-    public function getInOneDbParams() {
-        return $this->in_one_db_params;
-    }
-
 
 }
