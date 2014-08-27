@@ -83,7 +83,7 @@ class cls_dbroute {
 		return $this->use_mysqli_extend;
 	}
 
-	public static function strToIntKey($str) {//字符串转数字
+	public static function strToInt($str) {//字符串转数字
 		$len = strlen($str);
 		$total = 0;
 		for ($i = 0; $i < $len; $i++) {
@@ -333,7 +333,7 @@ class cls_dbroute {
 		$db_param_list = array();//每个数据库中 余数(余一个库中的表数)相同的值数组
 		foreach ($in_param_arr as $key => $value) {
 			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
-				$value = self::strToIntKey($value);
+				$value = self::strToInt($value);
 				$in_param_arr[$key]=$value;
 			} 
 			$mod=$this->getDbParse()->getTableMod($value);
@@ -805,14 +805,14 @@ abstract class BaseConfig{
 
 	public function getTableMod($logic_column_value) {
 		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string' && !is_numeric($logic_column_value)) {
-			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
+			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();//每库一表时总是取下标0
 	}
 
 	protected function getDBMod($logic_column_value) {
 		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
-			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
+			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 		return intval($logic_column_value % $this->getTableTotalNum() / $this->getOneDbTableNum());
 	}
@@ -975,7 +975,7 @@ class ConsistentHash extends BaseConfig{
 			return $prefix[0];
 		}
 		if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
-			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
+			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 
 		if(parent::getConsistentHashOneDbOneTable()){//每库一表时不取余
@@ -1041,7 +1041,7 @@ class VirtualHash extends BaseConfig{
             return $prefix[0];
         }
         if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
-            $logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
+            $logic_column_value=cls_dbroute::strToInt($logic_column_value);
         }
         return $this->hash->lookup($logic_column_value);
     }
