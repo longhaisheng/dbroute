@@ -156,7 +156,7 @@ $sc_refund_info_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里
 $sc_refund_info_multiple_dbroute_config['consistent_hash_separate_string'] = "[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003";//一致性hash字符串区间
 //$sc_refund_info_multiple_dbroute_config['consistent_hash_separate_mod_max_value'] =1024;//一致性hash最大区间值
 //$sc_refund_info_multiple_dbroute_config['consistent_hash_one_db_one_table'] =true;//区间是否是是一库一表
-//$sc_refund_info_multiple_dbroute_config['virtual_db_node_number'] = 64; //虚拟数据库数目 虚拟hash算法实现以此key为判断
+//$sc_refund_info_multiple_dbroute_config['virtual_db_node_number'] = 64; //虚拟节点数目 虚拟hash算法实现以此key为判断
 //$sc_refund_info_multiple_dbroute_config['db_hash_type'] ='virtual_hash';//可为  consistent_hash(必需设置key:consistent_hash_separate_string及consistent_hash_separate_mod_max_value) ||virtual_hash(必需设置key:virtual_db_node_number) ||mod_hash ，如果不设置，则默认为 mod_hash
 
 $master_sc_refund_info_multiple_dbs = array();
@@ -189,7 +189,7 @@ $monthofyear_multiple_dbroute_config['logic_column_field_type'] = "int"; //分�
 $monthofyear_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //select in 查询时时的参数key名
 $monthofyear_multiple_dbroute_config['table_total_num'] = 12; //总表数
 $monthofyear_multiple_dbroute_config['one_db_table_num'] = 12; //每个库里存放的表数
-$monthofyear_multiple_dbroute_config['table_name_type'] = 'date'; //按时间分表,只支持单库
+$monthofyear_multiple_dbroute_config['is_date_table'] = true; //是否按时间分表,只支持单库
 $monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'MMdd'; //按时间分表 yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天) ||MM(月) ||MMdd(月日)
 
 $master_sc_refund_info_multiple_dbs = array();

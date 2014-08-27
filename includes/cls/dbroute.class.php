@@ -116,9 +116,9 @@ class cls_dbroute {
 
     private function get_logic_column_value($params) {
         $logic_col = $this->getDbParse()->getTableLogicColumn();
-        $date_table = $this->getDbParse()->getTableNameType();
+        $dateTable = $this->getDbParse()->getIsdateTable();
         $logic_col_value = $params[$logic_col];
-        if ($date_table && $date_table == 'date') {
+        if ($dateTable) {
             $logic_col_value = $logic_col_value ? $logic_col_value : '';
             return $logic_col_value;
         } else {
@@ -147,8 +147,8 @@ class cls_dbroute {
     }
 
     private function getNewSql($sql,$logic_column_value='') {
-		$date_table=$this->getDbParse()->getTableNameType();
-		if(!isset($date_table) && $date_table !='date' &&  empty($logic_column_value)){
+		$dateTable=$this->getDbParse()->getIsdateTable();
+		if(!$dateTable &&  empty($logic_column_value)){
 			throw new DBRouteException("非日期分表必须要有逻辑列的值 ");
 		}
 		$table_name = $this->getDbParse()->getTableName($logic_column_value);
@@ -290,11 +290,11 @@ class cls_dbroute {
 	 */
 	public function selectByIn($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
-		$tableNameType = $this->getDbParse()->getTableNameType();
+		$dateTable = $this->getDbParse()->getIsdateTable();
 		if (!$logicTable) {
 			throw new DBRouteException("非逻辑表不支持此方法");
 		}
-		if (isset($tableNameType) && $tableNameType=='date') {
+		if ($dateTable) {
 			throw new DBRouteException("日期分表不支持此方法");
 		}
 		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
@@ -412,11 +412,11 @@ class cls_dbroute {
 	 */
 	public function queryResultFromAllDbTables($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
-		$tableNameType = $this->getDbParse()->getTableNameType();
+		$isDateTable = $this->getDbParse()->getIsdateTable();
 		if (!$logicTable) {//非逻辑表不支持
 			throw new DBRouteException("非逻辑表不支持此方法");
 		}
-		if (isset($tableNameType) &&$tableNameType=='date') {//日期分表不支持
+		if ($isDateTable) {//日期分表不支持
 			throw new DBRouteException("日期分表不支持此方法");
 		}
 		$size = isset($params['size']) ? $params['size'] : 20;
@@ -576,11 +576,12 @@ abstract class BaseConfig{
 	/** 逻辑字段值类型*/
 	private $logic_column_field_type;
 
-    private $table_name_type;
+    private $is_date_table=false;
 
+    /** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天) ||MM(月) ||MMdd(月日) */
     private $table_name_date_logic_string;
     
-   	/** 区间是否是是一库一表 */
+   	/** 区间是否是每库一表 */
 	private $consistent_hash_one_db_one_table=false;
 
 	private $db_list=array();
@@ -588,8 +589,8 @@ abstract class BaseConfig{
 	protected function __construct($config_array = array()) {
 		if(empty($config_array)) echo 'BaseConfig init error ';
 		$this->config_array = $config_array;
-        if(isset($this->config_array['table_name_type'])){
-            $this->setTableNameType($this->config_array['table_name_type']);
+        if(isset($this->config_array['is_date_table'])){
+            $this->setIsdateTable($this->config_array['is_date_table']);
         }
         if(isset($this->config_array['table_name_date_logic_string'])){
             $this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
@@ -774,12 +775,12 @@ abstract class BaseConfig{
         return $this->table_name_date_logic_string;
     }
 
-    public function setTableNameType($table_name_type) {
-        $this->table_name_type = $table_name_type;
+    public function setIsdateTable($table_name_type) {
+        $this->is_date_table = $table_name_type;
     }
 
-    public function getTableNameType() {
-        return $this->table_name_type;
+    public function getIsdateTable() {
+        return $this->is_date_table;
     }
 
     public function setConsistentHashOneDbOneTable($consistent_hash_one_db_one_table) {
@@ -806,7 +807,7 @@ abstract class BaseConfig{
 		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string' && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
-		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();
+		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();//每库一表时总是取下标0
 	}
 
 	protected function getDBMod($logic_column_value) {
@@ -817,7 +818,8 @@ abstract class BaseConfig{
 	}
 
     public function getTableName($logic_column_value,$db_name='') {
-        if($this->getTableNameType()=='date' && $this->getTableNameDateLogicString()){
+        if($this->getIsdateTable() && $this->getTableNameDateLogicString()){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
+        	$suffix=null;
             if($this->getTableNameDateLogicString()=='yyyy'){
                 $suffix=date("Y");
             }
@@ -835,6 +837,9 @@ abstract class BaseConfig{
             }
             if($this->getTableNameDateLogicString()=='dd'){
                 $suffix=date("d");
+            }
+            if(empty($suffix)){
+            	throw new DBRouteException("日期分表字符串设置错误!");
             }
             return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - 4);
         }
@@ -888,8 +893,9 @@ class ConsistentHash extends BaseConfig{
 
    /** 一致性hash配置字符串 
 	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
-	* 逻辑列值 mod Hash最大区间值之后 在 >=0 && <256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
+	* 如果key为consistent_hash_one_db_one_table的值为fasle,逻辑列值 mod Hash最大区间值之后 在 >=0 && <256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
 	* 可将[0,256]重新划分为[0,128]=sc_refund_0000和[128,256]=sc_refund_0005
+	* 如果key为consistent_hash_one_db_one_table的值为true,将表示每个库中只有一个表,此分段中的值可以设置为[0,500w]=sc_refund_0000;[500w,1000w]=sc_refund_0001;.....
 	*/
 	private $consistent_hash_separate_string;
 
@@ -972,7 +978,7 @@ class ConsistentHash extends BaseConfig{
 			$logic_column_value=cls_dbroute::strToIntKey($logic_column_value);
 		}
 
-		if(parent::getConsistentHashOneDbOneTable()){
+		if(parent::getConsistentHashOneDbOneTable()){//每库一表时不取余
 			$mod=intval($logic_column_value);
 		}else{
 			$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
