@@ -819,27 +819,28 @@ abstract class BaseConfig{
 	}
 
     public function getTableName($logic_column_value,$db_name='') {
-        if($this->getIsdateTable() && $this->getTableNameDateLogicString()){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
+        $tableNameDateLogicString = $this->getTableNameDateLogicString();
+        if($this->getIsdateTable() && $tableNameDateLogicString){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
         	$suffix=null;
-            if($this->getTableNameDateLogicString()=='yyyy'){
+            if($tableNameDateLogicString =='yyyy'){
                 $suffix=date("Y");
             }
-            if($this->getTableNameDateLogicString()=='yyyyMM'){
+            if($tableNameDateLogicString =='yyyyMM'){
                 $suffix=date("Ym");
             }
-            if($this->getTableNameDateLogicString()=='yyyyMMdd'){
+            if($tableNameDateLogicString =='yyyyMMdd'){
                 $suffix=date("Ymd");
             }
-            if($this->getTableNameDateLogicString()=='MMdd'){
+            if($tableNameDateLogicString =='MMdd'){
                 $suffix=date("md");
             }
-            if($this->getTableNameDateLogicString()=='MM'){
+            if($tableNameDateLogicString =='MM'){
                 $suffix=date("m");
             }
-            if($this->getTableNameDateLogicString()=='dd'){
+            if($tableNameDateLogicString =='dd'){
                 $suffix=date("d");
             }
-            if($this->getTableNameDateLogicString()=='w'){
+            if($tableNameDateLogicString =='w'){
                 $suffix=date("w");
             }
             if(empty($suffix)){
@@ -847,7 +848,6 @@ abstract class BaseConfig{
             }
             $tablePrefix=str_replace("0", "", $this->getTablePrefix());
             return $tablePrefix.$suffix;
-            //return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - 4);
         }
         if(empty($db_name)){
         	$db_name=$this->getDbName($logic_column_value);
