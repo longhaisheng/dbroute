@@ -34,13 +34,13 @@ class cls_dbroute {
         if(isset($this->config_array['db_hash_type'])){
             $this->db_hash_type=$this->config_array['db_hash_type'];
         }
-        if($this->db_hash_type==='consistent_hash'){//一致性hash
+        if($this->db_hash_type==='consistent_hash'){
 		    $this->dbParse=new ConsistentHash($this->config_array);
         }
-        if($this->db_hash_type==='virtual_hash'){//虚拟节点hash
+        if($this->db_hash_type==='virtual_hash'){
             $this->dbParse=new VirtualHash($this->config_array);
         }
-        if($this->db_hash_type==='mod_hash'){//mod Hash
+        if($this->db_hash_type==='mod_hash'){
             $this->dbParse=new ModHash($this->config_array);
         }
 	}
@@ -83,7 +83,7 @@ class cls_dbroute {
 		return $this->use_mysqli_extend;
 	}
 
-	public static function strToInt($str) {//字符串转数字
+	public static function strToInt($str) {
 		$len = strlen($str);
 		$total = 0;
 		for ($i = 0; $i < $len; $i++) {
@@ -149,7 +149,7 @@ class cls_dbroute {
     private function getNewSql($sql,$logic_column_value='') {
 		$dateTable=$this->getDbParse()->getIsdateTable();
 		if(!$dateTable &&  empty($logic_column_value)){
-			throw new DBRouteException("非日期分表必须要有逻辑列的值 ");
+			throw new DBRouteException('非日期分表必须要有逻辑列的值');
 		}
 		$table_name = $this->getDbParse()->getTableName($logic_column_value);
 		$logic_table = $this->getDbParse()->getLogicTable();
@@ -166,7 +166,7 @@ class cls_dbroute {
 		$db = null;
 		if ($logicTable) {
 			if (empty($params)) {
-				throw new DBRouteException("setConnection error,must have params ");
+				throw new DBRouteException('setConnection error,must have params');
 			}
 			$db = $this->get_db_name($params);
 		} else {
@@ -178,7 +178,7 @@ class cls_dbroute {
 
 	private function setDBConn($db) {
 		$this->setUseMysqliExtend();
-		if (!isset($this->connections[$db])) { //不存在则新创建一个连接
+		if (!isset($this->connections[$db])) {
 			if ($this->getUseMysqliExtend()) {
 				$this->connections[$db] = cls_sqlexecute::getInstance($db, $this->config_array);
 			} else {
@@ -187,11 +187,11 @@ class cls_dbroute {
 		}
 	}
 
-	private function getDbConnnection($db_name) { //如果分库后是单库多表
+	private function getDbConnection($db_name) {
 		return $this->connections[$db_name];
 	}
 
-	private function getSingleConn() { //如果分库后是单库多表
+	private function getSingleConnection() {
 		if ($this->getDbParse()->getIsSingleDb()) {
 			foreach ($this->connections as $conn) {
 				return $conn;
@@ -208,7 +208,7 @@ class cls_dbroute {
 	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->insert($decorate['sql'], $decorate['params'], $return_insert_id);
+		return $this->getDbConnection($db_name)->insert($decorate['sql'], $decorate['params'], $return_insert_id);
 	}
 
 	/**
@@ -220,7 +220,7 @@ class cls_dbroute {
 	public function update($sql, $params = array(), $return_affected_rows = true) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->update($decorate['sql'], $decorate['params'], $return_affected_rows);
+		return $this->getDbConnection($db_name)->update($decorate['sql'], $decorate['params'], $return_affected_rows);
 	}
 
 	/**
@@ -232,7 +232,7 @@ class cls_dbroute {
 	public function delete($sql, $params = array(), $return_affected_rows = true) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->delete($decorate['sql'], $decorate['params'], $return_affected_rows);
+		return $this->getDbConnection($db_name)->delete($decorate['sql'], $decorate['params'], $return_affected_rows);
 	}
 
 	/**
@@ -246,7 +246,7 @@ class cls_dbroute {
 	public function batchExecutes($sql, $batch_params = array(), $logic_params = array(), $batch_num = 20) {
 		$decorate = $this->decorate($sql, $logic_params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->batchExecutes($decorate['sql'], $batch_params, $batch_num);
+		return $this->getDbConnection($db_name)->batchExecutes($decorate['sql'], $batch_params, $batch_num);
 	}
 
 	/**
@@ -257,7 +257,7 @@ class cls_dbroute {
 	public function getAll($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->getAll($decorate['sql'], $decorate['params']);
+		return $this->getDbConnection($db_name)->getAll($decorate['sql'], $decorate['params']);
 	}
 
 	/**
@@ -268,7 +268,7 @@ class cls_dbroute {
 	public function getRow($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->getRow($decorate['sql'], $decorate['params']);
+		return $this->getDbConnection($db_name)->getRow($decorate['sql'], $decorate['params']);
 	}
 
 	/**
@@ -279,7 +279,7 @@ class cls_dbroute {
 	public function getColumn($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		return $this->getDbConnnection($db_name)->getColumn($decorate['sql'], $decorate['params']);
+		return $this->getDbConnection($db_name)->getColumn($decorate['sql'], $decorate['params']);
 	}
 	/**
 	 * 只支持分表的表,不包括日期分表
@@ -293,24 +293,24 @@ class cls_dbroute {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$dateTable = $this->getDbParse()->getIsdateTable();
 		if (!$logicTable) {
-			throw new DBRouteException("非逻辑表不支持此方法");
+			throw new DBRouteException('非逻辑表不支持此方法');
 		}
 		if ($dateTable) {
-			throw new DBRouteException("日期分表不支持此方法");
+			throw new DBRouteException('日期分表不支持此方法');
 		}
 		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
 		if (!isset($params[$select_in_logic_column])) {
-			throw new DBRouteException("select in 条件参数key名为" . $select_in_logic_column . "");
+			throw new DBRouteException('select in 条件参数key名为' . $select_in_logic_column . '');
 		}
-		if (!stripos($sql, "#" . $select_in_logic_column . "#")) {
-			throw new DBRouteException("select in 条件参数key名为#" . $select_in_logic_column . "#");
+		if (!stripos($sql, '#' . $select_in_logic_column . '#')) {
+			throw new DBRouteException('select in 条件参数key名为#' . $select_in_logic_column . '#');
 		}
 		$in_param_arr = $params[$select_in_logic_column];
 		if (!is_array($in_param_arr)) {
-			throw new DBRouteException("select in 条件参数值为数组");
+			throw new DBRouteException('select in 条件参数值为数组');
 		}
 		if (empty($in_param_arr)) {
-			throw new DBRouteException("select in 条件参数值为空");
+			throw new DBRouteException('select in 条件参数值为空');
 		}
 		$size = isset($params['size']) ? $params['size'] : 20;
 		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
@@ -318,8 +318,8 @@ class cls_dbroute {
 		if ($size >= 100) {
 			$size = 100;
 		}
-		if (!stripos($sql, " limit ")) {
-			$sql = $sql . " limit " . $size;
+		if (!stripos($sql, ' limit ')) {
+			$sql = $sql . ' limit ' . $size;
 		}
 
 		unset($params['size']);
@@ -376,7 +376,7 @@ class cls_dbroute {
 						throw new DBRouteException("error sql in " . $sql);
 					}
 					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
-					$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
+					$result = $this->getDbConnection($db_name)->getAll($new_sql, $in_params[$mod]);
 					if ($result) {
 						foreach ($result as $row) {
 							$merge_result[] = $row;
@@ -444,7 +444,7 @@ class cls_dbroute {
 				}
 				$new_sql = substr_replace($sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
 				$this->setDBConn($db_name);
-				$result = $this->getDbConnnection($db_name)->getAll($new_sql, $params);
+				$result = $this->getDbConnection($db_name)->getAll($new_sql, $params);
 				if ($result) {
 					foreach ($result as $row) {
 						$merge_result[] = $row;
@@ -473,38 +473,38 @@ class cls_dbroute {
 	public function getConnection($params = array()) { //用于分表的表与不分表的表共用同一个数据库链接，一般在事务中可能用到
 		$db_name = $this->setConnection($params);
 		if ($this->getDbParse()->getIsSingleDb()) {
-			return $this->getSingleConn();
+			return $this->getSingleConnection();
 		}
-		return $this->getDbConnnection($db_name);
+		return $this->getDbConnection($db_name);
 	}
 
 	public function begin($params = array()) {
 		$db_name = $this->setConnection($params);
 		if ($this->getDbParse()->getIsSingleDb()) {
-			$this->getSingleConn()->begin();
+			$this->getSingleConnection()->begin();
 		} else {
 			if (empty($params)) throw new DBRouteException('请传递参数');
-			$this->getDbConnnection($db_name)->begin();
+			$this->getDbConnection($db_name)->begin();
 		}
 	}
 
 	public function commit($params = array()) {
 		if ($this->getDbParse()->getIsSingleDb()) {
-			$this->getSingleConn()->commit();
+			$this->getSingleConnection()->commit();
 		} else {
 			if (empty($params)) throw new DBRouteException('请传递参数');
 			$db_name = $this->setConnection($params);
-			$this->getDbConnnection($db_name)->commit();
+			$this->getDbConnection($db_name)->commit();
 		}
 	}
 
 	public function rollBack($params = array()) {
 		if ($this->getDbParse()->getIsSingleDb()) {
-			$this->getSingleConn()->rollBack();
+			$this->getSingleConnection()->rollBack();
 		} else {
 			if (empty($params)) throw new DBRouteException('请传递参数');
 			$db_name = $this->setConnection($params);
-			$this->getDbConnnection($db_name)->rollBack();
+			$this->getDbConnection($db_name)->rollBack();
 		}
 	}
 
@@ -617,9 +617,9 @@ abstract class BaseConfig{
 				$this->setIsDebug (IS_DEBUG);
 			}
 			if ($this->getOneDbTableNum() == $this->getTableTotalNum()) {
-				$this-> setIsSingleDb(true); //单库
+				$this-> setIsSingleDb(true);
 			} else {
-				$this-> setIsSingleDb(false); //多库
+				$this-> setIsSingleDb(false);
 			}
 			$list = cls_shmop::readArray("init_logic_" . $this->getLogicTable());
 			if ($list) {
@@ -653,9 +653,8 @@ abstract class BaseConfig{
 			if ($mod && $num == $db_total_num) {
 				$tables = array_slice($tables, 0, $mod);
 			}
-			if ($this->getIsSingleDb()) {//单库
-				$prefix = explode("_", $this->getDbPrefix());
-				$db_key = $prefix[0];
+			if ($this->getIsSingleDb()) {
+				$db_key = $this->getSingleDbName();
 			} else {
 				$db_key = substr_replace($this->getDbPrefix(), $i, strlen($this->getDbPrefix()) - strlen($i));
 			}
@@ -808,7 +807,7 @@ abstract class BaseConfig{
 		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string' && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
-		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();//每库一表时总是取下标0
+		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();//每库一表时取下标0
 	}
 
 	protected function getDBMod($logic_column_value) {
@@ -885,7 +884,7 @@ class ModHash extends BaseConfig{
 	 * @param mixed $logic_column_value 逻辑列的值
 	 */
 	public function getDbName($logic_column_value) {
-		if (parent::getIsSingleDb()) { //单库
+		if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
 		}
 		$db_index=parent::getDBMod($logic_column_value);
@@ -981,15 +980,15 @@ class ConsistentHash extends BaseConfig{
 	}
 
     public function getDbName($logic_column_value) {
-		if (parent::getIsSingleDb()) { //单库
+		if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
 		}
 		if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 
-		if(parent::getConsistentHashOneDbOneTable()){//每库一表时不取余
-			$mod=intval($logic_column_value);
+		if(parent::getConsistentHashOneDbOneTable()){//每库一表时
+			$mod=$logic_column_value;
 		}else{
 			$mod=intval($logic_column_value % $this->getConsistentHashSeparateModMaxValue());
 		}
@@ -1046,7 +1045,7 @@ class VirtualHash extends BaseConfig{
     }
 
     public function getDbName($logic_column_value) {
-        if (parent::getIsSingleDb()) { //单库
+        if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
         }
         if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
