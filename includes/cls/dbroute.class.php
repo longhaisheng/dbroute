@@ -579,7 +579,7 @@ abstract class BaseConfig{
 
     private $is_date_table=false;
 
-    /** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天) ||MM(月) ||MMdd(月日) */
+    /** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:0...31) ||MM(月:01...12) ||MMdd(月日)||w(星期日:0,星期一:1...) */
     private $table_name_date_logic_string;
     
    	/** 区间是否是每库一表 */
@@ -839,10 +839,15 @@ abstract class BaseConfig{
             if($this->getTableNameDateLogicString()=='dd'){
                 $suffix=date("d");
             }
+            if($this->getTableNameDateLogicString()=='w'){
+                $suffix=date("w");
+            }
             if(empty($suffix)){
             	throw new DBRouteException("日期分表字符串设置错误!");
             }
-            return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - 4);
+            $tablePrefix=str_replace("0", "", $this->getTablePrefix());
+            return $tablePrefix.$suffix;
+            //return substr_replace($this->getTablePrefix(), $suffix, strlen($this->getTablePrefix()) - 4);
         }
         if(empty($db_name)){
         	$db_name=$this->getDbName($logic_column_value);
