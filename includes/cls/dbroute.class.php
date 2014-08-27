@@ -202,8 +202,8 @@ class cls_dbroute {
 	/**
 	 * @param $sql "insert order (order_id,order_sn,user_id) value (#order_id#,#order_sn#,#user_id#) "
 	 * @param array $params array('order_id'=>10,'order_sn'=>'123456','user_id'=>10)
-	 * @param bool $return_insert_id
-	 * @return int
+	 * @param bool $return_insert_id 是否返回插入主键 false时不返回
+	 * @return int 入主键
 	 */
 	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate = $this->decorate($sql, $params);
@@ -214,8 +214,8 @@ class cls_dbroute {
 	/**
 	 * @param $sql "update order set order_num=#order_num#,order_sn=#order_sn# where id=#id# and user_id=#user_id#"
 	 * @param array $params array('order_num'=>3,'order_sn'=>'sn123456','id'=>1,'user_id'=>10)
-	 * @param bool $return_affected_rows
-	 * @return int
+	 * @param bool $return_affected_rows 是否返回受影响行数 false不返回
+	 * @return int 受影响行数
 	 */
 	public function update($sql, $params = array(), $return_affected_rows = true) {
 		$decorate = $this->decorate($sql, $params);
@@ -226,8 +226,8 @@ class cls_dbroute {
 	/**
 	 * @param $sql "delete from order where id=#id# and user_id=#user_id#"
 	 * @param array $params array('id'=>123,'user_id'=>10)
-	 * @param bool $return_affected_rows
-	 * @return int
+	 * @param bool $return_affected_rows  是否返回受影响行数  false不返回
+	 * @return int 受影响行数
 	 */
 	public function delete($sql, $params = array(), $return_affected_rows = true) {
 		$decorate = $this->decorate($sql, $params);
@@ -240,7 +240,7 @@ class cls_dbroute {
 	 * @param $sql "insert order(order_id,order_sn,user_id) values (#order_id#,#order_sn#,#user_id#)"
 	 * @param array $batch_params (array(array('order_id'=>1,'order_sn'=>'password1','user_id'=>10),array('order_id'=>2,'order_sn'=>'password2','user_id'=>10)......))
 	 * @param array $logic_params 分表物理列名数组，如根据user_id分表的，此可传 array('user_id'=>10)
-	 * @param int $batch_num 不见意超过50,默认为20
+	 * @param int $batch_num 每次事务中操作的条数,不见意超过50,默认为20
 	 * @return 总共受影响行数
 	 */
 	public function batchExecutes($sql, $batch_params = array(), $logic_params = array(), $batch_num = 20) {
@@ -263,7 +263,7 @@ class cls_dbroute {
 	/**
 	 * @param $sql "select  order_id,order_sn from order where user_id=#user_id# "
 	 * @param array $bind_params array('user_id'=>10)
-	 * @return array
+	 * @return array 返回一行
 	 */
 	public function getRow($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
@@ -274,7 +274,7 @@ class cls_dbroute {
 	/**
 	 * @param $sql "select count(1) as count_num from order where user_id=#user_id# "
 	 * @param array $bind_params array('user_id'=>100)
-	 * @return int
+	 * @return mixed 列值
 	 */
 	public function getColumn($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
@@ -287,6 +287,7 @@ class cls_dbroute {
 	 * select in 查询，只支持in，不支持分表列的大于等于 |小于等于| between...and 操作
 	 * @param string $sql select id,user_id,order_sn,add_time from order where id>#id# and user_id in(#user_ids#) limit 0,30  user_ids为config.php中的select_in_logic_column
 	 * @param array $params（key为:size|sort_field|sort_order|及当前类中select_in_logic_column的值）  key为select_in_logic_column 的值为数组 具体参见 OrderModel类中的方法
+	 * @return array
 	 */
 	public function selectByIn($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
@@ -375,7 +376,6 @@ class cls_dbroute {
 						throw new DBRouteException("error sql in " . $sql);
 					}
 					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
-					//echo $new_sql.'=>'.$db_name."<br>";
 					$result = $this->getDbConnnection($db_name)->getAll($new_sql, $in_params[$mod]);
 					if ($result) {
 						foreach ($result as $row) {
@@ -409,6 +409,7 @@ class cls_dbroute {
 	 * 访问所有库表 不见意使用此方法
 	 * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
+	 * @return array
 	 */
 	public function queryResultFromAllDbTables($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
