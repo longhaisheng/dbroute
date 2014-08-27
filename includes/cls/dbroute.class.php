@@ -858,6 +858,12 @@ abstract class BaseConfig{
         return $one_db_tables[$table_index];
     }
 
+    protected function getSingleDbName() {
+        $dbPrefix = parent::getDbPrefix();
+        $dbPrefix = str_replace('0', '', $dbPrefix);
+        return trim($dbPrefix, '_');
+    }
+
     abstract function getDbName($logic_column_value);
 
 }
@@ -880,8 +886,7 @@ class ModHash extends BaseConfig{
 	 */
 	public function getDbName($logic_column_value) {
 		if (parent::getIsSingleDb()) { //单库
-			$prefix = explode("_", parent::getDbPrefix());
-			return $prefix[0];
+            return parent::getSingleDbName();
 		}
 		$db_index=parent::getDBMod($logic_column_value);
 		return substr_replace(parent::getDbPrefix(), $db_index, strlen(parent::getDbPrefix()) - strlen($db_index));
@@ -977,8 +982,7 @@ class ConsistentHash extends BaseConfig{
 
     public function getDbName($logic_column_value) {
 		if (parent::getIsSingleDb()) { //单库
-			$prefix = explode("_", parent::getDbPrefix());
-			return $prefix[0];
+            return parent::getSingleDbName();
 		}
 		if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
@@ -1043,8 +1047,7 @@ class VirtualHash extends BaseConfig{
 
     public function getDbName($logic_column_value) {
         if (parent::getIsSingleDb()) { //单库
-            $prefix = explode("_", parent::getDbPrefix());
-            return $prefix[0];
+            return parent::getSingleDbName();
         }
         if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
             $logic_column_value=cls_dbroute::strToInt($logic_column_value);
