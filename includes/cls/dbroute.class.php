@@ -909,10 +909,11 @@ class ConsistentHash extends BaseConfig{
 	*/
 	private $consistent_hash_separate_string;
 
-	/** 一致性hash最大区间值  */
+	/** 一致性hash最大区间值 */
 	private $consistent_hash_separate_mod_max_value;
-	
-	private $list=array();
+
+	/** db所有节点列表对象 */
+	private $node_list=array();
 
     function __construct($config_array = array()){
 		parent::__construct($config_array);
@@ -923,8 +924,12 @@ class ConsistentHash extends BaseConfig{
         if(isset($config_array['consistent_hash_separate_mod_max_value'])){
             $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
         }
-
-        $this->init();
+        $list = cls_shmop::readArray('init_consistent_hash_section'.parent::getLogicTable());
+        if ($list) {
+            $this->node_list=$list;
+        } else {
+            $this->init();
+        }
     }
 
     private function init(){
@@ -932,6 +937,7 @@ class ConsistentHash extends BaseConfig{
         $list=explode(";", $str);
         $max=0;
         $i=0;
+        $nodeList=array();
         foreach ($list as $value) {
             $one_db_config=explode("=", $value);
             $one_db_config[0]=str_replace("[", "", $one_db_config[0]);
@@ -948,8 +954,11 @@ class ConsistentHash extends BaseConfig{
             	$node->setIsDefaultDb(true);
             }
             $i++;
-            $this->list[]=$node;
+            $nodeList[]=$node;
         }
+        $this->node_list=$nodeList;
+        cls_shmop::writeArray('init_consistent_hash_section'.parent::getLogicTable(),$nodeList);
+
         /*if($max !=$this->consistent_hash_separate_mod_max_value){
             throw new DBRouteException('一致性hash字符串设置错误');
         }*/
@@ -971,12 +980,12 @@ class ConsistentHash extends BaseConfig{
         return $this->consistent_hash_separate_string;
     }
 
-    public function setList($list) {
-		$this->list = $list;
+    public function setNodeList($list) {
+		$this->node_list = $list;
 	}
 
-    public function getList() {
-		return $this->list;
+    public function getNodeList() {
+		return $this->node_list;
 	}
 
     public function getDbName($logic_column_value) {
@@ -994,7 +1003,7 @@ class ConsistentHash extends BaseConfig{
 		}
 		$default_db_name=null;
 		$db_name=null;
-		foreach ($this->getList() as $node){
+		foreach ($this->getNodeList() as $node){
 			if($mod>=$node->getStart() && $mod<$node->getEnd()){
 				$db_name= $node->getDbName();
 				break;
