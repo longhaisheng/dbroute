@@ -858,7 +858,7 @@ abstract class BaseConfig{
     }
 
     protected function getSingleDbName() {
-        $dbPrefix = parent::getDbPrefix();
+        $dbPrefix = $this->getDbPrefix();
         $dbPrefix = str_replace('0', '', $dbPrefix);
         return trim($dbPrefix, '_');
     }
