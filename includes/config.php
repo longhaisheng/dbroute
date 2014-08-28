@@ -190,7 +190,7 @@ $monthofyear_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //s
 $monthofyear_multiple_dbroute_config['table_total_num'] = 12; //总表数
 $monthofyear_multiple_dbroute_config['one_db_table_num'] = 12; //每个库里存放的表数
 $monthofyear_multiple_dbroute_config['is_date_table'] = true; //是否按时间分表,只支持单库
-$monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'MMdd'; //按时间分表 yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天) ||MM(月) ||MMdd(月日)
+$monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'MMdd'; //按时间分表 yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:0...31) ||MM(月1...12) ||MMdd(月日)||w(星期日:0,星期一:1...);
 
 $master_sc_refund_info_multiple_dbs = array();
 $master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP
