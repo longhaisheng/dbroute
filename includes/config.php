@@ -18,11 +18,10 @@ $default_config_array['user_name'] = DB_USER_NAME; //db username
 $default_config_array['pass_word'] = DB_PASSWORD; //db pwd
 $default_config_array['db'] = DB_NAME; //db
 $default_config_array['port'] = DB_PORT; //db port
-$default_config_array[DB_NAME] = DB_PORT; //db port
-$default_config_array['read_db_arithmetic'] = 'rand'; //roll or rand
 $slave_default_config_dbs = array();
 $slave_default_config_dbs[DB_NAME] = DB_HOST . "," . DB_HOST; 
 $default_config_array['read_db_hosts'] = $slave_default_config_dbs; 
+$default_config_array['read_db_arithmetic'] = 'rand'; //读库算法 roll:轮询 or rand:随机
 /***************************************************************************************************************************************/
 
 /***************order库表配置 (单库多表)*********************************************************************************************************/
