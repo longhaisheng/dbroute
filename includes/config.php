@@ -9,7 +9,7 @@ define("DB_HOST", '127.0.0.1');
 define("DB_PORT", 3306);
 define("SEQUENCE_DEFAULT_STEP", 1000); //序列步长
 define("TRANSACTION_READ_MASTER", true); //事务中 select查询 是否读主库
-
+define("APP_NAME", 'mmall');//应用名
 
 /************sequence表及未分库的表配置*****************************************************************************************************/
 $default_config_array = array();

@@ -535,7 +535,9 @@ class DBRouteException extends Exception {
  */
 abstract class BaseConfig{
 
-	/** 数据库前缀名 */
+    const INIT_LOGIC_CACHE_KEY = "init_logic_";
+
+    /** 数据库前缀名 */
 	private $db_prefix;
 
 	/** 表前缀名 */
@@ -621,7 +623,7 @@ abstract class BaseConfig{
 			} else {
 				$this-> setIsSingleDb(false);
 			}
-			$list = cls_shmop::readArray("init_logic_" . $this->getLogicTable());
+			$list = cls_shmop::readArray(self::INIT_LOGIC_CACHE_KEY . $this->getLogicTable());
 			if ($list) {
 				$this->db_list=$list;
 			} else {
@@ -660,7 +662,7 @@ abstract class BaseConfig{
 			}
 			$this->db_list[$db_key] = $tables;
 		}
-		cls_shmop::writeArray("init_logic_" . $this->getLogicTable(), $this->db_list);
+		cls_shmop::writeArray(self::INIT_LOGIC_CACHE_KEY . $this->getLogicTable(), $this->db_list);
 	}
 
 	public function setDbPrefix($db_prefix) {
@@ -901,7 +903,9 @@ class ModHash extends BaseConfig{
  */
 class ConsistentHash extends BaseConfig{
 
-   /** 一致性hash配置字符串 
+    const INIT_CONSISTENT_HASH_SECTION_CACHE_KEY = 'init_consistent_hash_section_';
+
+    /** 一致性hash配置字符串
 	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
 	* 如果key为consistent_hash_one_db_one_table的值为fasle,逻辑列值 mod Hash最大区间值之后 在 >=0 && <256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
 	* 可将[0,256]重新划分为[0,128]=sc_refund_0000和[128,256]=sc_refund_0005
@@ -924,7 +928,7 @@ class ConsistentHash extends BaseConfig{
         if(isset($config_array['consistent_hash_separate_mod_max_value'])){
             $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
         }
-        $list = cls_shmop::readArray('init_consistent_hash_section'.parent::getLogicTable());
+        $list = cls_shmop::readArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY.parent::getLogicTable());
         if ($list) {
             $this->node_list=$list;
         } else {
@@ -957,7 +961,7 @@ class ConsistentHash extends BaseConfig{
             $nodeList[]=$node;
         }
         $this->node_list=$nodeList;
-        cls_shmop::writeArray('init_consistent_hash_section'.parent::getLogicTable(),$nodeList);
+        cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
 
         /*if($max !=$this->consistent_hash_separate_mod_max_value){
             throw new DBRouteException('一致性hash字符串设置错误');

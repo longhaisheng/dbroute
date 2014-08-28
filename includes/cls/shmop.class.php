@@ -8,7 +8,7 @@ class cls_shmop {
 
     private static $static_int_num = 1000000;
 
-    public static function strToIntKey($str) {
+    private static function strToIntKey($str) {
         $len = strlen($str);
         $total = 0;
         for ($i = 0; $i < $len; $i++) {
@@ -28,7 +28,7 @@ class cls_shmop {
         if (empty($value)) {
             return false;
         }
-        $key = self::strToIntKey($key);
+        $key = self::strToIntKey(APP_NAME.$key);
         $connect = shmop_open($key, 'c', 0644, strlen($value));
         if ($connect === false) {
             return false;
@@ -47,7 +47,7 @@ class cls_shmop {
      * @param string $key
      */
     public static function read($key) {
-        $key = self::strToIntKey($key);
+        $key = self::strToIntKey(APP_NAME.$key);
         $connect = @shmop_open($key, 'a', 0644, 0);
         if ($connect) {
             $value = shmop_read($connect, 0, shmop_size($connect));
@@ -67,7 +67,7 @@ class cls_shmop {
         //if (!is_array($arrayList) || empty($arrayList)) {
         //	return false;
         //}
-        $key = self::strToIntKey($key);
+        $key = self::strToIntKey(APP_NAME.$key);
         $value = serialize($arrayList);
         $connect = shmop_open($key, 'c', 0644, strlen($value));
         if ($connect === false) {
@@ -88,7 +88,7 @@ class cls_shmop {
      * @return array
      */
     public static function readArray($key) {
-        $key = self::strToIntKey($key);
+        $key = self::strToIntKey(APP_NAME.$key);
         $connect = @shmop_open($key, 'a', 0644, 0);
         if ($connect) {
             $arrayList = shmop_read($connect, 0, shmop_size($connect));
