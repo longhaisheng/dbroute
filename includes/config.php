@@ -149,6 +149,7 @@ $sc_refund_info_multiple_dbroute_config['logic_table'] = "sc_refund_info"; //逻
 $sc_refund_info_multiple_dbroute_config['table_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数
 $sc_refund_info_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数
 $sc_refund_info_multiple_dbroute_config['logic_column_field_type'] = "int"; //分表的列值的类型
+$sc_refund_info_multiple_dbroute_config['db_logic_column_type'] = "int"; //分表的列值的类型
 $sc_refund_info_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //select in 查询时时的参数key名
 $sc_refund_info_multiple_dbroute_config['table_total_num'] = 64; //总表数
 $sc_refund_info_multiple_dbroute_config['one_db_table_num'] = 16; //每个库里存放的表数

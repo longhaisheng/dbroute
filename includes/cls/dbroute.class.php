@@ -576,8 +576,11 @@ abstract class BaseConfig{
 	/** 是否为调试模式*/
 	private $is_debug = false;
 
-	/** 逻辑字段值类型*/
-	private $logic_column_field_type;
+	/** 分库逻辑字段值类型*/
+    private $db_logic_column_type;
+
+    /** 分表辑字段值类型*/
+    private $logic_column_field_type;
 
     private $is_date_table=false;
 
@@ -607,6 +610,11 @@ abstract class BaseConfig{
 			    $this->setDbLogicColumn($this->config_array['db_logic_column']);
             }else{
                 $this->setDbLogicColumn($this->config_array['table_logic_column']);
+            }
+            if(isset($this->config_array['db_logic_column_type'])){
+			    $this->setDbLogicColumnType($this->config_array['db_logic_column_type']);
+            }else{
+                $this->setDbLogicColumnType($this->config_array['logic_column_field_type']);
             }
 			$this->setTableTotalNum($this->config_array['table_total_num']);
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
@@ -769,6 +777,14 @@ abstract class BaseConfig{
 		return $this->logic_column_field_type;
 	}
 
+    public function setDbLogicColumnType($db_logic_column_type) {
+        $this->db_logic_column_type = $db_logic_column_type;
+    }
+
+    public function getDbLogicColumnType() {
+        return $this->db_logic_column_type;
+    }
+
     public function setTableNameDateLogicString($table_name_date_logic_string) {
         $this->table_name_date_logic_string = $table_name_date_logic_string;
     }
@@ -813,7 +829,7 @@ abstract class BaseConfig{
 	}
 
 	protected function getDBMod($logic_column_value) {
-		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
+		if ($this->getDbLogicColumnType() && $this->getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 		return intval($logic_column_value % $this->getTableTotalNum() / $this->getOneDbTableNum());
@@ -996,7 +1012,7 @@ class ConsistentHash extends BaseConfig{
 		if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
 		}
-		if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
+		if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 
@@ -1061,7 +1077,7 @@ class VirtualHash extends BaseConfig{
         if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
         }
-        if (parent::getLogicColumnFieldType() && parent::getLogicColumnFieldType() == 'string'  && !is_numeric($logic_column_value)) {
+        if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
             $logic_column_value=cls_dbroute::strToInt($logic_column_value);
         }
         return $this->hash->lookup($logic_column_value);
