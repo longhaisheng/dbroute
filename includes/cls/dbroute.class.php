@@ -333,7 +333,7 @@ class cls_dbroute {
 
 		$db_param_list = array();//每个数据库中 余数(余一个库中的表数)相同的值数组
 		foreach ($in_param_arr as $key => $value) {
-			if ($this->getDbParse()->getLogicColumnFieldType() == 'string' && is_string($value) && !is_numeric($value)) {
+			if ($this->getDbParse()->getTableLogicColumnType() == 'string' && is_string($value) && !is_numeric($value)) {
 				$value = self::strToInt($value);
 				$in_param_arr[$key]=$value;
 			} 
@@ -580,7 +580,7 @@ abstract class BaseConfig{
     private $db_logic_column_type;
 
     /** 分表辑字段值类型*/
-    private $logic_column_field_type;
+    private $table_logic_column_type;
 
     private $is_date_table=false;
 
@@ -614,12 +614,12 @@ abstract class BaseConfig{
             if(isset($this->config_array['db_logic_column_type'])){
 			    $this->setDbLogicColumnType($this->config_array['db_logic_column_type']);
             }else{
-                $this->setDbLogicColumnType($this->config_array['logic_column_field_type']);
+                $this->setDbLogicColumnType($this->config_array['table_logic_column_type']);
             }
 			$this->setTableTotalNum($this->config_array['table_total_num']);
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
 			$this->setSelectInLogicColumn($this->config_array['select_in_logic_column']);
-			$this->setLogicColumnFieldType($this->config_array['logic_column_field_type']);
+			$this->setTableLogicColumnType($this->config_array['table_logic_column_type']);
 	        if(isset($config_array['consistent_hash_one_db_one_table'])){
             	$this->consistent_hash_one_db_one_table=$config_array['consistent_hash_one_db_one_table'];
         	}
@@ -769,12 +769,12 @@ abstract class BaseConfig{
 		return $this->is_debug;
 	}
 
-	public function setLogicColumnFieldType($logic_column_field_type) {
-		$this->logic_column_field_type = $logic_column_field_type;
+	public function setTableLogicColumnType($logic_column_field_type) {
+		$this->table_logic_column_type = $logic_column_field_type;
 	}
 
-	public function getLogicColumnFieldType() {
-		return $this->logic_column_field_type;
+	public function getTableLogicColumnType() {
+		return $this->table_logic_column_type;
 	}
 
     public function setDbLogicColumnType($db_logic_column_type) {
@@ -822,7 +822,7 @@ abstract class BaseConfig{
 	}
 
 	public function getTableMod($logic_column_value) {
-		if ($this->getLogicColumnFieldType() && $this->getLogicColumnFieldType() == 'string' && !is_numeric($logic_column_value)) {
+		if ($this->getTableLogicColumnType() && $this->getTableLogicColumnType() == 'string' && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
 		return $this->getConsistentHashOneDbOneTable()?0:$logic_column_value % $this->getOneDbTableNum();//每库一表时取下标0
