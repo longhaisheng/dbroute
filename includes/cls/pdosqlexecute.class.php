@@ -101,7 +101,7 @@ class cls_pdosqlexecute implements cls_idb {
 
     private function prepare($sql) {
         $transaction_read_master = false; //事务中的读操作是否读主库
-        if (defined("TRANSACTION_READ_MASTER")) {
+        if (defined('TRANSACTION_READ_MASTER')) {
             $transaction_read_master = TRANSACTION_READ_MASTER;
         }
         if ($this->this_operation_have_transaction && $transaction_read_master) { //有事务操作并且事务中select配置成操作主库,事务中select查询走主库
