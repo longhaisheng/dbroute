@@ -127,7 +127,11 @@ class cls_mysql {
     private function query($sql) {
         if ($this->mysqlLink == null) {
             $db_config_list = $this->config_array;
-            $this->mysqlLink = mysql_connect($db_config_list['host'], $db_config_list['user_name'], $db_config_list['pass_word'], true);
+            $server=$db_config_list['host'];
+            if(isset($db_config_list['port'])){
+            	$server=$db_config_list['host'].':'.$db_config_list['port'];
+            }
+            $this->mysqlLink = mysql_connect($server, $db_config_list['user_name'], $db_config_list['pass_word'], true);
             mysql_select_db($db_config_list['db'], $this->mysqlLink);
             mysql_query("SET character_set_connection=utf8, character_set_results=utf8, character_set_client=binary", $this->mysqlLink);
             //mysql_query("SET NAMES 'utf8'",$this->mysql_link);
