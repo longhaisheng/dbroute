@@ -73,7 +73,7 @@ class cls_pdosqlexecute implements cls_idb {
             if ($stmt) {
                 $stmt->closeCursor();
             }
-            throw new Exception("Error in : " . $e->getMessage());
+            throw new Exception('Error in : ' . $e->getMessage());
             return null;
         }
     }
@@ -138,16 +138,17 @@ class cls_pdosqlexecute implements cls_idb {
     }
     
     private function get_read_db_host_roll($db_read_host_array, $db) {
-        $host_str = $db_read_host_array[$db];
-        $host_array = explode(",", $host_str);
         $key=$db.'_read_host';
         $cache_array=cls_shmop::readArray($key);
         if($cache_array){
         	$host = array_shift($cache_array);
             cls_shmop::writeArray($key, $cache_array);
         }else{
-        	$host = array_shift($host_array);
-        	cls_shmop::writeArray($key,$host_array);
+	        $host_str = $db_read_host_array[$db];
+	        $host_array = explode(",", $host_str);
+	        $read_host_list=self::get_read_host_list($host_array);
+        	$host = array_shift($read_host_list);
+        	cls_shmop::writeArray($key,$read_host_list);
         }
         
         return $host;
@@ -155,10 +156,33 @@ class cls_pdosqlexecute implements cls_idb {
     
     private function get_read_db_host_rand($db_read_host_array, $db) {
         $host_str = $db_read_host_array[$db];
-        $host_array = explode(",", $host_str);
-        $num = rand(0, count($host_array) - 1);
-        $host = $host_array[$num];
-        return $host;
+        $host_array = explode(',', $host_str);
+        $read_host_list=self::get_read_host_list($host_array);
+        $num = rand(0, count($read_host_list) - 1);
+        return $read_host_list[$num];
+    }
+    
+    /**
+     * 
+     * 根据权重得到新host列表
+     * @param array $list array("127.0.0.1_1",'192.168.1.101_2','127.168.2.1') 下划线后面的表示权重
+     * @return array Array('127.0.0.1','192.168.1.101','192.168.1.101','127.168.2.1')
+     */
+    private static function get_read_host_list(array $list=array()){
+	    if(empty($list) || !is_array($list)) return false;
+		$host_list=array();
+		foreach ($list as $value) {
+			$new_list=explode('_', $value);
+			if(count($new_list)>1){
+				$count=$new_list[1];
+				for ($i=0;$i<$count;$i++){
+					$host_list[]=$new_list[0];
+				}
+			}else{
+				$host_list[]=$value;
+			}
+		}
+		return $host_list;
     }
 
     private function getDbConnection($connect_array) {
@@ -179,7 +203,7 @@ class cls_pdosqlexecute implements cls_idb {
             );
             return $connection;
         } catch (PDOException $e) {
-            throw new Exception("Database Connect Error : " . $e->getMessage());
+            throw new Exception('Database Connect Error : ' . $e->getMessage());
         }
     }
 
@@ -206,7 +230,7 @@ class cls_pdosqlexecute implements cls_idb {
             self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
         } 	
         if(count(self::get_database_name_list_in_one_transaction())>1){//事务中超过一个数据库,抛出异常,让客户端回滚
-            throw new Exception(" transactions have more than one database,plese check you code ");
+            throw new Exception(' transactions have more than one database,plese check you code ');
         }
         $return = $this->connection->commit();
         if(self::$need_record_db_name_in_one_transaction){

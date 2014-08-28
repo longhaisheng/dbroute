@@ -76,7 +76,7 @@ class cls_sqlexecute implements cls_idb {
             //host 前加p:可以设置成持久化连接，不见意使用持久化
             $this->connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
             if ($this->connection->error) {
-                echo("Database Connect Error : " . $this->connection->error);
+                echo('Database Connect Error : ' . $this->connection->error);
             } else {
                 $this->connection->query("SET NAMES 'utf8'");
             }
@@ -98,7 +98,7 @@ class cls_sqlexecute implements cls_idb {
             }
             $this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
             if ($this->read_connection->error) {
-                echo("Database Connect Error : " . $this->read_connection->error);
+                echo('Database Connect Error : ' . $this->read_connection->error);
             } else {
                 $this->read_connection->query("SET NAMES 'utf8'");
             }
@@ -106,16 +106,17 @@ class cls_sqlexecute implements cls_idb {
     }
 
     private function get_read_db_host_roll($db_read_host_array, $db) {
-        $host_str = $db_read_host_array[$db];
-        $host_array = explode(",", $host_str);
         $key=$db.'_read_host';
         $cache_array=cls_shmop::readArray($key);
         if($cache_array){
         	$host = array_shift($cache_array);
             cls_shmop::writeArray($key, $cache_array);
         }else{
-        	$host = array_shift($host_array);
-        	cls_shmop::writeArray($key,$host_array);
+	        $host_str = $db_read_host_array[$db];
+	        $host_array = explode(',', $host_str);
+	        $read_host_list=self::get_read_host_list($host_array);
+        	$host = array_shift($read_host_list);
+        	cls_shmop::writeArray($key,$read_host_list);
         }
         
         return $host;
@@ -123,10 +124,33 @@ class cls_sqlexecute implements cls_idb {
     
     private function get_read_db_host_rand($db_read_host_array, $db) {
         $host_str = $db_read_host_array[$db];
-        $host_array = explode(",", $host_str);
-        $num = rand(0, count($host_array) - 1);
-        $host = $host_array[$num];
-        return $host;
+        $host_array = explode(',', $host_str);
+        $read_host_list=self::get_read_host_list($host_array);
+        $num = rand(0, count($read_host_list) - 1);
+        return $read_host_list[$num];
+    }
+    
+    /**
+     * 
+     * 根据权重得到新host列表
+     * @param array $list array("127.0.0.1_1",'192.168.1.101_2','127.168.2.1') 下划线后面的表示权重
+     * @return array Array('127.0.0.1','192.168.1.101','192.168.1.101','127.168.2.1')
+     */
+    private static function get_read_host_list(array $list=array()){
+	    if(empty($list) || !is_array($list)) return false;
+		$host_list=array();
+		foreach ($list as $value) {
+			$new_list=explode('_', $value);
+			if(count($new_list)>1){
+				$count=$new_list[1];
+				for ($i=0;$i<$count;$i++){
+					$host_list[]=$new_list[0];
+				}
+			}else{
+				$host_list[]=$value;
+			}
+		}
+		return $host_list;
     }
 
     /** 获取一次事务中所包含的所有数据库名*/
@@ -303,7 +327,7 @@ class cls_sqlexecute implements cls_idb {
     private function executeQuery($sql, $params = array()) {
         $result = $this->replaceSql($sql, $params);
         $transaction_read_master = false; //事务中的读操作是否读主库
-        if (defined("TRANSACTION_READ_MASTER")) {
+        if (defined('TRANSACTION_READ_MASTER')) {
             $transaction_read_master = TRANSACTION_READ_MASTER;
         }
         $read_conn = false;
@@ -311,7 +335,7 @@ class cls_sqlexecute implements cls_idb {
             $this->init();
             $stmt = $this->connection->prepare($result['sql']);
         } else {
-            if ($this->has_read_db && (stristr($sql, "select ") || stristr($sql, "SELECT "))) { //有读库配置并且是 select 查询 走读库
+            if ($this->has_read_db && (stristr($sql, 'select ') || stristr($sql, 'SELECT '))) { //有读库配置并且是 select 查询 走读库
                 $this->init_read_connection();
                 $stmt = $this->read_connection->prepare($result['sql']);
                 $read_conn = true;
@@ -324,7 +348,7 @@ class cls_sqlexecute implements cls_idb {
 			self::$db_name_list_in_one_transaction[]=$this->connect_array['db'];
         }
         if (!$stmt) {
-            throw new Exception("error sql in " . $sql);
+            throw new Exception('error sql in ' . $sql);
         }
 
         $params = $this->get_bind_params($result['params']);
@@ -337,24 +361,24 @@ class cls_sqlexecute implements cls_idb {
                 $stmt->close();
             }
             $error_msg = $read_conn ? $this->read_connection->error : $this->connection->error;
-            throw new Exception("Error in : " . $error_msg);
+            throw new Exception('Error in : ' . $error_msg);
         }
     }
 
     private function get_bind_params($bind_params) {
         if ($bind_params && is_array($bind_params)) {
             ksort($bind_params);
-            $param_key = "";
+            $param_key = '';
             foreach ($bind_params as $key => $value) {
                 $type = gettype($value);
-                if ($type === "integer") {
-                    $param_key .= "i";
-                } else if ($type === "double") {
-                    $param_key .= "d";
-                } else if ($type === "string") {
-                    $param_key .= "s";
+                if ($type === 'integer') {
+                    $param_key .= 'i';
+                } else if ($type === 'double') {
+                    $param_key .= 'd';
+                } else if ($type === 'string') {
+                    $param_key .= 's';
                 } else {
-                    $param_key .= "b";
+                    $param_key .= 'b';
                 }
             }
             array_unshift($bind_params, $param_key); //在数组最前面插入一条数据
@@ -365,12 +389,12 @@ class cls_sqlexecute implements cls_idb {
 
     private function bindParameters($stmt, $bind_params = array()) {
         if ($bind_params) {
-            call_user_func_array(array($stmt, "bind_param"), $this->refValues($bind_params));
+            call_user_func_array(array($stmt, 'bind_param'), $this->refValues($bind_params));
         }
     }
 
     private function bindResult($stmt, $bind_result_fields = array()) {
-        call_user_func_array(array($stmt, "bind_result"), $bind_result_fields);
+        call_user_func_array(array($stmt, 'bind_result'), $bind_result_fields);
     }
 
     private function refValues($arr) {
@@ -401,10 +425,10 @@ class cls_sqlexecute implements cls_idb {
         $params = array();
         if ($object) {
             foreach ($object as $key => $value) {
-                if (!stripos($sql, ":" . $key)) {
-                    throw new Exception(" array key: $key not in sql:" . $sql);
+                if (!stripos($sql, ':' . $key)) {
+                    throw new Exception(' array key:'. $key.' not in sql:' . $sql);
                 } else {
-                    $sql = str_ireplace(":" . $key, "?", $sql);
+                    $sql = str_ireplace(':' . $key, '?', $sql);
                     foreach ($map as $k => $v) {
                         if (strtolower($v) === strtolower("#$key#")) {
                             $params[$k] = $value;
@@ -419,7 +443,7 @@ class cls_sqlexecute implements cls_idb {
     }
 
     private function iteratePropertyReplaceByArray($sql, $array) {
-        preg_match_all("/(#)(.*?)(#)/", $sql, $match);
+        preg_match_all('/(#)(.*?)(#)/', $sql, $match);
         if ($match) {
             $match = $match[0];
         }

@@ -912,7 +912,7 @@ class ConsistentHash extends BaseConfig{
 	/** 一致性hash最大区间值 */
 	private $consistent_hash_separate_mod_max_value;
 
-	/** db所有节点列表对象 */
+	/** db所有节点Node对象列表 */
 	private $node_list=array();
 
     function __construct($config_array = array()){
@@ -934,21 +934,21 @@ class ConsistentHash extends BaseConfig{
 
     private function init(){
         $str=$this->getConsistentHashSeparateString();
-        $list=explode(";", $str);
+        $list=explode(';', $str);
         $max=0;
         $i=0;
         $nodeList=array();
         foreach ($list as $value) {
-            $one_db_config=explode("=", $value);
-            $one_db_config[0]=str_replace("[", "", $one_db_config[0]);
-            $one_db_config[0]=str_replace("]", "", $one_db_config[0]);
-            $start_end_list=explode(",", $one_db_config[0]);
+            $one_db_config=explode('=', $value);
+            $one_db_config[0]=str_replace('[', '', $one_db_config[0]);
+            $one_db_config[0]=str_replace(']', '', $one_db_config[0]);
+            $start_end_list=explode(',', $one_db_config[0]);
             if($max <=$start_end_list[1]){
                 $max=$start_end_list[1];
             }
             $node=new Node();
-            $node->setStart(str_replace("w", "0000", $start_end_list[0]));
-            $node->setEnd(str_replace("w", "0000", $start_end_list[1]));
+            $node->setStart(str_replace('w', '0000', $start_end_list[0]));
+            $node->setEnd(str_replace('w', '0000', $start_end_list[1]));
             $node->setDbName($one_db_config[1]);
             if($i==0 && !parent::getConsistentHashOneDbOneTable()){
             	$node->setIsDefaultDb(true);
