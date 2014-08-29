@@ -184,8 +184,8 @@ $monthofyear_multiple_dbroute_config['port'] = DB_PORT; //db port
 $monthofyear_multiple_dbroute_config['db_prefix'] = "mmall_0000"; //数据库前缀，生成类似sc_refund_0000、sc_refund_0001...sc_refund_1023
 $monthofyear_multiple_dbroute_config['table_prefix'] = "refund_info_0000"; //表名前缀，生成类似refund_info_0000、refund_info_0001...refund_info_1023
 $monthofyear_multiple_dbroute_config['logic_table'] = "sc_refund_info"; //逻辑表名不能为sql关键字,用户月支付详情
-$monthofyear_multiple_dbroute_config['table_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数,日期分表时不用设置
-$monthofyear_multiple_dbroute_config['table_logic_column_type'] = "int"; //分表的列值的类型,日期分表时不用设置
+//$monthofyear_multiple_dbroute_config['table_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数,日期分表时不用设置
+//$monthofyear_multiple_dbroute_config['table_logic_column_type'] = "int"; //分表的列值的类型,日期分表时不用设置
 $monthofyear_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数,日期分库时不用设置
 $monthofyear_multiple_dbroute_config['db_logic_column_type'] = "int"; //分库的列值的类型，如不设置此值将同table_logic_column_type的值,日期分库时不用设置
 
