@@ -117,20 +117,24 @@ class cls_dbroute {
     private function get_logic_column_value($params) {
         $logic_col = $this->getDbParse()->getTableLogicColumn();
         $dateTable = $this->getDbParse()->getIsdateTable();
-        $logic_col_value = $params[$logic_col];
         if ($dateTable) {
-            $logic_col_value = $logic_col_value ? $logic_col_value : '';
+            $logic_col_value = '';
             return $logic_col_value;
         } else {
             if (!isset($params[$logic_col])) {
                 throw new DBRouteException("error params ,it must have key " . $logic_col);
             }
+            $logic_col_value = $params[$logic_col];
             return $logic_col_value;
         }
     }
 
     private function get_db_name($params) {
         $db_logic_column = $this->getDbParse()->getDbLogicColumn();
+        $isDateDb = $this->getDbParse()->getIsDateDb();
+        if($isDateDb) {
+        	return $this->getDbParse()->getDbName('');
+        }
         if($db_logic_column){
 	        if (!isset($params[$db_logic_column])) {
 	            throw new DBRouteException("error params ,it must have key " . $db_logic_column);
@@ -208,6 +212,8 @@ class cls_dbroute {
 	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
+		//print_r($decorate);
+		//die;
 		return $this->getDbConnection($db_name)->insert($decorate['sql'], $decorate['params'], $return_insert_id);
 	}
 
@@ -582,10 +588,14 @@ abstract class BaseConfig{
     /** 分表辑字段值类型*/
     private $table_logic_column_type;
 
+    private $is_date_db=false;
+    
     private $is_date_table=false;
 
     /** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:0...31) ||MM(月:01...12) ||MMdd(月日)||w(星期日:0,星期一:1...) */
     private $table_name_date_logic_string;
+
+    private $db_name_date_logic_string;
     
    	/** 区间是否是每库一表 */
 	private $consistent_hash_one_db_one_table=false;
@@ -598,28 +608,40 @@ abstract class BaseConfig{
         if(isset($this->config_array['is_date_table'])){
             $this->setIsdateTable($this->config_array['is_date_table']);
         }
+        if(isset($this->config_array['is_date_db'])){
+            $this->setIsDateDb($this->config_array['is_date_db']);
+        }
         if(isset($this->config_array['table_name_date_logic_string'])){
             $this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
         }
-		if (isset($this->config_array['logic_table']) && isset($this->config_array['table_logic_column'])) {
+        if(isset($this->config_array['db_name_date_logic_string'])){
+            $this->setDbNameDateLogicString($this->config_array['db_name_date_logic_string']);
+        }
+		if (isset($this->config_array['logic_table'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
 			$this->setTablePrefix($this->config_array['table_prefix']);
 			$this->setLogicTable($this->config_array['logic_table']);
-			$this->setTableLogicColumn($this->config_array['table_logic_column']);
+			if(!$this->getIsdateTable()){
+				$this->setTableLogicColumn($this->config_array['table_logic_column']);
+				$this->setTableLogicColumnType($this->config_array['table_logic_column_type']);
+			}
             if(isset($this->config_array['db_logic_column'])){
-			    $this->setDbLogicColumn($this->config_array['db_logic_column']);
+                $this->setDbLogicColumn($this->config_array['db_logic_column']);
             }else{
-                $this->setDbLogicColumn($this->config_array['table_logic_column']);
+                if(!$this->getIsDateDb() && !$this->getIsdateTable()){
+                    $this->setDbLogicColumn($this->config_array['table_logic_column']);
+                }
             }
             if(isset($this->config_array['db_logic_column_type'])){
-			    $this->setDbLogicColumnType($this->config_array['db_logic_column_type']);
+                $this->setDbLogicColumnType($this->config_array['db_logic_column_type']);
             }else{
-                $this->setDbLogicColumnType($this->config_array['table_logic_column_type']);
+                if(!$this->getIsDateDb() && !$this->getIsdateTable()){
+                    $this->setDbLogicColumnType($this->config_array['table_logic_column_type']);
+                }
             }
 			$this->setTableTotalNum($this->config_array['table_total_num']);
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
 			$this->setSelectInLogicColumn($this->config_array['select_in_logic_column']);
-			$this->setTableLogicColumnType($this->config_array['table_logic_column_type']);
 	        if(isset($config_array['consistent_hash_one_db_one_table'])){
             	$this->consistent_hash_one_db_one_table=$config_array['consistent_hash_one_db_one_table'];
         	}
@@ -635,7 +657,9 @@ abstract class BaseConfig{
 			if ($list) {
 				$this->db_list=$list;
 			} else {
-				$this->init();
+				if(!$this->getIsDateDb() && !$this->getIsdateTable()){
+					$this->init();
+				}
 			}
 			if ($this->getIsDebug()) {
 				print_r($this->db_list);
@@ -793,12 +817,28 @@ abstract class BaseConfig{
         return $this->table_name_date_logic_string;
     }
 
+    public function setDbNameDateLogicString($db_name_date_logic_string) {
+        $this->db_name_date_logic_string = $db_name_date_logic_string;
+    }
+
+    public function getDbNameDateLogicString() {
+        return $this->db_name_date_logic_string;
+    }
+
     public function setIsdateTable($table_name_type) {
         $this->is_date_table = $table_name_type;
     }
 
     public function getIsdateTable() {
         return $this->is_date_table;
+    }
+
+    public function setIsDateDb($is_date_db) {
+        $this->is_date_db = $is_date_db;
+    }
+
+    public function getIsDateDb() {
+        return $this->is_date_db;
     }
 
     public function setConsistentHashOneDbOneTable($consistent_hash_one_db_one_table) {
@@ -848,17 +888,17 @@ abstract class BaseConfig{
             if($tableNameDateLogicString =='yyyyMMdd'){
                 $suffix=date("Ymd");
             }
-            if($tableNameDateLogicString =='MMdd'){
+            if($tableNameDateLogicString =='MMdd'){//(0101...1231)
                 $suffix=date("md");
             }
-            if($tableNameDateLogicString =='MM'){
+            if($tableNameDateLogicString =='MM'){//月 (01...12)
                 $suffix=date("m");
             }
-            if($tableNameDateLogicString =='dd'){
+            if($tableNameDateLogicString =='dd'){//(01...31)
                 $suffix=date("d");
             }
-            if($tableNameDateLogicString =='w'){
-                $suffix=date("w");
+            if($tableNameDateLogicString =='w'){//星期 (00,01,02...06)
+                $suffix='0'.date("w");
             }
             if(empty($suffix)){
             	throw new DBRouteException("日期分表字符串设置错误!");
@@ -879,6 +919,28 @@ abstract class BaseConfig{
         $dbPrefix = $this->getDbPrefix();
         $dbPrefix = str_replace('0', '', $dbPrefix);
         return trim($dbPrefix, '_');
+    }
+    
+    protected function get_date_db_name() {
+        $str = $this->getDbNameDateLogicString();
+        if($str =='year'){//年 2014
+        	$suffix=date("Y");
+        }
+        if($str =='month'){//月 (01...12)
+        	$suffix=date("m");
+        }
+        if($str =='day'){//日 (01...31)
+        	$suffix=date("d");
+        }
+        if($str =='week'){//星期 (00,01,02...06)
+        	$suffix='0'.date("w");
+        }
+        if(empty($suffix)){
+           throw new DBRouteException("日期分库字符串设置错误!");
+        }
+        $dbPrefix=str_replace("0", "", $this->getDbPrefix());
+        $dbPrefix=str_replace("_", "", $dbPrefix);
+        return $dbPrefix.'_'.$suffix;
     }
 
     abstract function getDbName($logic_column_value);
@@ -904,6 +966,9 @@ class ModHash extends BaseConfig{
 	public function getDbName($logic_column_value) {
 		if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
+		}
+		if(parent::getIsDateDb()){
+			return parent::get_date_db_name();
 		}
 		$db_index=parent::getDBMod($logic_column_value);
 		return substr_replace(parent::getDbPrefix(), $db_index, strlen(parent::getDbPrefix()) - strlen($db_index));
@@ -1012,6 +1077,9 @@ class ConsistentHash extends BaseConfig{
 		if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
 		}
+    	if(parent::getIsDateDb()){
+			return parent::get_date_db_name();
+		}
 		if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
 			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
 		}
@@ -1077,6 +1145,9 @@ class VirtualHash extends BaseConfig{
         if (parent::getIsSingleDb()) {
             return parent::getSingleDbName();
         }
+        if(parent::getIsDateDb()){
+			return parent::get_date_db_name();
+		}
         if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
             $logic_column_value=cls_dbroute::strToInt($logic_column_value);
         }
