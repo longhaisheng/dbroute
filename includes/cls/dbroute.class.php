@@ -296,10 +296,11 @@ class cls_dbroute {
 	public function selectByIn($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$dateTable = $this->getDbParse()->getIsdateTable();
+		$isDateDb = $this->getDbParse()->getIsDateDb();
 		if (!$logicTable) {
 			throw new DBRouteException('非逻辑表不支持此方法');
 		}
-		if ($dateTable) {
+		if ($dateTable || $isDateDb) {
 			throw new DBRouteException('日期分表不支持此方法');
 		}
 		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
@@ -380,7 +381,8 @@ class cls_dbroute {
 						throw new DBRouteException("error sql in " . $sql);
 					}
 					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
-					$result = $this->getDbConnection($db_name)->getAll($new_sql, $in_params[$mod]);
+					echo $new_sql.":$db_name<br>";
+					$result =array(); //$this->getDbConnection($db_name)->getAll($new_sql, $in_params[$mod]);
 					if ($result) {
 						foreach ($result as $row) {
 							$merge_result[] = $row;
@@ -418,10 +420,11 @@ class cls_dbroute {
 	public function queryResultFromAllDbTables($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$isDateTable = $this->getDbParse()->getIsdateTable();
+		$isDateDb = $this->getDbParse()->getIsDateDb();
 		if (!$logicTable) {//非逻辑表不支持
 			throw new DBRouteException("非逻辑表不支持此方法");
 		}
-		if ($isDateTable) {//日期分表不支持
+		if ($isDateTable || $isDateDb) {//日期分表不支持
 			throw new DBRouteException("日期分表不支持此方法");
 		}
 		$size = isset($params['size']) ? $params['size'] : 20;
@@ -586,18 +589,28 @@ abstract class BaseConfig{
     /** 分表辑字段值类型*/
     private $table_logic_column_type;
 
+    /** 是否按日期表达式分库*/
     private $is_date_db=false;
     
+    /** 是否日期表达式分表*/
     private $is_date_table=false;
 
     /** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:0...31) ||MM(月:01...12) ||MMdd(月日)||w(星期日:0,星期一:1...) */
     private $table_name_date_logic_string;
 
+    /** 时间分库表达式可为year(2014) ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...) */
     private $db_name_date_logic_string;
+    
+    /** 按时间分库时,db_name_date_logic_string为year时，需设置起始年份  */
+    private $db_name_date_logic_start_year;
     
    	/** 区间是否是每库一表 */
 	private $consistent_hash_one_db_one_table=false;
+	
+	/** 按日期分库的所有日期库名 */
+	private $date_db_list=array();
 
+	/** 库表的数组,key为数据库名,值为库中所有表名*/
 	private $db_list=array();
 
 	protected function __construct($config_array = array()) {
@@ -614,6 +627,9 @@ abstract class BaseConfig{
         }
         if(isset($this->config_array['db_name_date_logic_string'])){
             $this->setDbNameDateLogicString($this->config_array['db_name_date_logic_string']);
+        }
+        if(isset($this->config_array['db_name_date_logic_start_year'])){
+            $this->setDbNameDateLogicStartYear($this->config_array['db_name_date_logic_start_year']);
         }
 		if (isset($this->config_array['logic_table'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
@@ -637,7 +653,9 @@ abstract class BaseConfig{
                     $this->setDbLogicColumnType($this->config_array['table_logic_column_type']);
                 }
             }
-			$this->setTableTotalNum($this->config_array['table_total_num']);
+            if(isset($this->config_array['table_total_num'])){
+				$this->setTableTotalNum($this->config_array['table_total_num']);
+            }
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
 			$this->setSelectInLogicColumn($this->config_array['select_in_logic_column']);
 	        if(isset($config_array['consistent_hash_one_db_one_table'])){
@@ -655,9 +673,7 @@ abstract class BaseConfig{
 			if ($list) {
 				$this->db_list=$list;
 			} else {
-				if(!$this->getIsDateDb() && !$this->getIsdateTable()){
-					$this->init();
-				}
+				$this->init();
 			}
 			if ($this->getIsDebug()) {
 				print_r($this->db_list);
@@ -666,7 +682,14 @@ abstract class BaseConfig{
 	}
 
 	private function init() {
-		$db_total_num = $this->getDbTotalNum();
+		if($this->getIsDateDb() && !$this->getIsdateTable()){
+			if(empty($this->date_db_list)){
+				$this->get_date_db_name();
+			}
+			$db_total_num=count($this->date_db_list);
+		}else{
+			$db_total_num = $this->getDbTotalNum();
+		}
 		$mod = $this->getTableTotalNum() % $this->getOneDbTableNum();
 		$num = 0;
 		for ($i = 0; $i < $db_total_num; $i++) {
@@ -689,6 +712,9 @@ abstract class BaseConfig{
 				$db_key = $this->getSingleDbName();
 			} else {
 				$db_key = substr_replace($this->getDbPrefix(), $i, strlen($this->getDbPrefix()) - strlen($i));
+				if($this->getIsDateDb() && !$this->getIsdateTable()){//如果是日期分库，非日期分表
+					$db_key=$this->date_db_list[$i];
+				}
 			}
 			$this->db_list[$db_key] = $tables;
 		}
@@ -819,6 +845,14 @@ abstract class BaseConfig{
         $this->db_name_date_logic_string = $db_name_date_logic_string;
     }
 
+    public function setDbNameDateLogicStartYear($db_name_date_logic_start_year) {
+        $this->db_name_date_logic_start_year = $db_name_date_logic_start_year;
+    }
+
+    public function getDbNameDateLogicStartYear() {
+        return $this->db_name_date_logic_start_year;
+    }
+
     public function getDbNameDateLogicString() {
         return $this->db_name_date_logic_string;
     }
@@ -921,23 +955,64 @@ abstract class BaseConfig{
     
     protected function get_date_db_name() {
         $str = $this->getDbNameDateLogicString();
+        $date_db_count=count($this->date_db_list);
+        $suffix_list=array();
         if($str =='year'){//年 2014
         	$suffix=date("Y");
+        	if(empty($date_db_count)){
+        		$start_year=$this->getDbNameDateLogicStartYear();
+	        	for($start_year;$start_year<$suffix+1;$start_year++){
+	        		$suffix_list[$start_year]=$start_year;
+	        	}
+        	}
         }
         if($str =='month'){//月 (01...12)
         	$suffix=date("m");
+        	if(empty($date_db_count)){
+	        	for($i=1;$i<13;$i++){
+	        		if($i<10){
+	        			$suffix_list['0'.$i]='0'.$i;
+	        		}else{
+	        			$suffix_list[$i]=$i;
+	        		}
+	        	}
+        	}
         }
         if($str =='day'){//日 (01...31)
         	$suffix=date("d");
+        	if(empty($date_db_count)){
+	            for($i=1;$i<32;$i++){
+	        		if($i<10){
+	        			$suffix_list['0'.$i]='0'.$i;
+	        		}else{
+	        			$suffix_list[$i]=$i;
+	        		}
+	        	}
+        	}
         }
         if($str =='week'){//星期 (00,01,02...06)
         	$suffix='0'.date("w");
+        	if(empty($date_db_count)){
+	           for($i=0;$i<6;$i++){
+	        		if($i<10){
+	        			$suffix_list['0'.$i]='0'.$i;
+	        		}
+	        	}
+        	}
         }
+        
+        $dbPrefix=str_replace("0", "", $this->getDbPrefix());
+        $dbPrefix=trim($dbPrefix,"_");
+        if(empty($date_db_count)){
+	        foreach ($suffix_list as $key=>$value){
+	        	$db_name=$dbPrefix.'_'.$value;
+	        	$this->date_db_list[]=$db_name;//所有日期数据库名
+	        }
+        }
+        
         if(empty($suffix)){
            throw new DBRouteException("日期分库字符串设置错误!");
         }
-        $dbPrefix=str_replace("0", "", $this->getDbPrefix());
-        $dbPrefix=str_replace("_", "", $dbPrefix);
         return $dbPrefix.'_'.$suffix;
     }
 
