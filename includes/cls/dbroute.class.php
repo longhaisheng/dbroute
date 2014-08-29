@@ -296,11 +296,10 @@ class cls_dbroute {
 	public function selectByIn($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$dateTable = $this->getDbParse()->getIsdateTable();
-		$isDateDb = $this->getDbParse()->getIsDateDb();
 		if (!$logicTable) {
 			throw new DBRouteException('非逻辑表不支持此方法');
 		}
-		if ($dateTable || $isDateDb) {
+		if ($dateTable) {
 			throw new DBRouteException('日期分表不支持此方法');
 		}
 		$select_in_logic_column=$this->getDbParse()->getSelectInLogicColumn();
@@ -381,8 +380,8 @@ class cls_dbroute {
 						throw new DBRouteException("error sql in " . $sql);
 					}
 					$new_sql = substr_replace($new_sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
-					echo $new_sql.":$db_name<br>";
-					$result =array(); //$this->getDbConnection($db_name)->getAll($new_sql, $in_params[$mod]);
+					//echo $new_sql.":$db_name<br>";
+					$result = $this->getDbConnection($db_name)->getAll($new_sql, $in_params[$mod]);
 					if ($result) {
 						foreach ($result as $row) {
 							$merge_result[] = $row;
@@ -420,11 +419,10 @@ class cls_dbroute {
 	public function queryResultFromAllDbTables($sql, $params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$isDateTable = $this->getDbParse()->getIsdateTable();
-		$isDateDb = $this->getDbParse()->getIsDateDb();
 		if (!$logicTable) {//非逻辑表不支持
 			throw new DBRouteException("非逻辑表不支持此方法");
 		}
-		if ($isDateTable || $isDateDb) {//日期分表不支持
+		if ($isDateTable) {//日期分表不支持
 			throw new DBRouteException("日期分表不支持此方法");
 		}
 		$size = isset($params['size']) ? $params['size'] : 20;
@@ -451,6 +449,7 @@ class cls_dbroute {
 				}
 				$new_sql = substr_replace($sql, " " . $table_name . " ", $first_pos, strlen(" " . $logicTable . " "));
 				$this->setDBConn($db_name);
+				//echo $new_sql.":$db_name<br>";
 				$result = $this->getDbConnection($db_name)->getAll($new_sql, $params);
 				if ($result) {
 					foreach ($result as $row) {
