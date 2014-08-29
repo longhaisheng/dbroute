@@ -212,8 +212,6 @@ class cls_dbroute {
 	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		//print_r($decorate);
-		//die;
 		return $this->getDbConnection($db_name)->insert($decorate['sql'], $decorate['params'], $return_insert_id);
 	}
 
@@ -879,25 +877,25 @@ abstract class BaseConfig{
         $tableNameDateLogicString = $this->getTableNameDateLogicString();
         if($this->getIsdateTable() && $tableNameDateLogicString){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
         	$suffix=null;
-            if($tableNameDateLogicString =='yyyy'){
+            if($tableNameDateLogicString =='year'){//2014
                 $suffix=date("Y");
             }
-            if($tableNameDateLogicString =='yyyyMM'){
+            if($tableNameDateLogicString =='year_and_month'){//201408
                 $suffix=date("Ym");
             }
-            if($tableNameDateLogicString =='yyyyMMdd'){
+            if($tableNameDateLogicString =='year_month_day'){//20140806
                 $suffix=date("Ymd");
             }
-            if($tableNameDateLogicString =='MMdd'){//(0101...1231)
+            if($tableNameDateLogicString =='month_and_day'){//(0101...1231)
                 $suffix=date("md");
             }
-            if($tableNameDateLogicString =='MM'){//月 (01...12)
+            if($tableNameDateLogicString =='month'){//月 (01...12)
                 $suffix=date("m");
             }
-            if($tableNameDateLogicString =='dd'){//(01...31)
+            if($tableNameDateLogicString =='day'){//(01...31)
                 $suffix=date("d");
             }
-            if($tableNameDateLogicString =='w'){//星期 (00,01,02...06)
+            if($tableNameDateLogicString =='week'){//星期 (00,01,02...06)
                 $suffix='0'.date("w");
             }
             if(empty($suffix)){

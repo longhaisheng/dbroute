@@ -186,16 +186,16 @@ $monthofyear_multiple_dbroute_config['table_prefix'] = "refund_info_0000"; //表
 $monthofyear_multiple_dbroute_config['logic_table'] = "sc_refund_info"; //逻辑表名不能为sql关键字,用户月支付详情
 //$monthofyear_multiple_dbroute_config['table_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数,日期分表时不用设置
 //$monthofyear_multiple_dbroute_config['table_logic_column_type'] = "int"; //分表的列值的类型,日期分表时不用设置
-$monthofyear_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数
-$monthofyear_multiple_dbroute_config['db_logic_column_type'] = "int"; //分库的列值的类型，如不设置此值将同table_logic_column_type的值
+//$monthofyear_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数
+//$monthofyear_multiple_dbroute_config['db_logic_column_type'] = "int"; //分库的列值的类型，如不设置此值将同table_logic_column_type的值
 
 $monthofyear_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //select in 查询时时的参数key名
 $monthofyear_multiple_dbroute_config['table_total_num'] = 48; //总表数
 $monthofyear_multiple_dbroute_config['one_db_table_num'] = 12; //每个库里存放的表数
 $monthofyear_multiple_dbroute_config['is_date_table'] = true; //是否按时间分表
-//$monthofyear_multiple_dbroute_config['is_date_db'] = true; //是否按时间分库
-$monthofyear_multiple_dbroute_config['db_name_date_logic_string'] = 'yyyy'; //时间分库表达式可为year(2014) ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...);
-$monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'MMdd'; //按时间分表 yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:01...31) ||MM(月01...12) ||MMdd(月日)||w(星期日:00,星期一:01...);
+$monthofyear_multiple_dbroute_config['is_date_db'] = true; //是否按时间分库
+$monthofyear_multiple_dbroute_config['db_name_date_logic_string'] = 'year'; //时间分库表达式可为year(2014) ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...);
+$monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'month_and_day'; //按时间分表 year_month_day(20140806) || year_and_month(201408) || year(2014) ||day(天:01...31) ||month(月01...12) ||month_and_day(月日)||week(星期日:00,星期一:01...);
 
 $master_sc_refund_info_multiple_dbs = array();
 $master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP
