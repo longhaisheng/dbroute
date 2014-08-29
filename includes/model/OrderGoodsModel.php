@@ -11,7 +11,7 @@ class OrderGoodsModel extends BaseModel { //单库多表
 
     public function insert($user_id = 10) {
         $sql = "insert sc_order_goods (id,order_id,goods_id,user_id,add_time,modify_time) value(#id#,#order_id#,#goods_id#,#user_id#,now(),now()) ";
-        $params['id'] = $this->sequence->nextValue('order_goods');
+        $params['id'] = $this->sequence->nextValue('sc_order_goods');
         $params['order_id'] = 10;
         $params['goods_id'] = 11;
         $params['user_id'] = $user_id;

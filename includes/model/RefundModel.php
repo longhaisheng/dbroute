@@ -17,7 +17,7 @@ class RefundModel extends BaseModel { //多库多表
 
     public function insert($user_id = 10) {
         $sql = "insert sc_refund (id,refund_sn,reason,user_id,add_time,modify_time) value(#id#,#refund_sn#,#reason#,#user_id#,now(),now()) ";
-        $params['id'] = $this->sequence->nextValue('order');
+        $params['id'] = $this->sequence->nextValue('sc_refund');
         $params['refund_sn'] = 'SN00000' . rand(1, 1000);
         $params['reason'] = 'abc' . rand(1, 1000);
         $params['user_id'] = $user_id;

@@ -17,7 +17,7 @@ class OrderModel extends BaseModel { //单库多表
 
     public function insert($user_id = 10) {
         $sql = "insert sc_order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
-        $params['id'] = $this->sequence->nextValue('order');
+        $params['id'] = $this->sequence->nextValue('sc_order');
         $params['order_sn'] = 'abc';
         $params['user_id'] = $user_id;
         $this->dbroute->insert($sql, $params);
@@ -75,16 +75,16 @@ class OrderModel extends BaseModel { //单库多表
     }
 
     public function transactionTest() { //事务测试
-        $user_id = 10;
+        $user_id = 11;
         $tx_params = array('user_id' => $user_id);
         $connection = $this->dbroute->getConnection($tx_params);
-        $city_list = $connection->getAll("select id,city_name,city_code from city where id=1 ");
+       	$city_list = $connection->getAll("select id,city_name,city_code from city  ");
         try {
             $this->dbroute->begin($tx_params);
 
             $sql = "insert sc_order (id,order_sn,user_id,add_time,modify_time) value(#id#,#order_sn#,#user_id#,now(),now()) ";
             $params = array();
-            $params['id'] = $this->sequence->nextValue('order');
+            $params['id'] = $this->sequence->nextValue('sc_order');
             $params['order_sn'] = 'abc';
             $params['user_id'] = $user_id;
             $this->dbroute->insert($sql, $params);
@@ -96,7 +96,7 @@ class OrderModel extends BaseModel { //单库多表
             $params['order_sn'] = 'bcd';
             $params['user_id'] = $user_id;
             $this->dbroute->update($update_sql, $params);
-
+			
             $this->dbroute->commit($tx_params);
             return true;
         } catch (Exception $e) {
