@@ -174,7 +174,7 @@ $slave_sc_refund_info_multiple_dbs['sc_refund_0003'] = DB_HOST . "," . DB_HOST;
 $sc_refund_info_multiple_dbroute_config['read_db_hosts'] = $slave_sc_refund_info_multiple_dbs;//dbroute根据key为‘read_db_hosts’是否设置了值 判断是否有读写分离配置
 /******************************************************************************************************************************************/
 
-/***************单库多表，按时间方式分表*************************************************************************************************/
+/***************按时间方式分库分表*************************************************************************************************/
 $monthofyear_multiple_dbroute_config = array();
 $monthofyear_multiple_dbroute_config['host'] = DB_HOST; //db_host
 $monthofyear_multiple_dbroute_config['user_name'] = DB_USER_NAME; //db username
@@ -186,8 +186,8 @@ $monthofyear_multiple_dbroute_config['table_prefix'] = "refund_info_0000"; //表
 $monthofyear_multiple_dbroute_config['logic_table'] = "sc_refund_info"; //逻辑表名不能为sql关键字,用户月支付详情
 //$monthofyear_multiple_dbroute_config['table_logic_column'] = "user_id"; //分表的列，执行sql语句时，要传递此参数,日期分表时不用设置
 //$monthofyear_multiple_dbroute_config['table_logic_column_type'] = "int"; //分表的列值的类型,日期分表时不用设置
-//$monthofyear_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数,日期分库时不用设置
-//$monthofyear_multiple_dbroute_config['db_logic_column_type'] = "int"; //分库的列值的类型，如不设置此值将同table_logic_column_type的值,日期分库时不用设置
+$monthofyear_multiple_dbroute_config['db_logic_column'] = "user_id"; //分库的列，执行sql语句时，要传递此参数,日期分库时不用设置
+$monthofyear_multiple_dbroute_config['db_logic_column_type'] = "int"; //分库的列值的类型，如不设置此值将同table_logic_column_type的值,日期分库时不用设置
 
 $monthofyear_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //select in 查询时时的参数key名
 $monthofyear_multiple_dbroute_config['table_total_num'] = 48; //总表数
