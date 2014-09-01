@@ -162,7 +162,8 @@ class cls_dbroute {
 			throw new DBRouteException("error sql in " . $sql);
 		}
 		$new_sql = substr_replace($sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
-		return $new_sql;
+		$return_sql = substr_replace($new_sql, " " . $table_name. "(", $first_pos, strlen(" " . $logic_table . "("));
+		return $return_sql;
 	}
 
 	private function setConnection($params = array()) {
