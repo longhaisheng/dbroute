@@ -213,9 +213,6 @@ class cls_dbroute {
 	public function insert($sql, $params = array(), $return_insert_id = false) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-		//print_r($this->getDbParse()->get_all_date_tables());
-		//print_r($decorate);
-		//return;
 		return $this->getDbConnection($db_name)->insert($decorate['sql'], $decorate['params'], $return_insert_id);
 	}
 
@@ -1116,7 +1113,6 @@ abstract class BaseConfig{
 			if(empty($suffix)){
 				throw new DBRouteException("日期分表字符串设置错误!");
 			}
-			//print_r($new_list);
 			return $new_list;
 		}
 	}
