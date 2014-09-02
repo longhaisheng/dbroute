@@ -193,10 +193,9 @@ $monthofyear_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //s
 $monthofyear_multiple_dbroute_config['table_total_num'] = 48; //总表数,如果按照日期分库,此值可不设置
 $monthofyear_multiple_dbroute_config['one_db_table_num'] = 12; //每个库里存放的表数
 $monthofyear_multiple_dbroute_config['is_date_db'] = true; //是否按时间分库
-$monthofyear_multiple_dbroute_config['db_name_date_logic_string'] = 'year'; //时间分库表达式可为year(2014) ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...);
-$monthofyear_multiple_dbroute_config['db_name_date_logic_start_year'] = 2010; //起始年份 db_name_date_logic_string为year时，必须设置此值 为month day week时则不用
-//$monthofyear_multiple_dbroute_config['is_date_table'] = true; //是否按时间分表
-//$monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'month_and_day'; //按时间分表 year_month_day(20140806) || year_and_month(201408) || year(2014) ||day(天:01...31) ||month(月01...12) ||month_and_day(月日)||week(星期日:00,星期一:01...);
+$monthofyear_multiple_dbroute_config['db_name_date_logic_string'] = 'year@@@2009_2020'; //时间分库表达式可为year(year@@@2009_2020),2009_2020表示起始年份,为year时必须配置 ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...);
+$monthofyear_multiple_dbroute_config['is_date_table'] = true; //是否按时间分表
+$monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'week@@@'; //按时间分表 year_month_day(year_month_day@@@20140501)@@@后表示开始年月日 || year_and_month(year_and_month@@@201405)@@@后表示开始年月 || year(year@@@2010)@@@后表示开始年份 ||day(天:01...31) ||month(月01...12) ||month_and_day(月日)||week(星期日:00,星期一:01...);
 
 $master_sc_refund_info_multiple_dbs = array();
 $master_sc_refund_info_multiple_dbs['sc_refund_0000'] = DB_HOST; //key为数据库名，value为数据库所在的host，此value只能配置一个IP
