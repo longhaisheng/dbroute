@@ -547,6 +547,8 @@ class DBRouteException extends Exception {
 abstract class BaseConfig{
 
     const INIT_LOGIC_CACHE_KEY = "init_logic_";
+    
+    const STR_SPLIT_CHAR = '@@@';
 
     /** 数据库前缀名 */
 	private $db_prefix;
@@ -633,11 +635,15 @@ abstract class BaseConfig{
             $this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
         }
         if(isset($this->config_array['db_name_date_logic_string'])){
-            $db_name_str_list=explode('@@@', $this->config_array['db_name_date_logic_string']);
-            $this->setDbNameDateLogicString($db_name_str_list[0]);
-            $start_end=explode('_', $db_name_str_list[1]);
-            $this->setDbNameDateLogicStartYear($start_end[0]);
-            $this->setDbNameDateLogicEndYear($start_end[1]);
+        	if(stripos($this->config_array['db_name_date_logic_string'], self::STR_SPLIT_CHAR)){
+	            $db_name_str_list=explode(self::STR_SPLIT_CHAR, $this->config_array['db_name_date_logic_string']);
+	            $this->setDbNameDateLogicString($db_name_str_list[0]);
+	            $start_end=explode('_', $db_name_str_list[1]);
+	            $this->setDbNameDateLogicStartYear($start_end[0]);
+	            $this->setDbNameDateLogicEndYear($start_end[1]);
+        	}else{
+        		 $this->setDbNameDateLogicString($this->config_array['db_name_date_logic_string']);
+        	}
         }
 		if (isset($this->config_array['logic_table'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
@@ -942,8 +948,8 @@ abstract class BaseConfig{
         $tableNameDateLogicString = $this->getTableNameDateLogicString();
         if($this->getIsdateTable() && $tableNameDateLogicString){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
         	$suffix=null;
-			if(stripos($tableNameDateLogicString, '@@@')){
-				$list=explode('@@@', $tableNameDateLogicString);
+			if(stripos($tableNameDateLogicString,self::STR_SPLIT_CHAR)){
+				$list=explode(self::STR_SPLIT_CHAR, $tableNameDateLogicString);
 				$tableNameDateLogicString=$list[0];
 			}
             if($tableNameDateLogicString =='year'){//2014
@@ -992,8 +998,8 @@ abstract class BaseConfig{
 		if($this->getIsdateTable() && $tableNameDateLogicString){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
 			$suffix=null;
 			$start_value=null;
-			if(stripos($tableNameDateLogicString, '@@@')){
-				$list=explode('@@@', $tableNameDateLogicString);
+			if(stripos($tableNameDateLogicString, self::STR_SPLIT_CHAR)){
+				$list=explode(self::STR_SPLIT_CHAR, $tableNameDateLogicString);
 				$tableNameDateLogicString=$list[0];
 				$start_value=$list[1];
 			}
