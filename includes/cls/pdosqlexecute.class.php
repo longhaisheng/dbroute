@@ -79,7 +79,7 @@ class cls_pdosqlexecute implements cls_idb {
     }
 
     private function format($sql, $params = array()) {
-        $sql = $this->formatSql($sql);
+        $sql = $this->formatSql(strtolower($sql));
         $params = $this->formatParams($params);
         $condition = array('sql' => $sql, 'params' => $params);
 
@@ -93,7 +93,7 @@ class cls_pdosqlexecute implements cls_idb {
     private function formatParams($params = array()) {
         $result = array();
         foreach ($params as $k => $v) {
-            $result[':' . $k] = $v;
+            $result[':' . strtolower($k)] = $v;
         }
         $params = $result;
         return $params;

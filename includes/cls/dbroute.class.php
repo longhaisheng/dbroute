@@ -99,6 +99,8 @@ class cls_dbroute {
 	 * @param array $params 只能为一唯数组，非日期分表必须包括分表的列名 array('user_id'=>100)
 	 */
 	private function decorate($sql, $params = array()) {
+		$sql=strtolower($sql);
+		$params=array_change_key_case($params,CASE_LOWER);
 		$logicTable = $this->getDbParse()->getLogicTable();
         $db = null;
         if ($logicTable) {
@@ -300,6 +302,8 @@ class cls_dbroute {
 	 * @return array
 	 */
 	public function selectByIn($sql, $params = array()) {
+		$sql=strtolower($sql);
+		$params=array_change_key_case($params,CASE_LOWER);
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$dateTable = $this->getDbParse()->getIsdateTable();
 		if (!$logicTable) {
@@ -423,6 +427,8 @@ class cls_dbroute {
 	 * @return array
 	 */
 	public function queryResultFromAllDbTables($sql, $params = array()) {
+		$sql=strtolower($sql);
+		$params=array_change_key_case($params,CASE_LOWER);
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$isDateTable = $this->getDbParse()->getIsdateTable();
 		if (!$logicTable) {//非逻辑表不支持
