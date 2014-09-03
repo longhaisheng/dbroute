@@ -158,12 +158,17 @@ class cls_dbroute {
 		$table_name = $this->getDbParse()->getTableName($logic_column_value);
 		$logic_table = $this->getDbParse()->getLogicTable();
 		$first_pos = stripos($sql, " " . $logic_table . " ");
-		if (!$first_pos) {
-			throw new DBRouteException("error sql in " . $sql);
+		$first_pos_one = stripos($sql, " " . $logic_table . "(");
+		if (!$first_pos && !$first_pos_one) {
+			throw new DBRouteException("sql中无逻辑表名 " . $sql);
 		}
-		$new_sql = substr_replace($sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
-		$return_sql = substr_replace($new_sql, " " . $table_name. "(", $first_pos, strlen(" " . $logic_table . "("));
-		return $return_sql;
+		if($first_pos){
+			$sql = substr_replace($sql, " " . $table_name . " ", $first_pos, strlen(" " . $logic_table . " "));
+		}
+		if($first_pos_one){
+			$sql=str_replace(" " . $logic_table . "(", " ".$table_name.'(', $sql);
+		}
+		return $sql;
 	}
 
 	private function setConnection($params = array()) {
@@ -411,7 +416,7 @@ class cls_dbroute {
 	}
 	
 	/**
-	 * 只支持分表的表,不包括日期分表
+	 * 只支持分表的表
 	 * 访问所有库表 不见意使用此方法
 	 * @param string $sql select user_id,order_sn,add_time from order where id >1000 and id<10000 limit 0,20 order by add_time desc
 	 * @param array $params 参数 size、sort_filed、sort_order(0:asc,1:desc) 需设置  不能设置逻辑列的值
@@ -989,7 +994,7 @@ abstract class BaseConfig{
 
     protected function getSingleDbName() {
         $dbPrefix = $this->getDbPrefix();
-        $dbPrefix = str_replace('0', '', $dbPrefix);
+        $dbPrefix =trim($dbPrefix,'0');
         return trim($dbPrefix, '_');
     }
 
