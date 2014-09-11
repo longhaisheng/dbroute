@@ -72,18 +72,24 @@ class cls_sequence {
             for (; ;) {
                 $new_array = cls_shmop::readArray($logic_table);
                 if ($new_array) {
-                    $value = array_shift($new_array);
-                    $is_write = cls_shmop::writeArray($logic_table, $new_array);
+               		$start=$new_array['start'];
+                	$end=$new_array['end'];
+                	$value =$start;
+                	if($start < $end){
+                		$new_array['start']=$start+1;
+                	}else{
+                		$new_array=array();
+                	}
+                  	$is_write = cls_shmop::writeArray($logic_table, $new_array);
                 } else {
                     $range = $this->getLastSeq($logic_table);
                     if ($range) {
                         $min = $range->getMin();
                         $max = $range->getMax();
                         $array = array();
-                        for ($i = $min; $i < $max + 1; $i++) {
-                            $array[] = $i;
-                        }
-                        $value = array_shift($array);
+                        $array['start']=$min+1;
+                        $array['end']=$max;
+                        $value = $min;
                         $is_write = cls_shmop::writeArray($logic_table, $array);
                     }
                 }
