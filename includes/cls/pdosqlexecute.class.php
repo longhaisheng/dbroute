@@ -125,10 +125,22 @@ class cls_pdosqlexecute implements cls_idb {
             $connect_array = $this->connect_array; // 载入读库配置
             $db_name = $this->connect_array['db'];
             $db_read_host_array = isset($this->connect_array['read_db_hosts']) ? $this->connect_array['read_db_hosts'] : array();
+            $host=null;
             if(isset($connect_array['read_db_arithmetic']) && $connect_array['read_db_arithmetic']=='roll'){//轮询算法
-               $host = cls_rollrand::get_read_db_host_roll($db_read_host_array, $db_name);
+               $host = cls_rollrand::get_db_host_roll($db_read_host_array, $db_name);
             }else{
-               $host = cls_rollrand::get_read_db_host_rand($db_read_host_array, $db_name);//随机
+               $host = cls_rollrand::get_db_host_rand($db_read_host_array, $db_name);//随机
+            }
+            if(empty($host)){//如果从库对应的host不存在，则从主库列表查找
+                $db_host_array = isset($connect_array['db_hosts']) ? $connect_array['db_hosts'] : array();
+                if ($db_host_array) {
+                    $host = $db_host_array[$db_name];
+                    if(stripos($host,',')){//双master
+                        $host = cls_rollrand::get_write_db_host_rand($host);
+                    }
+                } else {
+                    $host = $connect_array['host'];
+                }
             }
             $connect_array['host'] = $host;
             return $this->read_connection = $this->getDbConnection($connect_array);
@@ -136,7 +148,26 @@ class cls_pdosqlexecute implements cls_idb {
 
         return $this->read_connection;
     }
-   
+
+    private function getMasterConnection() {
+        if (!$this->connection) {
+            $connect_array = $this->connect_array;
+            $db_host_array = isset($connect_array['db_hosts']) ? $connect_array['db_hosts'] : array();
+            if ($db_host_array) {
+                $db = $connect_array['db'];
+                $host = $db_host_array[$db];
+                if(stripos($host,',')){//双master
+                    $host = cls_rollrand::get_write_db_host_rand($host);
+                }
+            } else {
+                $host = $connect_array['host'];
+            }
+            $connect_array['host']=$host;
+            return $this->connection = $this->getDbConnection($connect_array);
+        }
+        return $this->connection;
+    }
+
     private function getDbConnection($connect_array) {
         $dsn_array = array(
             'dbname=' . $connect_array['db'],
@@ -157,13 +188,6 @@ class cls_pdosqlexecute implements cls_idb {
         } catch (PDOException $e) {
             throw new Exception('Database Connect Error : ' . $e->getMessage());
         }
-    }
-
-    private function getMasterConnection() {
-        if (!$this->connection) {
-            return $this->connection = $this->getDbConnection($this->connect_array);
-        }
-        return $this->connection;
     }
 
     public function begin() {

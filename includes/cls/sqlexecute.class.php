@@ -70,6 +70,9 @@ class cls_sqlexecute implements cls_idb {
             if ($db_host_array) {
                 $db = $connect_array['db'];
                 $host = $db_host_array[$db];
+                if(stripos($host,',')){//双master
+                    $host = cls_rollrand::get_write_db_host_rand($host);
+                }
             } else {
                 $host = $connect_array['host'];
             }
@@ -88,12 +91,23 @@ class cls_sqlexecute implements cls_idb {
             $connect_array = $this->connect_array;
 
             $db_read_host_array = isset($this->connect_array['read_db_hosts']) ? $this->connect_array['read_db_hosts'] : array();
+            $db = $connect_array['db'];
             if ($db_read_host_array) {
-                $db = $connect_array['db'];
                 if(isset($connect_array['read_db_arithmetic']) && $connect_array['read_db_arithmetic']=='roll'){//轮询算法
-                	$host = cls_rollrand::get_read_db_host_roll($db_read_host_array, $db);
+                	$host = cls_rollrand::get_db_host_roll($db_read_host_array, $db);
                 }else{
-                	$host = cls_rollrand::get_read_db_host_rand($db_read_host_array, $db);//随机
+                	$host = cls_rollrand::get_db_host_rand($db_read_host_array, $db);//随机
+                }
+                if(empty($host)){//如果从库的host不存在，去主库中查找对应的host
+                    $db_host_array = isset($this->connect_array['db_hosts']) ? $this->connect_array['db_hosts'] : array();
+                    if ($db_host_array) {
+                        $host = $db_host_array[$db];
+                        if(stripos($host,',')){//双master
+                            $host = cls_rollrand::get_write_db_host_rand($host);
+                        }
+                    } else {
+                        $host = $connect_array['host'];
+                    }
                 }
             }
             $this->read_connection = new mysqli($host, $connect_array['user_name'], $connect_array['pass_word'], $connect_array['db'], $connect_array['port']);
