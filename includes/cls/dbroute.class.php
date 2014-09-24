@@ -434,9 +434,6 @@ class cls_dbroute {
 		if (!$logicTable) {//非逻辑表不支持
 			throw new DBRouteException("非逻辑表不支持此方法");
 		}
-		/*if ($isDateTable) {//日期分表不支持
-			throw new DBRouteException("日期分表不支持此方法");
-		}*/
 		$size = isset($params['size']) ? $params['size'] : 20;
 		$sort_filed = isset($params['sort_filed']) ? $params['sort_filed'] : '';
 		$sort_order = isset($params['sort_order']) ? $params['sort_order'] : 1;
@@ -499,13 +496,16 @@ class cls_dbroute {
 		}
 		return $this->getDbConnection($db_name);
 	}
-
+	
 	public function begin($params = array()) {
 		$db_name = $this->setConnection($params);
 		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConnection()->begin();
 		} else {
-			if (empty($params)) throw new DBRouteException('请传递参数');
+			$logicTable = $this->getDbParse()->getLogicTable();
+			if($logicTable){
+				if (empty($params)) throw new DBRouteException('请传递参数');
+			}
 			$this->getDbConnection($db_name)->begin();
 		}
 	}
@@ -514,7 +514,10 @@ class cls_dbroute {
 		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConnection()->commit();
 		} else {
-			if (empty($params)) throw new DBRouteException('请传递参数');
+			$logicTable = $this->getDbParse()->getLogicTable();
+			if($logicTable){
+				if (empty($params)) throw new DBRouteException('请传递参数');
+			}
 			$db_name = $this->setConnection($params);
 			$this->getDbConnection($db_name)->commit();
 		}
@@ -524,12 +527,16 @@ class cls_dbroute {
 		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConnection()->rollBack();
 		} else {
-			if (empty($params)) throw new DBRouteException('请传递参数');
+			$logicTable = $this->getDbParse()->getLogicTable();
+			if($logicTable){
+				if (empty($params)) throw new DBRouteException('请传递参数');
+			}
 			$db_name = $this->setConnection($params);
 			$this->getDbConnection($db_name)->rollBack();
 		}
 	}
-
+	
+	
 	public function __destruct() {
 		if ($this->connections) {
 			foreach ($this->connections as $conn) {
