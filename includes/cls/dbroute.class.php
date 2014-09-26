@@ -177,15 +177,35 @@ class cls_dbroute {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		$db = null;
 		if ($logicTable) {
-			if (empty($params)) {
-				throw new DBRouteException('setConnection error,must have params');
-			}
+			$this->check_logic_params($params);
 			$db = $this->get_db_name($params);
 		} else {
 			$db = $this->config_array['db'];
 		}
 		$this->setDBConn($db);
 		return $db;
+	}
+	
+	private function check_logic_params($params = array()) {
+		$logicTable = $this->getDbParse()->getLogicTable();
+		if ($logicTable) {
+			$db_logic_column = $this->getDbParse()->getDbLogicColumn();
+			$table_logic_column = $this->getDbParse()->getTableLogicColumn();
+			if($db_logic_column || $table_logic_column){
+				if (empty($params)) {
+					throw new DBRouteException('setConnection error,must have params');
+				}
+				
+				if($db_logic_column && !isset($params[$db_logic_column])){
+					throw new DBRouteException('逻辑分库必须设置逻辑分库列值');
+				}
+				
+				if($table_logic_column && !isset($params[$table_logic_column])){
+					throw new DBRouteException('逻辑分表必须设置逻辑分表列值');
+				}
+				
+			}
+		} 
 	}
 
 	private function setDBConn($db) {
@@ -502,10 +522,6 @@ class cls_dbroute {
 		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConnection()->begin();
 		} else {
-			$logicTable = $this->getDbParse()->getLogicTable();
-			if($logicTable){
-				if (empty($params)) throw new DBRouteException('请传递参数');
-			}
 			$this->getDbConnection($db_name)->begin();
 		}
 	}
@@ -514,10 +530,6 @@ class cls_dbroute {
 		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConnection()->commit();
 		} else {
-			$logicTable = $this->getDbParse()->getLogicTable();
-			if($logicTable){
-				if (empty($params)) throw new DBRouteException('请传递参数');
-			}
 			$db_name = $this->setConnection($params);
 			$this->getDbConnection($db_name)->commit();
 		}
@@ -527,10 +539,6 @@ class cls_dbroute {
 		if ($this->getDbParse()->getIsSingleDb()) {
 			$this->getSingleConnection()->rollBack();
 		} else {
-			$logicTable = $this->getDbParse()->getLogicTable();
-			if($logicTable){
-				if (empty($params)) throw new DBRouteException('请传递参数');
-			}
 			$db_name = $this->setConnection($params);
 			$this->getDbConnection($db_name)->rollBack();
 		}
