@@ -749,14 +749,14 @@ abstract class BaseConfig{
 				$tables = array_slice($tables, 0, $mod);
 			}
 			if ($this->getIsSingleDb()) {
-				$db_key = $this->getSingleDbName();
+				$db_name = $this->getSingleDbName();
 			} else {
-				$db_key = substr_replace($this->getDbPrefix(), $i, strlen($this->getDbPrefix()) - strlen($i));
+				$db_name = substr_replace($this->getDbPrefix(), $i, strlen($this->getDbPrefix()) - strlen($i));
 				if($this->getIsDateDb() && !$this->getIsdateTable()){//如果是日期分库，非日期分表
-					$db_key=$this->date_db_list[$i];
+					$db_name=$this->date_db_list[$i];
 				}
 			}
-			$this->db_list[$db_key] = $tables;
+			$this->db_list[$db_name] = $tables;
 		}
 		cls_shmop::writeArray(self::INIT_LOGIC_CACHE_KEY . $this->getLogicTable(), $this->db_list);
 	}
