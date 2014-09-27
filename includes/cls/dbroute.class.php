@@ -104,17 +104,18 @@ class cls_dbroute {
 		$params=array_change_key_case($params,CASE_LOWER);
 		$logicTable = $this->getDbParse()->getLogicTable();
         $db = null;
+        $db_sql_arr=array();
         if ($logicTable) {
             $logic_col_value = $this->get_logic_column_value($params);
-			$array['db_name'] = $this->get_db_name($params);
-			$array['sql'] = $this->getNewSql($sql, $logic_col_value);
+			$db_sql_arr['db_name'] = $this->get_db_name($params);
+			$db_sql_arr['sql'] = $this->getNewSql($sql, $logic_col_value);
 		} else {
-			$array['db_name'] = $this->config_array['db'];
-			$array['sql'] = $sql;
+			$db_sql_arr['db_name'] = $this->config_array['db'];
+			$db_sql_arr['sql'] = $sql;
 		}
-		$array['params'] = $params;
-		$this->setDBConn($array['db_name']);
-		return $array;
+		$db_sql_arr['params'] = $params;
+		$this->setDBConn($db_sql_arr['db_name']);
+		return $db_sql_arr;
 	}
 
     private function get_logic_column_value($params) {
