@@ -107,8 +107,21 @@ class cls_dbroute {
         $db_sql_arr=array();
         if ($logicTable) {
             $logic_col_value = $this->get_logic_column_value($params);
-			$db_sql_arr['db_name'] = $this->get_db_name($params);
-			$db_sql_arr['sql'] = $this->getNewSql($sql, $logic_col_value);
+            $db_sql_arr['db_name'] = $this->get_db_name($params);
+            if($this->db_hash_type === 'mod_hash' || $this->db_hash_type === 'consistent_hash' ){
+                $mod_value=$this->getDbParse()->getTableMod($logic_col_value);
+                $cache_key=md5($sql.'_'.$db_sql_arr['db_name'].$mod_value);
+                $cache_sql=cls_shmop::read($cache_key);
+                if($cache_sql){
+                    $db_sql_arr['sql']=$cache_sql;
+                }else{
+                    $newSql = $this->getNewSql($sql, $logic_col_value);
+                    cls_shmop::write($cache_key,$newSql);
+                    $db_sql_arr['sql']=$newSql;
+                }
+            }elseif($this->db_hash_type=='virtual_hash'){
+                $db_sql_arr['sql']= $this->getNewSql($sql, $logic_col_value);
+            }
 		} else {
 			$db_sql_arr['db_name'] = $this->config_array['db'];
 			$db_sql_arr['sql'] = $sql;
@@ -289,6 +302,8 @@ class cls_dbroute {
 	public function getAll($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
+        print_r($decorate);
+        die;
 		return $this->getDbConnection($db_name)->getAll($decorate['sql'], $decorate['params']);
 	}
 
