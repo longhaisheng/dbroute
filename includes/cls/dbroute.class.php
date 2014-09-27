@@ -16,13 +16,13 @@ class cls_dbroute {
 	/** 是否使用mysqli扩展，默认为true*/
 	private $use_mysqli_extend=true;
 
-	/** 数据库连接 cls_mysqli 类的数组*/
+    /** 数据库连接对象数组*/
 	private $connections = array();
 
     /** 数据库解析器字符串类型 */
     private $db_hash_type;
-	
-	public function __construct($db_route_array=array()){
+
+    public function __construct($db_route_array=array()){
 		global $default_config_array;
 		if ($db_route_array) {
 			$this->config_array = $db_route_array;
@@ -43,13 +43,25 @@ class cls_dbroute {
         if($this->db_hash_type==='mod_hash'){
             $this->dbParse=new ModHash($this->config_array);
         }
+        $this->setUseMysqliExtend();
 	}
 
-	private function setDbParse($parse) {
+    private function setUseMysqliExtend() {
+        if (defined("MYSQL_EXTEND")) {
+            if (MYSQL_EXTEND == 'mysqli') {
+                $this->use_mysqli_extend = true;
+            }
+            if (MYSQL_EXTEND == 'mysql_pdo') {
+                $this->use_mysqli_extend = false;
+            }
+        }
+    }
+
+    private function setDbParse($parse) {
 		$this->dbParse = $parse;
 	}
 
-	public function getDbParse() {
+    public function getDbParse() {
 		return $this->dbParse;
 	}
 
@@ -61,22 +73,11 @@ class cls_dbroute {
         return $this->db_hash_type;
     }
 
-	public function getDBAndTableName($params=array()){
+    public function getDBAndTableName($params=array()){
 		$logic_column_value = $this->get_logic_column_value($params);
 		$table_name=$this->getDbParse()->getTableName($logic_column_value);
 		$db_name=$this->get_db_name($params);
 		return array('db_name'=>$db_name,'table_name'=>$table_name);
-	}
-
-	private function setUseMysqliExtend() {
-		if (defined("MYSQL_EXTEND")) {
-			if (MYSQL_EXTEND == 'mysqli') {
-				$this->use_mysqli_extend = true;
-			}
-			if (MYSQL_EXTEND == 'mysql_pdo') {
-				$this->use_mysqli_extend = false;
-			}
-		}
 	}
 
 	private function getUseMysqliExtend() {
@@ -117,26 +118,25 @@ class cls_dbroute {
 	}
 
     private function get_logic_column_value($params) {
-        $logic_col = $this->getDbParse()->getTableLogicColumn();
         $dateTable = $this->getDbParse()->getIsdateTable();
         if ($dateTable) {
-            $logic_col_value = '';
-            return $logic_col_value;
+            return '';
         } else {
+            $logic_col = $this->getDbParse()->getTableLogicColumn();
             if (!isset($params[$logic_col])) {
                 throw new DBRouteException("error params ,it must have key " . $logic_col);
             }
-            $logic_col_value = $params[$logic_col];
-            return $logic_col_value;
+            return $params[$logic_col];
         }
     }
 
     private function get_db_name($params) {
-        $db_logic_column = $this->getDbParse()->getDbLogicColumn();
         $isDateDb = $this->getDbParse()->getIsDateDb();
         if($isDateDb) {
-        	return $this->getDbParse()->getDbName('');
+            return $this->getDbParse()->getDbName('');
         }
+        $db_logic_column_value=null;
+        $db_logic_column = $this->getDbParse()->getDbLogicColumn();
         if($db_logic_column){
 	        if (!isset($params[$db_logic_column])) {
 	            throw new DBRouteException("error params ,it must have key " . $db_logic_column);
@@ -209,7 +209,6 @@ class cls_dbroute {
 	}
 
 	private function setDBConn($db) {
-		$this->setUseMysqliExtend();
 		if (!isset($this->connections[$db])) {
 			if ($this->getUseMysqliExtend()) {
 				$this->connections[$db] = cls_sqlexecute::getInstance($db, $this->config_array);
