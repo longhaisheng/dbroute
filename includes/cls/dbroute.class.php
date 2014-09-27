@@ -111,7 +111,7 @@ class cls_dbroute {
             if($this->db_hash_type === 'mod_hash' || $this->db_hash_type === 'consistent_hash' ){
                 $mod_value=$this->getDbParse()->getTableMod($logic_col_value);
                 $cache_key=md5($sql.'_'.$db_sql_arr['db_name'].$mod_value);
-                $cache_sql=cls_shmop::read($cache_key);
+                $cache_sql=cls_shmop::read($cache_key);// TODO 此处生产环境中应该放入 memcache 或 redis 中，否则可能造成php本地cache占用过多内存，shmop没有LRU和缓存失效时间设置
                 if($cache_sql){
                     $db_sql_arr['sql']=$cache_sql;
                 }else{
@@ -302,8 +302,6 @@ class cls_dbroute {
 	public function getAll($sql, $params = array()) {
 		$decorate = $this->decorate($sql, $params);
 		$db_name = $decorate['db_name'];
-        print_r($decorate);
-        die;
 		return $this->getDbConnection($db_name)->getAll($decorate['sql'], $decorate['params']);
 	}
 
