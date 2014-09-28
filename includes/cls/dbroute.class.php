@@ -739,7 +739,7 @@ abstract class BaseConfig{
 		}
 	}
 
-	private function init() {
+	protected function init() {
 		if($this->getIsDateDb() && !$this->getIsdateTable()){
 			if(empty($this->date_db_list)){
 				$this->get_all_date_db_names(true);
@@ -1346,36 +1346,43 @@ class ConsistentHash extends BaseConfig{
 		if ($list) {
 			$this->node_list=$list;
 		} else {
-			$this->init();
+			$this->initNodeList();
 		}
 	}
+	
+	public function reloadCache(){//重新加载初始化缓存,配置文件自动更新后,接收到消息后调用此方法
+		parent::init();
+		$this->initNodeList();
+	}
 
-	private function init(){
+	private function initNodeList(){
 		$str=$this->getConsistentHashSeparateString();
 		$list=explode(';', $str);
-		$max=0;
-		$i=0;
-		$nodeList=array();
-		foreach ($list as $value) {
-			$one_db_config=explode('=', $value);
-			$one_db_config[0]=str_replace('[', '', $one_db_config[0]);
-			$one_db_config[0]=str_replace(']', '', $one_db_config[0]);
-			$start_end_list=explode(',', $one_db_config[0]);
-			if($max <=$start_end_list[1]){
-				$max=$start_end_list[1];
+		if(!empty($list)){
+			$max=0;
+			$i=0;
+			$nodeList=array();
+			foreach ($list as $value) {
+				$one_db_config=explode('=', $value);
+				$one_db_config[0]=str_replace('[', '', $one_db_config[0]);
+				$one_db_config[0]=str_replace(']', '', $one_db_config[0]);
+				$start_end_list=explode(',', $one_db_config[0]);
+				if($max <=$start_end_list[1]){
+					$max=$start_end_list[1];
+				}
+				$node=new Node();
+				$node->setStart(str_replace('w', '0000', $start_end_list[0]));
+				$node->setEnd(str_replace('w', '0000', $start_end_list[1]));
+				$node->setDbName($one_db_config[1]);
+				if($i==0 && !parent::getConsistentHashOneDbOneTable()){
+					$node->setIsDefaultDb(true);
+				}
+				$i++;
+				$nodeList[]=$node;
 			}
-			$node=new Node();
-			$node->setStart(str_replace('w', '0000', $start_end_list[0]));
-			$node->setEnd(str_replace('w', '0000', $start_end_list[1]));
-			$node->setDbName($one_db_config[1]);
-			if($i==0 && !parent::getConsistentHashOneDbOneTable()){
-				$node->setIsDefaultDb(true);
-			}
-			$i++;
-			$nodeList[]=$node;
+			$this->node_list=$nodeList;
+			cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
 		}
-		$this->node_list=$nodeList;
-		cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
 
 		/*if($max !=$this->consistent_hash_separate_mod_max_value){
 		 throw new DBRouteException('一致性hash字符串设置错误');
