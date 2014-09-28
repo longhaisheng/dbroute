@@ -16,13 +16,13 @@ class cls_dbroute {
 	/** 是否使用mysqli扩展，默认为true*/
 	private $use_mysqli_extend=true;
 
-    /** 数据库连接对象数组*/
+	/** 数据库连接对象数组*/
 	private $connections = array();
 
-    /** 数据库解析器字符串类型 */
-    private $db_hash_type;
+	/** 数据库解析器字符串类型 */
+	private $db_hash_type;
 
-    public function __construct($db_route_array=array()){
+	public function __construct($db_route_array=array()){
 		global $default_config_array;
 		if ($db_route_array) {
 			$this->config_array = $db_route_array;
@@ -30,50 +30,50 @@ class cls_dbroute {
 			$this->config_array = $default_config_array;
 		}
 
-        $this->db_hash_type='mod_hash';
-        if(isset($this->config_array['db_hash_type'])){
-            $this->db_hash_type=$this->config_array['db_hash_type'];
-        }
-        if($this->db_hash_type==='consistent_hash'){
-		    $this->dbParse=new ConsistentHash($this->config_array);
-        }
-        if($this->db_hash_type==='virtual_hash'){
-            $this->dbParse=new VirtualHash($this->config_array);
-        }
-        if($this->db_hash_type==='mod_hash'){
-            $this->dbParse=new ModHash($this->config_array);
-        }
-        $this->setUseMysqliExtend();
+		$this->db_hash_type='mod_hash';
+		if(isset($this->config_array['db_hash_type'])){
+			$this->db_hash_type=$this->config_array['db_hash_type'];
+		}
+		if($this->db_hash_type==='consistent_hash'){
+			$this->dbParse=new ConsistentHash($this->config_array);
+		}
+		if($this->db_hash_type==='virtual_hash'){
+			$this->dbParse=new VirtualHash($this->config_array);
+		}
+		if($this->db_hash_type==='mod_hash'){
+			$this->dbParse=new ModHash($this->config_array);
+		}
+		$this->setUseMysqliExtend();
 	}
 
-    private function setUseMysqliExtend() {
-        if (defined("MYSQL_EXTEND")) {
-            if (MYSQL_EXTEND == 'mysqli') {
-                $this->use_mysqli_extend = true;
-            }
-            if (MYSQL_EXTEND == 'mysql_pdo') {
-                $this->use_mysqli_extend = false;
-            }
-        }
-    }
+	private function setUseMysqliExtend() {
+		if (defined("MYSQL_EXTEND")) {
+			if (MYSQL_EXTEND == 'mysqli') {
+				$this->use_mysqli_extend = true;
+			}
+			if (MYSQL_EXTEND == 'mysql_pdo') {
+				$this->use_mysqli_extend = false;
+			}
+		}
+	}
 
-    private function setDbParse($parse) {
+	private function setDbParse($parse) {
 		$this->dbParse = $parse;
 	}
 
-    public function getDbParse() {
+	public function getDbParse() {
 		return $this->dbParse;
 	}
 
-    public function setDbHashType($hash_type) {
-        $this->db_hash_type = $hash_type;
-    }
+	public function setDbHashType($hash_type) {
+		$this->db_hash_type = $hash_type;
+	}
 
-    public function getDbHashType() {
-        return $this->db_hash_type;
-    }
+	public function getDbHashType() {
+		return $this->db_hash_type;
+	}
 
-    public function getDBAndTableName($params=array()){
+	public function getDBAndTableName($params=array()){
 		$logic_column_value = $this->get_logic_column_value($params);
 		$table_name=$this->getDbParse()->getTableName($logic_column_value);
 		$db_name=$this->get_db_name($params);
@@ -103,30 +103,30 @@ class cls_dbroute {
 		$sql=strtolower($sql);
 		$params=array_change_key_case($params,CASE_LOWER);
 		$logicTable = $this->getDbParse()->getLogicTable();
-        $db = null;
-        $db_sql_arr=array();
-        if ($logicTable) {
-            $logic_col_value = $this->get_logic_column_value($params);
-            $db_sql_arr['db_name'] = $this->get_db_name($params);
-            $is_data_table=$this->getDbParse()->getIsdateTable();
-            if($is_data_table){
-                $db_sql_arr['sql']=$this->getNewSql($sql, $logic_col_value);
-            }else{
-                if($this->db_hash_type === 'mod_hash' || $this->db_hash_type === 'consistent_hash' ){
-                    $mod_value=$this->getDbParse()->getTableMod($logic_col_value);
-                    $cache_key=md5($sql.'_'.$db_sql_arr['db_name'].$mod_value);
-                    $cache_sql=cls_shmop::read($cache_key);// TODO 此处生产环境中应该放入 memcache 或 redis 中，否则可能造成php本地cache占用过多内存，shmop没有LRU和缓存失效时间设置
-                    if($cache_sql){
-                        $db_sql_arr['sql']=$cache_sql;
-                    }else{
-                        $newSql = $this->getNewSql($sql, $logic_col_value);
-                        cls_shmop::write($cache_key,$newSql);
-                        $db_sql_arr['sql']=$newSql;
-                    }
-                }elseif($this->db_hash_type=='virtual_hash'){
-                    $db_sql_arr['sql']= $this->getNewSql($sql, $logic_col_value);
-                }
-            }
+		$db = null;
+		$db_sql_arr=array();
+		if ($logicTable) {
+			$logic_col_value = $this->get_logic_column_value($params);
+			$db_sql_arr['db_name'] = $this->get_db_name($params);
+			$is_data_table=$this->getDbParse()->getIsdateTable();
+			if($is_data_table){
+				$db_sql_arr['sql']=$this->getNewSql($sql, $logic_col_value);
+			}else{
+				if($this->db_hash_type === 'mod_hash' || $this->db_hash_type === 'consistent_hash' ){
+					$mod_value=$this->getDbParse()->getTableMod($logic_col_value);
+					$cache_key=md5($sql.'_'.$db_sql_arr['db_name'].$mod_value);
+					$cache_sql=cls_shmop::read($cache_key);// TODO 此处生产环境中应该放入 memcache 或 redis 中，否则可能造成php本地cache占用过多内存，shmop没有LRU和缓存失效时间设置
+					if($cache_sql){
+						$db_sql_arr['sql']=$cache_sql;
+					}else{
+						$newSql = $this->getNewSql($sql, $logic_col_value);
+						cls_shmop::write($cache_key,$newSql);
+						$db_sql_arr['sql']=$newSql;
+					}
+				}elseif($this->db_hash_type=='virtual_hash'){
+					$db_sql_arr['sql']= $this->getNewSql($sql, $logic_col_value);
+				}
+			}
 		} else {
 			$db_sql_arr['db_name'] = $this->config_array['db'];
 			$db_sql_arr['sql'] = $sql;
@@ -136,42 +136,42 @@ class cls_dbroute {
 		return $db_sql_arr;
 	}
 
-    private function get_logic_column_value($params) {
-        $dateTable = $this->getDbParse()->getIsdateTable();
-        if ($dateTable) {
-            return '';
-        } else {
-            $logic_col = $this->getDbParse()->getTableLogicColumn();
-            if (!isset($params[$logic_col])) {
-                throw new DBRouteException("error params ,it must have key " . $logic_col);
-            }
-            return $params[$logic_col];
-        }
-    }
+	private function get_logic_column_value($params) {
+		$dateTable = $this->getDbParse()->getIsdateTable();
+		if ($dateTable) {
+			return '';
+		} else {
+			$logic_col = $this->getDbParse()->getTableLogicColumn();
+			if (!isset($params[$logic_col])) {
+				throw new DBRouteException("error params ,it must have key " . $logic_col);
+			}
+			return $params[$logic_col];
+		}
+	}
 
-    private function get_db_name($params) {
-        $isDateDb = $this->getDbParse()->getIsDateDb();
-        if($isDateDb) {
-            return $this->getDbParse()->getDbName('');
-        }
-        $db_logic_column_value=null;
-        $db_logic_column = $this->getDbParse()->getDbLogicColumn();
-        if($db_logic_column){
-	        if (!isset($params[$db_logic_column])) {
-	            throw new DBRouteException("error params ,it must have key " . $db_logic_column);
-	        }
-	        $db_logic_column_value = $params[$db_logic_column];
-        }else{
-	        $logic_col = $this->getDbParse()->getTableLogicColumn();
+	private function get_db_name($params) {
+		$isDateDb = $this->getDbParse()->getIsDateDb();
+		if($isDateDb) {
+			return $this->getDbParse()->getDbName('');
+		}
+		$db_logic_column_value=null;
+		$db_logic_column = $this->getDbParse()->getDbLogicColumn();
+		if($db_logic_column){
+			if (!isset($params[$db_logic_column])) {
+				throw new DBRouteException("error params ,it must have key " . $db_logic_column);
+			}
+			$db_logic_column_value = $params[$db_logic_column];
+		}else{
+			$logic_col = $this->getDbParse()->getTableLogicColumn();
 			if (!isset($params[$logic_col])) {
 				throw new DBRouteException("error params ,it must have key " . $logic_col);
 			}
 			$db_logic_column_value=$params[$logic_col];
-        }
-        return $this->getDbParse()->getDbName($db_logic_column_value);
-    }
+		}
+		return $this->getDbParse()->getDbName($db_logic_column_value);
+	}
 
-    private function getNewSql($sql,$logic_column_value='') {
+	private function getNewSql($sql,$logic_column_value='') {
 		$dateTable=$this->getDbParse()->getIsdateTable();
 		if(!$dateTable &&  empty($logic_column_value)){
 			throw new DBRouteException('非日期分表必须要有逻辑列的值');
@@ -204,7 +204,7 @@ class cls_dbroute {
 		$this->setDBConn($db);
 		return $db;
 	}
-	
+
 	private function check_logic_params($params = array()) {
 		$logicTable = $this->getDbParse()->getLogicTable();
 		if ($logicTable) {
@@ -214,17 +214,17 @@ class cls_dbroute {
 				if (empty($params)) {
 					throw new DBRouteException('setConnection error,must have params');
 				}
-				
+
 				if($db_logic_column && !isset($params[$db_logic_column])){
 					throw new DBRouteException('逻辑分库必须设置逻辑分库列值');
 				}
-				
+
 				if($table_logic_column && !isset($params[$table_logic_column])){
 					throw new DBRouteException('逻辑分表必须设置逻辑分表列值');
 				}
-				
+
 			}
-		} 
+		}
 	}
 
 	private function setDBConn($db) {
@@ -378,17 +378,17 @@ class cls_dbroute {
 		unset($params['sort_filed']);
 		unset($params['sort_order']);
 		unset($params[$select_in_logic_column]);
-		
+
 		$tableLogicColumn=$this->getDbParse()->getTableLogicColumn();
 		$dbLogicColumn=$this->getDbParse()->getDbLogicColumn();
-		
+
 
 		$db_param_list = array();//每个数据库中 余数(余一个库中的表数)相同的值数组
 		foreach ($in_param_arr as $key => $value) {
 			if ($this->getDbParse()->getTableLogicColumnType() == 'string' && is_string($value) && !is_numeric($value)) {
 				$value = self::strToInt($value);
 				$in_param_arr[$key]=$value;
-			} 
+			}
 			$mod=$this->getDbParse()->getTableMod($value);
 			if($dbLogicColumn && $dbLogicColumn==$tableLogicColumn){//分库列与分表列相同
 				$db_name = $this->getDbParse()->getDbName($value);
@@ -419,7 +419,7 @@ class cls_dbroute {
 				foreach ($params as $k => $v) {
 					$in_params[$mod][$k] = $v;
 				}
-			
+					
 				foreach ($in_value_arrays as $mod => $val) {
 					$table_name=$mod_db_name[$mod]['table_name'];
 					$new_sql = str_ireplace("#" . $select_in_logic_column . "#", implode(',', array_values($val)), $sql);
@@ -437,9 +437,9 @@ class cls_dbroute {
 					}
 				}
 			}
-			
+				
 		}
-		
+
 		if ($merge_result) {
 			if ($sort_filed) {
 				foreach ((array)$merge_result as $key => $row) {
@@ -456,7 +456,7 @@ class cls_dbroute {
 			return array();
 		}
 	}
-	
+
 	/**
 	 * 只支持分表的表
 	 * 访问所有库表 不见意使用此方法
@@ -484,7 +484,7 @@ class cls_dbroute {
 		if (isset($params[$logic_col])) {
 			throw new DBRouteException("error params ,it must not have key " . $logic_col);
 		}
-		
+
 		$merge_result = array();
 		if($this->getDbParse()->getIsDateDb() && $this->getDbParse()->getIsdateTable()){
 			$db_tables =$this->getDbParse()->get_all_date_db_date_tables();
@@ -534,7 +534,7 @@ class cls_dbroute {
 		}
 		return $this->getDbConnection($db_name);
 	}
-	
+
 	public function begin($params = array()) {
 		$db_name = $this->setConnection($params);
 		if ($this->getDbParse()->getIsSingleDb()) {
@@ -561,8 +561,8 @@ class cls_dbroute {
 			$this->getDbConnection($db_name)->rollBack();
 		}
 	}
-	
-	
+
+
 	public function __destruct() {
 		if ($this->connections) {
 			foreach ($this->connections as $conn) {
@@ -572,7 +572,7 @@ class cls_dbroute {
 			}
 		}
 	}
-	
+
 }
 
 class DBRouteException extends Exception {
@@ -583,18 +583,18 @@ class DBRouteException extends Exception {
 
 }
 /**
- * 
+ *
  * 单个分库分表配置项基础抽象类
  * @author longhaisheng
  *
  */
 abstract class BaseConfig{
 
-    const INIT_LOGIC_CACHE_KEY = "init_logic_";
-    
-    const STR_SPLIT_CHAR = '@@@';
+	const INIT_LOGIC_CACHE_KEY = "init_logic_";
 
-    /** 数据库前缀名 */
+	const STR_SPLIT_CHAR = '@@@';
+
+	/** 数据库前缀名 */
 	private $db_prefix;
 
 	/** 表前缀名 */
@@ -618,10 +618,10 @@ abstract class BaseConfig{
 	/** 分表的逻辑列名 */
 	private $table_logic_column;
 
-    /** 分库的逻辑列名 */
-    private $db_logic_column;
+	/** 分库的逻辑列名 */
+	private $db_logic_column;
 
-    /** select in 查询时时的参数key名 */
+	/** select in 查询时时的参数key名 */
 	private $select_in_logic_column;
 
 	/** 是否单库多表 true为单库 */
@@ -634,32 +634,32 @@ abstract class BaseConfig{
 	private $is_debug = false;
 
 	/** 分库逻辑字段值类型*/
-    private $db_logic_column_type;
+	private $db_logic_column_type;
 
-    /** 分表辑字段值类型*/
-    private $table_logic_column_type;
+	/** 分表辑字段值类型*/
+	private $table_logic_column_type;
 
-    /** 是否按日期表达式分库*/
-    private $is_date_db=false;
-    
-    /** 是否日期表达式分表*/
-    private $is_date_table=false;
+	/** 是否按日期表达式分库*/
+	private $is_date_db=false;
 
-    /** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:0...31) ||MM(月:01...12) ||MMdd(月日)||w(星期日:0,星期一:1...) */
-    private $table_name_date_logic_string;
+	/** 是否日期表达式分表*/
+	private $is_date_table=false;
 
-    /** 时间分库表达式可为year(2014) ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...) */
-    private $db_name_date_logic_string;
-    
-    /** 按时间分库时,db_name_date_logic_string为year时，需设置开始年份  */
-    private $db_name_date_logic_start_year;
-    
-    /** 按时间分库时,db_name_date_logic_string为year时，需设置结束年份  */
-    private $db_name_date_logic_end_year;
-    
-   	/** 区间是否是每库一表 */
+	/** 时间分表格式化字符串   yyyyMMdd(20140806) || yyyyMM(201408) || yyyy(2014) ||dd(天:0...31) ||MM(月:01...12) ||MMdd(月日)||w(星期日:0,星期一:1...) */
+	private $table_name_date_logic_string;
+
+	/** 时间分库表达式可为year(2014) ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...) */
+	private $db_name_date_logic_string;
+
+	/** 按时间分库时,db_name_date_logic_string为year时，需设置开始年份  */
+	private $db_name_date_logic_start_year;
+
+	/** 按时间分库时,db_name_date_logic_string为year时，需设置结束年份  */
+	private $db_name_date_logic_end_year;
+
+	/** 区间是否是每库一表 */
 	private $consistent_hash_one_db_one_table=false;
-	
+
 	/** 按日期分库的所有日期库名 */
 	private $date_db_list=array();
 
@@ -669,26 +669,26 @@ abstract class BaseConfig{
 	protected function __construct($config_array = array()) {
 		if(empty($config_array)) echo 'BaseConfig init error ';
 		$this->config_array = $config_array;
-        if(isset($this->config_array['is_date_table'])){
-            $this->setIsdateTable($this->config_array['is_date_table']);
-        }
-        if(isset($this->config_array['is_date_db'])){
-            $this->setIsDateDb($this->config_array['is_date_db']);
-        }
-        if(isset($this->config_array['table_name_date_logic_string'])){
-            $this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
-        }
-        if(isset($this->config_array['db_name_date_logic_string'])){
-        	if(stripos($this->config_array['db_name_date_logic_string'], self::STR_SPLIT_CHAR)){
-	            $db_name_str_list=explode(self::STR_SPLIT_CHAR, $this->config_array['db_name_date_logic_string']);
-	            $this->setDbNameDateLogicString($db_name_str_list[0]);
-	            $start_end=explode('_', $db_name_str_list[1]);
-	            $this->setDbNameDateLogicStartYear($start_end[0]);
-	            $this->setDbNameDateLogicEndYear($start_end[1]);
-        	}else{
-        		 $this->setDbNameDateLogicString($this->config_array['db_name_date_logic_string']);
-        	}
-        }
+		if(isset($this->config_array['is_date_table'])){
+			$this->setIsdateTable($this->config_array['is_date_table']);
+		}
+		if(isset($this->config_array['is_date_db'])){
+			$this->setIsDateDb($this->config_array['is_date_db']);
+		}
+		if(isset($this->config_array['table_name_date_logic_string'])){
+			$this->setTableNameDateLogicString($this->config_array['table_name_date_logic_string']);
+		}
+		if(isset($this->config_array['db_name_date_logic_string'])){
+			if(stripos($this->config_array['db_name_date_logic_string'], self::STR_SPLIT_CHAR)){
+				$db_name_str_list=explode(self::STR_SPLIT_CHAR, $this->config_array['db_name_date_logic_string']);
+				$this->setDbNameDateLogicString($db_name_str_list[0]);
+				$start_end=explode('_', $db_name_str_list[1]);
+				$this->setDbNameDateLogicStartYear($start_end[0]);
+				$this->setDbNameDateLogicEndYear($start_end[1]);
+			}else{
+				$this->setDbNameDateLogicString($this->config_array['db_name_date_logic_string']);
+			}
+		}
 		if (isset($this->config_array['logic_table'])) {
 			$this->setDbPrefix($this->config_array['db_prefix']);
 			$this->setTablePrefix($this->config_array['table_prefix']);
@@ -697,28 +697,28 @@ abstract class BaseConfig{
 				$this->setTableLogicColumn($this->config_array['table_logic_column']);
 				$this->setTableLogicColumnType($this->config_array['table_logic_column_type']);
 			}
-            if(isset($this->config_array['db_logic_column'])){
-                $this->setDbLogicColumn($this->config_array['db_logic_column']);
-            }else{
-                if(!$this->getIsDateDb() && !$this->getIsdateTable()){
-                    $this->setDbLogicColumn($this->config_array['table_logic_column']);
-                }
-            }
-            if(isset($this->config_array['db_logic_column_type'])){
-                $this->setDbLogicColumnType($this->config_array['db_logic_column_type']);
-            }else{
-                if(!$this->getIsDateDb() && !$this->getIsdateTable()){
-                    $this->setDbLogicColumnType($this->config_array['table_logic_column_type']);
-                }
-            }
-            if(isset($this->config_array['table_total_num'])){
+			if(isset($this->config_array['db_logic_column'])){
+				$this->setDbLogicColumn($this->config_array['db_logic_column']);
+			}else{
+				if(!$this->getIsDateDb() && !$this->getIsdateTable()){
+					$this->setDbLogicColumn($this->config_array['table_logic_column']);
+				}
+			}
+			if(isset($this->config_array['db_logic_column_type'])){
+				$this->setDbLogicColumnType($this->config_array['db_logic_column_type']);
+			}else{
+				if(!$this->getIsDateDb() && !$this->getIsdateTable()){
+					$this->setDbLogicColumnType($this->config_array['table_logic_column_type']);
+				}
+			}
+			if(isset($this->config_array['table_total_num'])){
 				$this->setTableTotalNum($this->config_array['table_total_num']);
-            }
+			}
 			$this->setOneDbTableNum($this->config_array['one_db_table_num']);
 			$this->setSelectInLogicColumn($this->config_array['select_in_logic_column']);
-	        if(isset($config_array['consistent_hash_one_db_one_table'])){
-            	$this->consistent_hash_one_db_one_table=$config_array['consistent_hash_one_db_one_table'];
-        	}
+			if(isset($config_array['consistent_hash_one_db_one_table'])){
+				$this->consistent_hash_one_db_one_table=$config_array['consistent_hash_one_db_one_table'];
+			}
 			if (defined("IS_DEBUG")) {
 				$this->setIsDebug (IS_DEBUG);
 			}
@@ -759,9 +759,9 @@ abstract class BaseConfig{
 				$tables[] = $this->getTable($j);
 				/*if ($this->getIsSingleDb()) {
 					$this->db_tables[0] = $i;
-				} else {
+					} else {
 					$this->db_tables[$j] = $i; //key为表的数字下缀，value为数据库数字下缀（下缀大于等于零）
-				}*/
+					}*/
 			}
 			if ($mod && $num == $db_total_num) {
 				$tables = array_slice($tables, 0, $mod);
@@ -843,13 +843,13 @@ abstract class BaseConfig{
 		return $this->table_logic_column;
 	}
 
-    public function setDbLogicColumn($db_logic_column) {
-        $this->db_logic_column = $db_logic_column;
-    }
+	public function setDbLogicColumn($db_logic_column) {
+		$this->db_logic_column = $db_logic_column;
+	}
 
-    public function getDbLogicColumn() {
-        return $this->db_logic_column;
-    }
+	public function getDbLogicColumn() {
+		return $this->db_logic_column;
+	}
 
 	public function setSelectInLogicColumn($select_in_logic_column) {
 		$this->select_in_logic_column = $select_in_logic_column;
@@ -883,70 +883,70 @@ abstract class BaseConfig{
 		return $this->table_logic_column_type;
 	}
 
-    public function setDbLogicColumnType($db_logic_column_type) {
-        $this->db_logic_column_type = $db_logic_column_type;
-    }
+	public function setDbLogicColumnType($db_logic_column_type) {
+		$this->db_logic_column_type = $db_logic_column_type;
+	}
 
-    public function getDbLogicColumnType() {
-        return $this->db_logic_column_type;
-    }
+	public function getDbLogicColumnType() {
+		return $this->db_logic_column_type;
+	}
 
-    public function setTableNameDateLogicString($table_name_date_logic_string) {
-        $this->table_name_date_logic_string = $table_name_date_logic_string;
-    }
+	public function setTableNameDateLogicString($table_name_date_logic_string) {
+		$this->table_name_date_logic_string = $table_name_date_logic_string;
+	}
 
-    public function getTableNameDateLogicString() {
-        return $this->table_name_date_logic_string;
-    }
+	public function getTableNameDateLogicString() {
+		return $this->table_name_date_logic_string;
+	}
 
-    public function setDbNameDateLogicString($db_name_date_logic_string) {
-        $this->db_name_date_logic_string = $db_name_date_logic_string;
-    }
+	public function setDbNameDateLogicString($db_name_date_logic_string) {
+		$this->db_name_date_logic_string = $db_name_date_logic_string;
+	}
 
-    public function setDbNameDateLogicStartYear($db_name_date_logic_start_year) {
-        $this->db_name_date_logic_start_year = $db_name_date_logic_start_year;
-    }
+	public function setDbNameDateLogicStartYear($db_name_date_logic_start_year) {
+		$this->db_name_date_logic_start_year = $db_name_date_logic_start_year;
+	}
 
-    public function getDbNameDateLogicStartYear() {
-        return $this->db_name_date_logic_start_year;
-    }
+	public function getDbNameDateLogicStartYear() {
+		return $this->db_name_date_logic_start_year;
+	}
 
-    public function setDbNameDateLogicEndYear($db_name_date_logic_end_year) {
-        $this->db_name_date_logic_end_year = $db_name_date_logic_end_year;
-    }
+	public function setDbNameDateLogicEndYear($db_name_date_logic_end_year) {
+		$this->db_name_date_logic_end_year = $db_name_date_logic_end_year;
+	}
 
-    public function getDbNameDateLogicEndYear() {
-        return $this->db_name_date_logic_end_year;
-    }
+	public function getDbNameDateLogicEndYear() {
+		return $this->db_name_date_logic_end_year;
+	}
 
-    public function getDbNameDateLogicString() {
-        return $this->db_name_date_logic_string;
-    }
+	public function getDbNameDateLogicString() {
+		return $this->db_name_date_logic_string;
+	}
 
-    public function setIsdateTable($table_name_type) {
-        $this->is_date_table = $table_name_type;
-    }
+	public function setIsdateTable($table_name_type) {
+		$this->is_date_table = $table_name_type;
+	}
 
-    public function getIsdateTable() {
-        return $this->is_date_table;
-    }
+	public function getIsdateTable() {
+		return $this->is_date_table;
+	}
 
-    public function setIsDateDb($is_date_db) {
-        $this->is_date_db = $is_date_db;
-    }
+	public function setIsDateDb($is_date_db) {
+		$this->is_date_db = $is_date_db;
+	}
 
-    public function getIsDateDb() {
-        return $this->is_date_db;
-    }
+	public function getIsDateDb() {
+		return $this->is_date_db;
+	}
 
-    public function setConsistentHashOneDbOneTable($consistent_hash_one_db_one_table) {
-        $this->consistent_hash_one_db_one_table = $consistent_hash_one_db_one_table;
-    }
+	public function setConsistentHashOneDbOneTable($consistent_hash_one_db_one_table) {
+		$this->consistent_hash_one_db_one_table = $consistent_hash_one_db_one_table;
+	}
 
-    public function getConsistentHashOneDbOneTable() {
-        return $this->consistent_hash_one_db_one_table;
-    }
-    
+	public function getConsistentHashOneDbOneTable() {
+		return $this->consistent_hash_one_db_one_table;
+	}
+
 	private function getTable($mod) {
 		return substr_replace($this->getTablePrefix(), $mod, strlen($this->getTablePrefix()) - strlen($mod));
 	}
@@ -958,7 +958,7 @@ abstract class BaseConfig{
 	public function getDbList() {
 		return $this->db_list;
 	}
-	
+
 	public function get_all_date_db_date_tables(){//取所有日期库中的日期表
 		if($this->getIsDateDb() && $this->getIsdateTable()){
 			$date_db_list=$this->get_all_date_db_names(false);
@@ -988,54 +988,54 @@ abstract class BaseConfig{
 		return intval($logic_column_value % $this->getTableTotalNum() / $this->getOneDbTableNum());
 	}
 
-    public function getTableName($logic_column_value,$db_name='') {
-        $tableNameDateLogicString = $this->getTableNameDateLogicString();
-        if($this->getIsdateTable() && $tableNameDateLogicString){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
-        	$suffix=null;
+	public function getTableName($logic_column_value,$db_name='') {
+		$tableNameDateLogicString = $this->getTableNameDateLogicString();
+		if($this->getIsdateTable() && $tableNameDateLogicString){//日期分表时 此处不设置时区，应该在应用入口文件处统一设置
+			$suffix=null;
 			if(stripos($tableNameDateLogicString,self::STR_SPLIT_CHAR)){
 				$list=explode(self::STR_SPLIT_CHAR, $tableNameDateLogicString);
 				$tableNameDateLogicString=$list[0];
 			}
-            if($tableNameDateLogicString =='year'){//2014
-                $suffix=date("Y");
-            }
-            if($tableNameDateLogicString =='year_and_month'){//201408
-                $suffix=date("Ym");
-            }
-            if($tableNameDateLogicString =='year_month_day'){//20140806
-                $suffix=date("Ymd");
-            }
-            if($tableNameDateLogicString =='month_and_day'){//(0101...1231)
-                $suffix=date("md");
-            }
-            if($tableNameDateLogicString =='month'){//月 (01...12)
-                $suffix=date("m");
-            }
-            if($tableNameDateLogicString =='day'){//(01...31)
-                $suffix=date("d");
-            }
-            if($tableNameDateLogicString =='week'){//星期 (00,01,02...06)
-                $suffix='0'.date("w");
-            }
-            if(empty($suffix)){
-            	throw new DBRouteException("日期分表字符串设置错误!");
-            }
-            return $this->get_date_table_name($suffix);
-        }
-        if(empty($db_name)){
-        	$db_name=$this->getDbName($logic_column_value);
-        }
-        $db_list=$this->getDbList();
-        $one_db_tables=$db_list[$db_name];
-        $table_index=$this->getTableMod($logic_column_value);
-        return $one_db_tables[$table_index];
-    }
+			if($tableNameDateLogicString =='year'){//2014
+				$suffix=date("Y");
+			}
+			if($tableNameDateLogicString =='year_and_month'){//201408
+				$suffix=date("Ym");
+			}
+			if($tableNameDateLogicString =='year_month_day'){//20140806
+				$suffix=date("Ymd");
+			}
+			if($tableNameDateLogicString =='month_and_day'){//(0101...1231)
+				$suffix=date("md");
+			}
+			if($tableNameDateLogicString =='month'){//月 (01...12)
+				$suffix=date("m");
+			}
+			if($tableNameDateLogicString =='day'){//(01...31)
+				$suffix=date("d");
+			}
+			if($tableNameDateLogicString =='week'){//星期 (00,01,02...06)
+				$suffix='0'.date("w");
+			}
+			if(empty($suffix)){
+				throw new DBRouteException("日期分表字符串设置错误!");
+			}
+			return $this->get_date_table_name($suffix);
+		}
+		if(empty($db_name)){
+			$db_name=$this->getDbName($logic_column_value);
+		}
+		$db_list=$this->getDbList();
+		$one_db_tables=$db_list[$db_name];
+		$table_index=$this->getTableMod($logic_column_value);
+		return $one_db_tables[$table_index];
+	}
 
-    protected function getSingleDbName() {
-        $dbPrefix = $this->getDbPrefix();
-        $dbPrefix =trim($dbPrefix,'0');
-        return trim($dbPrefix, '_');
-    }
+	protected function getSingleDbName() {
+		$dbPrefix = $this->getDbPrefix();
+		$dbPrefix =trim($dbPrefix,'0');
+		return trim($dbPrefix, '_');
+	}
 
 	public function get_all_date_tables(){
 		$tableNameDateLogicString = $this->getTableNameDateLogicString();
@@ -1166,128 +1166,128 @@ abstract class BaseConfig{
 			return $new_list;
 		}
 	}
-	
-	private function get_date_table_name($suffix){
-       $tablePrefix=str_replace("0", "", $this->getTablePrefix());
-       $tablePrefix=trim($tablePrefix,'_');
-       return $tablePrefix.'_'.$suffix;
-	}
-    
-    protected function get_date_db_name() {
-        $str = $this->getDbNameDateLogicString();
-        $date_db_count=count($this->date_db_list);
-        $suffix_list=array();
-        if($str =='year'){//年 2014
-        	$suffix=date("Y");
-        }
-        if($str =='month'){//月 (01...12)
-        	$suffix=date("m");
-        }
-        if($str =='day'){//日 (01...31)
-        	$suffix=date("d");
-        }
-        if($str =='week'){//星期 (00,01,02...06)
-        	$suffix='0'.date("w");
-        }
-        
-        if(empty($suffix)){
-           throw new DBRouteException("日期分库字符串设置错误!");
-        }
-        $dbPrefix=$this->getDbPrefix();
-        $dbPrefix=trim($dbPrefix,"0");
-        $dbPrefix=trim($dbPrefix,"_");
-        return $dbPrefix.'_'.$suffix;
-    }
-    
-    public function get_all_date_db_names($is_init=false) {
-        $str = $this->getDbNameDateLogicString();
-        $date_db_count=count($this->date_db_list);
-        $suffix_list=array();
-        $suffix=null;
-        if($str =='year'){//年 2014
-        	$suffix=date("Y");
-        	if(empty($date_db_count)){
-        		if(!$this->getDbNameDateLogicStartYear()){
-        			throw new DBRouteException('请设置开始年份');
-        		}
-        		if(!$this->getDbNameDateLogicEndYear()){
-        			throw new DBRouteException('请设置结束年份');
-        		}
-        		$start_year=$this->getDbNameDateLogicStartYear();
-        		if($is_init){//初始中的数据会放在缓存中
-        			$end_year=$this->getDbNameDateLogicEndYear();
-        		}else{//未初始化调用主要放在遍历所有库表时 
-        			$end_year=$suffix+1;
-        		}
-        		
-	        	for($start_year;$start_year<$end_year;$start_year++){
-	        		$suffix_list[$start_year]=$start_year;
-	        	}
-        	}
-        }
-        if($str =='month'){//月 (01...12)
-        	$suffix=date("m");
-        	if(empty($date_db_count)){
-	        	for($i=1;$i<13;$i++){
-	        		if($i<10){
-	        			$suffix_list['0'.$i]='0'.$i;
-	        		}else{
-	        			$suffix_list[$i]=$i;
-	        		}
-	        	}
-        	}
-        }
-        if($str =='day'){//日 (01...31)
-        	$suffix=date("d");
-        	if(empty($date_db_count)){
-	            for($i=1;$i<32;$i++){
-	        		if($i<10){
-	        			$suffix_list['0'.$i]='0'.$i;
-	        		}else{
-	        			$suffix_list[$i]=$i;
-	        		}
-	        	}
-        	}
-        }
-        if($str =='week'){//星期 (00,01,02...06)
-        	$suffix='0'.date("w");
-        	if(empty($date_db_count)){
-	           for($i=0;$i<6;$i++){
-	        		if($i<10){
-	        			$suffix_list['0'.$i]='0'.$i;
-	        		}
-	        	}
-        	}
-        }
-        
-        if(empty($suffix)){
-           throw new DBRouteException("日期分库字符串设置错误!");
-        }
-        
-        $dbPrefix=$this->getDbPrefix();
-        $dbPrefix=trim($dbPrefix,"0");
-        $dbPrefix=trim($dbPrefix,"_");
-        if(empty($date_db_count)){
-	        foreach ($suffix_list as $key=>$value){
-	        	$db_name=$dbPrefix.'_'.$value;
-	        	$this->date_db_list[]=$db_name;//所有日期数据库名
-	        }
-        }
-        return $this->date_db_list;
-    }
 
-    abstract function getDbName($logic_column_value);
+	private function get_date_table_name($suffix){
+		$tablePrefix=str_replace("0", "", $this->getTablePrefix());
+		$tablePrefix=trim($tablePrefix,'_');
+		return $tablePrefix.'_'.$suffix;
+	}
+
+	protected function get_date_db_name() {
+		$str = $this->getDbNameDateLogicString();
+		$date_db_count=count($this->date_db_list);
+		$suffix_list=array();
+		if($str =='year'){//年 2014
+			$suffix=date("Y");
+		}
+		if($str =='month'){//月 (01...12)
+			$suffix=date("m");
+		}
+		if($str =='day'){//日 (01...31)
+			$suffix=date("d");
+		}
+		if($str =='week'){//星期 (00,01,02...06)
+			$suffix='0'.date("w");
+		}
+
+		if(empty($suffix)){
+			throw new DBRouteException("日期分库字符串设置错误!");
+		}
+		$dbPrefix=$this->getDbPrefix();
+		$dbPrefix=trim($dbPrefix,"0");
+		$dbPrefix=trim($dbPrefix,"_");
+		return $dbPrefix.'_'.$suffix;
+	}
+
+	public function get_all_date_db_names($is_init=false) {
+		$str = $this->getDbNameDateLogicString();
+		$date_db_count=count($this->date_db_list);
+		$suffix_list=array();
+		$suffix=null;
+		if($str =='year'){//年 2014
+			$suffix=date("Y");
+			if(empty($date_db_count)){
+				if(!$this->getDbNameDateLogicStartYear()){
+					throw new DBRouteException('请设置开始年份');
+				}
+				if(!$this->getDbNameDateLogicEndYear()){
+					throw new DBRouteException('请设置结束年份');
+				}
+				$start_year=$this->getDbNameDateLogicStartYear();
+				if($is_init){//初始中的数据会放在缓存中
+					$end_year=$this->getDbNameDateLogicEndYear();
+				}else{//未初始化调用主要放在遍历所有库表时
+					$end_year=$suffix+1;
+				}
+
+				for($start_year;$start_year<$end_year;$start_year++){
+					$suffix_list[$start_year]=$start_year;
+				}
+			}
+		}
+		if($str =='month'){//月 (01...12)
+			$suffix=date("m");
+			if(empty($date_db_count)){
+				for($i=1;$i<13;$i++){
+					if($i<10){
+						$suffix_list['0'.$i]='0'.$i;
+					}else{
+						$suffix_list[$i]=$i;
+					}
+				}
+			}
+		}
+		if($str =='day'){//日 (01...31)
+			$suffix=date("d");
+			if(empty($date_db_count)){
+				for($i=1;$i<32;$i++){
+					if($i<10){
+						$suffix_list['0'.$i]='0'.$i;
+					}else{
+						$suffix_list[$i]=$i;
+					}
+				}
+			}
+		}
+		if($str =='week'){//星期 (00,01,02...06)
+			$suffix='0'.date("w");
+			if(empty($date_db_count)){
+				for($i=0;$i<6;$i++){
+					if($i<10){
+						$suffix_list['0'.$i]='0'.$i;
+					}
+				}
+			}
+		}
+
+		if(empty($suffix)){
+			throw new DBRouteException("日期分库字符串设置错误!");
+		}
+
+		$dbPrefix=$this->getDbPrefix();
+		$dbPrefix=trim($dbPrefix,"0");
+		$dbPrefix=trim($dbPrefix,"_");
+		if(empty($date_db_count)){
+			foreach ($suffix_list as $key=>$value){
+				$db_name=$dbPrefix.'_'.$value;
+				$this->date_db_list[]=$db_name;//所有日期数据库名
+			}
+		}
+		return $this->date_db_list;
+	}
+
+	abstract function getDbName($logic_column_value);
 
 }
 
 /**
- * 
+ *
  * 取模hash
  * @author longhaisheng
  *
  */
 class ModHash extends BaseConfig{
-	
+
 	function __construct($config_array = array()){
 		parent::__construct($config_array);
 	}
@@ -1298,7 +1298,7 @@ class ModHash extends BaseConfig{
 	 */
 	public function getDbName($logic_column_value) {
 		if (parent::getIsSingleDb()) {
-            return parent::getSingleDbName();
+			return parent::getSingleDbName();
 		}
 		if(parent::getIsDateDb()){
 			return parent::get_date_db_name();
@@ -1310,21 +1310,21 @@ class ModHash extends BaseConfig{
 }
 
 /**
- * 
+ *
  * 一致性hash算法实现(分段hash)
  * @author longhaisheng
  *
  */
 class ConsistentHash extends BaseConfig{
 
-    const INIT_CONSISTENT_HASH_SECTION_CACHE_KEY = 'init_consistent_hash_section_';
+	const INIT_CONSISTENT_HASH_SECTION_CACHE_KEY = 'init_consistent_hash_section_';
 
-    /** 一致性hash配置字符串
-	* 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
-	* 如果key为consistent_hash_one_db_one_table的值为fasle,逻辑列值 mod Hash最大区间值之后 在 >=0 && <256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
-	* 可将[0,256]重新划分为[0,128]=sc_refund_0000和[128,256]=sc_refund_0005
-	* 如果key为consistent_hash_one_db_one_table的值为true,将表示每个库中只有一个表,此分段中的值可以设置为[0,500w]=sc_refund_0000;[500w,1000w]=sc_refund_0001;.....
-	*/
+	/** 一致性hash配置字符串
+	 * 字符串值为："[0,256]=sc_refund_0000;[256,512]=sc_refund_0001;[512,768]=sc_refund_0002;[768,1024]=sc_refund_0003" 表示：
+	 * 如果key为consistent_hash_one_db_one_table的值为fasle,逻辑列值 mod Hash最大区间值之后 在 >=0 && <256时 会路由到sc_refund_0000库，后面以此类推，如果都不在以上范围，默认库为字符串中配置的第一个库，即sc_refund_0000,迁移时
+	 * 可将[0,256]重新划分为[0,128]=sc_refund_0000和[128,256]=sc_refund_0005
+	 * 如果key为consistent_hash_one_db_one_table的值为true,将表示每个库中只有一个表,此分段中的值可以设置为[0,500w]=sc_refund_0000;[500w,1000w]=sc_refund_0001;.....
+	 */
 	private $consistent_hash_separate_string;
 
 	/** 一致性hash最大区间值 */
@@ -1333,84 +1333,84 @@ class ConsistentHash extends BaseConfig{
 	/** db所有节点Node对象列表 */
 	private $node_list=array();
 
-    function __construct($config_array = array()){
+	function __construct($config_array = array()){
 		parent::__construct($config_array);
 		if(isset($config_array['consistent_hash_separate_string'])){
 			$this->consistent_hash_separate_string=$config_array['consistent_hash_separate_string'];
 
-        }
-        if(isset($config_array['consistent_hash_separate_mod_max_value'])){
-            $this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
-        }
-        $list = cls_shmop::readArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY.parent::getLogicTable());
-        if ($list) {
-            $this->node_list=$list;
-        } else {
-            $this->init();
-        }
-    }
+		}
+		if(isset($config_array['consistent_hash_separate_mod_max_value'])){
+			$this->consistent_hash_separate_mod_max_value=$config_array['consistent_hash_separate_mod_max_value'];
+		}
+		$list = cls_shmop::readArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY.parent::getLogicTable());
+		if ($list) {
+			$this->node_list=$list;
+		} else {
+			$this->init();
+		}
+	}
 
-    private function init(){
-        $str=$this->getConsistentHashSeparateString();
-        $list=explode(';', $str);
-        $max=0;
-        $i=0;
-        $nodeList=array();
-        foreach ($list as $value) {
-            $one_db_config=explode('=', $value);
-            $one_db_config[0]=str_replace('[', '', $one_db_config[0]);
-            $one_db_config[0]=str_replace(']', '', $one_db_config[0]);
-            $start_end_list=explode(',', $one_db_config[0]);
-            if($max <=$start_end_list[1]){
-                $max=$start_end_list[1];
-            }
-            $node=new Node();
-            $node->setStart(str_replace('w', '0000', $start_end_list[0]));
-            $node->setEnd(str_replace('w', '0000', $start_end_list[1]));
-            $node->setDbName($one_db_config[1]);
-            if($i==0 && !parent::getConsistentHashOneDbOneTable()){
-            	$node->setIsDefaultDb(true);
-            }
-            $i++;
-            $nodeList[]=$node;
-        }
-        $this->node_list=$nodeList;
-        cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
+	private function init(){
+		$str=$this->getConsistentHashSeparateString();
+		$list=explode(';', $str);
+		$max=0;
+		$i=0;
+		$nodeList=array();
+		foreach ($list as $value) {
+			$one_db_config=explode('=', $value);
+			$one_db_config[0]=str_replace('[', '', $one_db_config[0]);
+			$one_db_config[0]=str_replace(']', '', $one_db_config[0]);
+			$start_end_list=explode(',', $one_db_config[0]);
+			if($max <=$start_end_list[1]){
+				$max=$start_end_list[1];
+			}
+			$node=new Node();
+			$node->setStart(str_replace('w', '0000', $start_end_list[0]));
+			$node->setEnd(str_replace('w', '0000', $start_end_list[1]));
+			$node->setDbName($one_db_config[1]);
+			if($i==0 && !parent::getConsistentHashOneDbOneTable()){
+				$node->setIsDefaultDb(true);
+			}
+			$i++;
+			$nodeList[]=$node;
+		}
+		$this->node_list=$nodeList;
+		cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
 
-        /*if($max !=$this->consistent_hash_separate_mod_max_value){
-            throw new DBRouteException('一致性hash字符串设置错误');
-        }*/
-    }
+		/*if($max !=$this->consistent_hash_separate_mod_max_value){
+		 throw new DBRouteException('一致性hash字符串设置错误');
+		 }*/
+	}
 
-    public function setConsistentHashSeparateModMaxValue($consistent_hash_separate_mod_max_value) {
-        $this->consistent_hash_separate_mod_max_value = $consistent_hash_separate_mod_max_value;
-    }
+	public function setConsistentHashSeparateModMaxValue($consistent_hash_separate_mod_max_value) {
+		$this->consistent_hash_separate_mod_max_value = $consistent_hash_separate_mod_max_value;
+	}
 
-    public function getConsistentHashSeparateModMaxValue() {
-        return $this->consistent_hash_separate_mod_max_value;
-    }
+	public function getConsistentHashSeparateModMaxValue() {
+		return $this->consistent_hash_separate_mod_max_value;
+	}
 
-    public function setConsistentHashSeparateString($consistent_hash_separate_string) {
-        $this->consistent_hash_separate_string = $consistent_hash_separate_string;
-    }
+	public function setConsistentHashSeparateString($consistent_hash_separate_string) {
+		$this->consistent_hash_separate_string = $consistent_hash_separate_string;
+	}
 
-    public function getConsistentHashSeparateString() {
-        return $this->consistent_hash_separate_string;
-    }
+	public function getConsistentHashSeparateString() {
+		return $this->consistent_hash_separate_string;
+	}
 
-    public function setNodeList($list) {
+	public function setNodeList($list) {
 		$this->node_list = $list;
 	}
 
-    public function getNodeList() {
+	public function getNodeList() {
 		return $this->node_list;
 	}
 
-    public function getDbName($logic_column_value) {
+	public function getDbName($logic_column_value) {
 		if (parent::getIsSingleDb()) {
-            return parent::getSingleDbName();
+			return parent::getSingleDbName();
 		}
-    	if(parent::getIsDateDb()){
+		if(parent::getIsDateDb()){
 			return parent::get_date_db_name();
 		}
 		if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
@@ -1429,7 +1429,7 @@ class ConsistentHash extends BaseConfig{
 				$db_name= $node->getDbName();
 				break;
 			}
-			
+				
 			if($node->getIsDefaultDb()){
 				$default_db_name= $node->getDbName();
 			}
@@ -1443,7 +1443,7 @@ class ConsistentHash extends BaseConfig{
 
 }
 /**
- * 
+ *
  * 虚拟节点hash算法实现
  * @author longhaisheng
  *
@@ -1452,68 +1452,68 @@ class VirtualHash extends BaseConfig{
 
 	/** 虚拟节点个数 */
 	private $virtual_db_node_number=64;
-	
+
 	/** hash算法类实例 */
-    private $hash;
+	private $hash;
 
-    function __construct($config_array = array()){
-        parent::__construct($config_array);
-        if(isset($config_array['virtual_db_node_number'])){
-            $this->virtual_db_node_number=$config_array['virtual_db_node_number'];
-            $this->hash=new cls_flexihash(new Flexihash_Crc32Hasher(),$this->virtual_db_node_number);
+	function __construct($config_array = array()){
+		parent::__construct($config_array);
+		if(isset($config_array['virtual_db_node_number'])){
+			$this->virtual_db_node_number=$config_array['virtual_db_node_number'];
+			$this->hash=new cls_flexihash(new Flexihash_Crc32Hasher(),$this->virtual_db_node_number);
 
-        }
-        $this->initialize();
-    }
+		}
+		$this->initialize();
+	}
 
-    private function initialize(){//将实际数据库结点对应至圆上
-        $total_table_num=parent::getDbTotalNum();
-        for($i=0;$i<$total_table_num;$i++){
-            $db_name= substr_replace(parent::getDbPrefix(), $i, strlen(parent::getDbPrefix()) - strlen($i));
-            $this->hash->addTarget($db_name);
-        }
-    }
+	private function initialize(){//将实际数据库结点对应至圆上
+		$total_table_num=parent::getDbTotalNum();
+		for($i=0;$i<$total_table_num;$i++){
+			$db_name= substr_replace(parent::getDbPrefix(), $i, strlen(parent::getDbPrefix()) - strlen($i));
+			$this->hash->addTarget($db_name);
+		}
+	}
 
-    public function getDbName($logic_column_value) {
-        if (parent::getIsSingleDb()) {
-            return parent::getSingleDbName();
-        }
-        if(parent::getIsDateDb()){
+	public function getDbName($logic_column_value) {
+		if (parent::getIsSingleDb()) {
+			return parent::getSingleDbName();
+		}
+		if(parent::getIsDateDb()){
 			return parent::get_date_db_name();
 		}
-        if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
-            $logic_column_value=cls_dbroute::strToInt($logic_column_value);
-        }
-        return $this->hash->lookup($logic_column_value);
-    }
+		if (parent::getDbLogicColumnType() && parent::getDbLogicColumnType() == 'string'  && !is_numeric($logic_column_value)) {
+			$logic_column_value=cls_dbroute::strToInt($logic_column_value);
+		}
+		return $this->hash->lookup($logic_column_value);
+	}
 
-    public function setVirtualDbNodeNumber($virtual_db_node_number) {
-        $this->virtual_db_node_number = $virtual_db_node_number;
-    }
+	public function setVirtualDbNodeNumber($virtual_db_node_number) {
+		$this->virtual_db_node_number = $virtual_db_node_number;
+	}
 
-    public function getVirtualDbNodeNumber() {
-        return $this->virtual_db_node_number;
-    }
+	public function getVirtualDbNodeNumber() {
+		return $this->virtual_db_node_number;
+	}
 
 }
 
 class Node{
 
 	/** 节点开始值 */
-    private $start;
+	private $start;
 
 	/** 节点结束值 */
-    private $end;
+	private $end;
 
 	/** 节点段中的数据库名 */
-    private $db_name;
+	private $db_name;
 
 	/** 节点中的数据库名是否是默认db */
-    private $is_default_db=false;
-    
-    public function setEnd($end) {
-        $this->end = $end;
-    }
+	private $is_default_db=false;
+
+	public function setEnd($end) {
+		$this->end = $end;
+	}
 
 	public function getEnd() {
 		return $this->end;
@@ -1535,12 +1535,12 @@ class Node{
 		return $this->db_name;
 	}
 
-    public function setIsDefaultDb($default_db) {
-        $this->is_default_db = $default_db;
-    }
+	public function setIsDefaultDb($default_db) {
+		$this->is_default_db = $default_db;
+	}
 
-    public function getIsDefaultDb() {
-        return $this->is_default_db;
-    }
+	public function getIsDefaultDb() {
+		return $this->is_default_db;
+	}
 
 }
