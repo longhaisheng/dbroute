@@ -1357,34 +1357,35 @@ class ConsistentHash extends BaseConfig{
 
 	private function initNodeList(){
 		$str=$this->getConsistentHashSeparateString();
-		$list=explode(';', $str);
-		if(!empty($list)){
-			$max=0;
-			$i=0;
-			$nodeList=array();
-			foreach ($list as $value) {
-				$value=strtolower($value);
-				$one_db_config=explode('=', $value);
-				$one_db_config[0]=str_replace('[', '', $one_db_config[0]);
-				$one_db_config[0]=str_replace(']', '', $one_db_config[0]);
-				$start_end_list=explode(',', $one_db_config[0]);
-				if($max <=$start_end_list[1]){
-					$max=$start_end_list[1];
+		if($str){
+			$list=explode(';', $str);
+				if(!empty($list)){
+					$max=0;
+					$i=0;
+					$nodeList=array();
+					foreach ($list as $value) {
+						$value=strtolower($value);
+						$one_db_config=explode('=', $value);
+						$one_db_config[0]=str_replace('[', '', $one_db_config[0]);
+						$one_db_config[0]=str_replace(']', '', $one_db_config[0]);
+						$start_end_list=explode(',', $one_db_config[0]);
+						if($max <=$start_end_list[1]){
+							$max=$start_end_list[1];
+						}
+						$node=new Node();
+						$node->setStart(str_replace('w', '0000', $start_end_list[0]));
+						$node->setEnd(str_replace('w', '0000', $start_end_list[1]));
+						$node->setDbName($one_db_config[1]);
+						if($i==0 && !parent::getConsistentHashOneDbOneTable()){
+							$node->setIsDefaultDb(true);
+						}
+						$i++;
+						$nodeList[]=$node;
+					}
+					$this->node_list=$nodeList;
+					cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
 				}
-				$node=new Node();
-				$node->setStart(str_replace('w', '0000', $start_end_list[0]));
-				$node->setEnd(str_replace('w', '0000', $start_end_list[1]));
-				$node->setDbName($one_db_config[1]);
-				if($i==0 && !parent::getConsistentHashOneDbOneTable()){
-					$node->setIsDefaultDb(true);
-				}
-				$i++;
-				$nodeList[]=$node;
 			}
-			$this->node_list=$nodeList;
-			cls_shmop::writeArray(self::INIT_CONSISTENT_HASH_SECTION_CACHE_KEY .parent::getLogicTable(),$nodeList);
-		}
-
 		/*if($max !=$this->consistent_hash_separate_mod_max_value){
 		 throw new DBRouteException('一致性hash字符串设置错误');
 		 }*/
