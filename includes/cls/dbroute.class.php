@@ -1363,6 +1363,7 @@ class ConsistentHash extends BaseConfig{
 			$i=0;
 			$nodeList=array();
 			foreach ($list as $value) {
+				$value=strtolower($value);
 				$one_db_config=explode('=', $value);
 				$one_db_config[0]=str_replace('[', '', $one_db_config[0]);
 				$one_db_config[0]=str_replace(']', '', $one_db_config[0]);
