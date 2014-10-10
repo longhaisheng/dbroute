@@ -13,7 +13,7 @@ define("APP_NAME", 'mmall');//应用名
 
 /************sequence表及未分库的表配置*****************************************************************************************************/
 $default_config_array = array();
-$default_config_array['host'] = DB_HOST; //db_host
+$default_config_array['host'] = DB_HOST; //db_host 非逻辑表必须配置
 $default_config_array['user_name'] = DB_USER_NAME; //db username
 $default_config_array['pass_word'] = DB_PASSWORD; //db pwd
 $default_config_array['db'] = DB_NAME; //db
@@ -26,7 +26,7 @@ $default_config_array['read_db_arithmetic'] = 'rand'; //读库算法 roll:轮询
 
 /***************order库表配置 (单库多表)*********************************************************************************************************/
 $sc_order_dbroute_single_config = array();
-$sc_order_dbroute_single_config['host'] = DB_HOST; //db_host
+$sc_order_dbroute_single_config['host'] = DB_HOST; //db_host  逻辑表不必配置
 $sc_order_dbroute_single_config['user_name'] = DB_USER_NAME; //db username
 $sc_order_dbroute_single_config['pass_word'] = DB_PASSWORD; //db pwd
 $sc_order_dbroute_single_config['port'] = DB_PORT; //db port
@@ -51,7 +51,7 @@ $sc_order_dbroute_single_config['read_db_hosts'] = $slave_read_host_array; //dbr
 
 /***************order_goods库表配置(单库多表)*************************************************************************************************/
 $sc_order_goods_dbroute_single_config = array();
-$sc_order_goods_dbroute_single_config['host'] = DB_HOST; //db_host
+$sc_order_goods_dbroute_single_config['host'] = DB_HOST; //db_host 逻辑表不必配置
 $sc_order_goods_dbroute_single_config['user_name'] = DB_USER_NAME; //db username
 $sc_order_goods_dbroute_single_config['pass_word'] = DB_PASSWORD; //db pwd
 $sc_order_goods_dbroute_single_config['port'] = DB_PORT; //db port
@@ -76,7 +76,7 @@ $sc_order_goods_dbroute_single_config['read_db_hosts'] = $slave_sc_order_goods_d
 
 /***************用户库表配置(多库多表)********************************************************************************************************/
 $user_multiple_dbroute_config = array();
-$user_multiple_dbroute_config['host'] = DB_HOST; //db_host
+$user_multiple_dbroute_config['host'] = DB_HOST; //db_host 逻辑表不必配置
 $user_multiple_dbroute_config['user_name'] = DB_USER_NAME; //db username
 $user_multiple_dbroute_config['pass_word'] = DB_PASSWORD; //db pwd
 $user_multiple_dbroute_config['port'] = DB_PORT; //db port
@@ -107,7 +107,7 @@ $user_multiple_dbroute_config['read_db_hosts'] = $slave_sc_user_multiple_dbs; //
 
 /***************用户退款库表配置(多库)*************************************************************************************************/
 $sc_refund_multiple_dbroute_config = array();
-$sc_refund_multiple_dbroute_config['host'] = DB_HOST; //db_host
+$sc_refund_multiple_dbroute_config['host'] = DB_HOST; //db_host 逻辑表不必配置
 $sc_refund_multiple_dbroute_config['user_name'] = DB_USER_NAME; //db username
 $sc_refund_multiple_dbroute_config['pass_word'] = DB_PASSWORD; //db pwd
 $sc_refund_multiple_dbroute_config['port'] = DB_PORT; //db port
@@ -138,7 +138,7 @@ $sc_refund_multiple_dbroute_config['read_db_hosts'] = $slave_sc_refund__multiple
 
 /***************用户退款详情库表配置(多库)*************************************************************************************************/
 $sc_refund_info_multiple_dbroute_config = array();
-$sc_refund_info_multiple_dbroute_config['host'] = DB_HOST; //db_host
+$sc_refund_info_multiple_dbroute_config['host'] = DB_HOST; //db_host 逻辑表不必配置
 $sc_refund_info_multiple_dbroute_config['user_name'] = DB_USER_NAME; //db username
 $sc_refund_info_multiple_dbroute_config['pass_word'] = DB_PASSWORD; //db pwd
 $sc_refund_info_multiple_dbroute_config['port'] = DB_PORT; //db port
@@ -176,7 +176,7 @@ $sc_refund_info_multiple_dbroute_config['read_db_hosts'] = $slave_sc_refund_info
 
 /***************按时间方式分库分表,时间分库支持(支持库表都按时间分 , 库按逻辑列分表按时间分, 库按时间分表按逻辑列分)*************************************************************************************************/
 $monthofyear_multiple_dbroute_config = array();
-$monthofyear_multiple_dbroute_config['host'] = DB_HOST; //db_host
+$monthofyear_multiple_dbroute_config['host'] = DB_HOST; //db_host 逻辑表不必配置
 $monthofyear_multiple_dbroute_config['user_name'] = DB_USER_NAME; //db username
 $monthofyear_multiple_dbroute_config['pass_word'] = DB_PASSWORD; //db pwd
 $monthofyear_multiple_dbroute_config['port'] = DB_PORT; //db port
@@ -193,7 +193,7 @@ $monthofyear_multiple_dbroute_config['select_in_logic_column'] = "user_ids"; //s
 $monthofyear_multiple_dbroute_config['table_total_num'] = 48; //总表数,如果按照日期分库,此值可不设置
 $monthofyear_multiple_dbroute_config['one_db_table_num'] = 12; //每个库里存放的表数
 $monthofyear_multiple_dbroute_config['is_date_db'] = true; //是否按时间分库
-$monthofyear_multiple_dbroute_config['db_name_date_logic_string'] = 'year@@@2009_2020'; //时间分库表达式可为year(year@@@2009_2020),2009_2020表示起始年份,为year时必须配置 ||month(月01,02...12) ||day(天:0...31)||week(星期日:0,星期一:1...);
+$monthofyear_multiple_dbroute_config['db_name_date_logic_string'] = 'year@@@2009_2020'; //时间分库表达式可为year(year@@@2009_2020),2009_2020表示起始年份,为year时必须配置 ||month(月01,02...12) ||day(天:1...31)||week(星期日:0,星期一:1...);
 $monthofyear_multiple_dbroute_config['is_date_table'] = true; //是否按时间分表
 $monthofyear_multiple_dbroute_config['table_name_date_logic_string'] = 'week@@@'; //按时间分表 year_month_day(year_month_day@@@20140501)@@@后表示开始年月日 || year_and_month(year_and_month@@@201405)@@@后表示开始年月 || year(year@@@2010)@@@后表示开始年份 ||day(天:01...31) ||month(月01...12) ||month_and_day(月日)||week(星期日:00,星期一:01...);
 
