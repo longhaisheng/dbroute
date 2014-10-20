@@ -4,7 +4,7 @@ dbroute 是一个支持mysql数据库分库分表的数据库操作中间件
 
 1、分库分表支持：单库多表、多库多表、多库单表(每库一表).<br>
 2、分库规则支持 (mod hash)、一致性hash、虚拟节点Hash及日期分库(year|month|day|week),逻辑字段支持字符串和整型.<br>
-3、分表规则支持:取模、日期格式分表(year|year_and_month|month|day|week|year_month_day|month_and_day)
+3、分表规则支持:取模、日期格式分表(year|year_and_month|month|day|week|year_month_day|month_and_day).<br>
 4、支持mysql本地事务(本地事务中超过一个数据源抛出异常)及分布式事务.<br>
 4、支持事务中的 select 走主库查询，以避免事务中查询延时(从库数据同步可能有延时),事务结束之后的查询依然走从库查询.<br>
 5、唯一数值型主键生成策略,建立一个表专门用于生成id(将生成的主键放至本地缓存中).<br>
